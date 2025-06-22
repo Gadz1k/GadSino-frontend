@@ -137,55 +137,27 @@
 
     document.getElementById('logged-user').innerText = username;
 
-    socket.on('table_update', (table) => {
-      updateHands(table);
-    });
-
-    socket.on('round_started', (table) => {
-      updateHands(table);
-      document.getElementById('result').innerText = 'Runda rozpoczęta';
-    });
-
+    socket.on('table_update', updateHands);
+    socket.on('round_started', updateHands);
     socket.on('your_turn', (turnUser) => {
       document.getElementById('actions').style.display = turnUser === username ? 'block' : 'none';
       document.getElementById('result').innerText = turnUser === username ? 'Twoja tura!' : `Tura gracza: ${turnUser}`;
     });
 
-    socket.on('round_result', (table) => {
-      updateHands(table);
-      const player = table.players.find(p => p && p.username === username);
-      document.getElementById('result').innerText = `Wynik: ${player?.result || ''}`;
-      updateUserInfo();
-    });
-
-    socket.on('player_updated', ({ username: userUpdated, hand }) => {
-      const slots = Array.from(document.querySelectorAll('.table-slot'));
-      slots.forEach(slot => {
-        if (slot.innerHTML.includes(userUpdated)) {
-          slot.innerHTML = `<b>${userUpdated}</b>: ${hand.join(', ')}`;
-        }
-      });
-    });
+    socket.on('round_result', updateHands);
 
     function updateHands(table) {
       table.players.forEach((player, i) => {
         const el = document.getElementById(`slot-${i}`);
-        if (player) {
-          el.innerHTML = `<b>${player.username}</b>: ${player.hand?.join(', ') || ''}`;
-          if (player.username === username) {
-            joinedSlot = i;
-            document.getElementById('player-hand').innerText = player.hand.join(', ');
-            document.getElementById('leave-btn').style.display = 'inline-block';
-          }
-        } else {
-          if (joinedSlot === null) {
-            el.innerHTML = `<button onclick="joinSlot(${i})">Dołącz</button>`;
-          } else {
-            el.innerHTML = `Wolne miejsce`;
-          }
+        el.innerHTML = player ? `<b>${player.username}</b>: ${player.hand?.join(', ')}` : `<button onclick="joinSlot(${i})">Dołącz</button>`;
+        if(player?.username === username) {
+          joinedSlot = i;
+          document.getElementById('player-hand').innerText = player.hand.join(', ');
+          document.getElementById('leave-btn').style.display = 'inline-block';
         }
       });
       document.getElementById('dealer-hand').innerText = table.dealerHand?.join(', ') || '';
+      updateUserInfo();
     }
 
     function joinSlot(slotIndex) {
@@ -197,20 +169,14 @@
       if (joinedSlot === null) return;
       socket.emit('join_table', { tableId: defaultTableId, username, slotIndex: -1 });
       joinedSlot = null;
-      document.getElementById('player-hand').innerText = '';
-      document.getElementById('actions').style.display = 'none';
       document.getElementById('leave-btn').style.display = 'none';
     }
 
     function updateUserInfo() {
       fetch(`https://gadsino.onrender.com/player/${username}`)
         .then(res => res.json())
-        .then(data => {
-          document.getElementById('user-balance').innerText = data.balance;
-        })
-        .catch(() => {
-          document.getElementById('user-balance').innerText = '–';
-        });
+        .then(data => document.getElementById('user-balance').innerText = data.balance)
+        .catch(() => document.getElementById('user-balance').innerText = '–');
     }
 
     function placeBet() {
@@ -219,13 +185,8 @@
       socket.emit('place_bet', { tableId: defaultTableId, username, amount });
     }
 
-    function hit() {
-      socket.emit('player_action', { tableId: defaultTableId, username, action: 'hit' });
-    }
-
-    function stand() {
-      socket.emit('player_action', { tableId: defaultTableId, username, action: 'stand' });
-    }
+    function hit() { socket.emit('player_action', { tableId: defaultTableId, username, action: 'hit' }); }
+    function stand() { socket.emit('player_action', { tableId: defaultTableId, username, action: 'stand' }); }
 
     updateUserInfo();
   </script>
