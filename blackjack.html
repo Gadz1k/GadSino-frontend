@@ -114,7 +114,6 @@
       Dealer:
       <div class="dealer-cards" id="dealer-hand"></div>
     </div>
-    <!-- Sloty graczy rozmieszczone półkolem -->
     <div id="slot-0" class="table-slot" style="left: 60px; top: 280px;"></div>
     <div id="slot-1" class="table-slot" style="left: 220px; top: 360px;"></div>
     <div id="slot-2" class="table-slot" style="left: 400px; top: 400px;"></div>
@@ -171,12 +170,9 @@
     });
 
     function getCardImg(card) {
-      if (card === '❓' || !card) return '';
-      const map = { 'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace' };
-      const val = map[card] || card;
-      const suits = ['clubs', 'diamonds', 'hearts', 'spades'];
-      const suit = suits[Math.floor(Math.random() * 4)];
-      return `<img src="svg-cards/${val}_of_${suit}.svg" alt="${card}" />`;
+      if (!card || card === '❓') return '';
+      const { rank, suit } = card;
+      return `<img src="svg-cards/${rank}_of_${suit}.svg" alt="${rank} of ${suit}" />`;
     }
 
     function updateHands(table) {
