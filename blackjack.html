@@ -199,6 +199,7 @@
     }
 
     updateUserInfo();
+    socket.emit('get_table_state', { tableId: defaultTableId });
   </script>
 </body>
 </html>
