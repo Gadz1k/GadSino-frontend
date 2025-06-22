@@ -1,13 +1,210 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Karol's Kasyno – Strona Główna</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body.landing {
+      font-family: Arial, sans-serif;
+      background: #1c1c1c;
+      color: white;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    header {
+      position: fixed;
+      top: 0; right: 0;
+      padding: 1em 2em;
+    }
+    header button {
+      background: #ff4757;
+      border: none;
+      color: white;
+      padding: 0.5em 1em;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+    header button:hover {
+      background: #e84118;
+    }
+    h1 {
+      font-size: 3em;
+      margin-bottom: 0.3em;
+      color: #ffa502;
+    }
+    p {
+      font-size: 1.3em;
+      margin-bottom: 2em;
+      max-width: 400px;
+    }
+    a button {
+      font-size: 1.2em;
+      padding: 1em 2em;
+      border-radius: 10px;
+      background: #ff4757;
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    a button:hover {
+      background: #e84118;
+    }
+    /* Modal styles */
+    #login-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #login-modal.active {
+      display: flex;
+    }
+    #login-box {
+      background: #2f3542;
+      padding: 2em;
+      border-radius: 10px;
+      width: 300px;
+      text-align: left;
+      color: white;
+    }
+    #login-box h2 {
+      margin-top: 0;
+      margin-bottom: 1em;
+      color: #ffa502;
+    }
+    #login-box label {
+      display: block;
+      margin-bottom: 0.3em;
+      font-weight: bold;
+    }
+    #login-box input {
+      width: 100%;
+      padding: 0.5em;
+      margin-bottom: 1em;
+      border-radius: 5px;
+      border: none;
+      font-size: 1em;
+    }
+    #login-box button {
+      width: 100%;
+      background: #ff4757;
+      border: none;
+      padding: 0.7em;
+      color: white;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    #login-box button:hover {
+      background: #e84118;
+    }
+    #login-box .close-btn {
+      background: #555;
+      margin-top: 1em;
+    }
+    #login-box .close-btn:hover {
+      background: #444;
+    }
+    #login-error {
+      color: #ff6b6b;
+      margin-bottom: 1em;
+      font-weight: bold;
+      display: none;
+    }
+  </style>
 </head>
 <body class="landing">
+  <header>
+    <button id="login-open-btn">Loguj się</button>
+  </header>
+
   <h1>🎰 Karol's Kasyno 🎰</h1>
   <p>Witamy w miejscu, gdzie marzenia umierają szybciej niż twoje saldo.</p>
   <a href="blackjack.html"><button>♠ Zagraj w Blackjacka ♠</button></a>
+
+  <!-- Modal logowania -->
+  <div id="login-modal">
+    <div id="login-box">
+      <h2>Logowanie</h2>
+      <div id="login-error"></div>
+      <label for="login-username">Nazwa użytkownika</label>
+      <input type="text" id="login-username" autocomplete="username" />
+      <label for="login-password">Hasło</label>
+      <input type="password" id="login-password" autocomplete="current-password" />
+      <button id="login-submit-btn">Zaloguj się</button>
+      <button class="close-btn" id="login-close-btn">Anuluj</button>
+    </div>
+  </div>
+
+  <script>
+    const loginModal = document.getElementById('login-modal');
+    const loginOpenBtn = document.getElementById('login-open-btn');
+    const loginCloseBtn = document.getElementById('login-close-btn');
+    const loginSubmitBtn = document.getElementById('login-submit-btn');
+    const loginError = document.getElementById('login-error');
+
+    loginOpenBtn.onclick = () => {
+      loginError.style.display = 'none';
+      loginError.textContent = '';
+      loginModal.classList.add('active');
+    };
+
+    loginCloseBtn.onclick = () => {
+      loginModal.classList.remove('active');
+    };
+
+    loginSubmitBtn.onclick = async () => {
+      loginError.style.display = 'none';
+      loginError.textContent = '';
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      if (!username || !password) {
+        loginError.style.display = 'block';
+        loginError.textContent = 'Podaj nazwę użytkownika i hasło.';
+        return;
+      }
+
+      try {
+        const res = await fetch('https://gadsino.onrender.com/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          loginError.style.display = 'block';
+          loginError.textContent = data.message || 'Błąd logowania.';
+          return;
+        }
+        const data = await res.json();
+        loginModal.classList.remove('active');
+        alert(`Witaj, ${data.username}! Zalogowano pomyślnie.`);
+        // Tu możesz zapisać token do localStorage lub cookie
+      } catch (e) {
+        loginError.style.display = 'block';
+        loginError.textContent = 'Błąd połączenia z serwerem.';
+      }
+    };
+
+    // Zamknij modal na ESC
+    window.addEventListener('keydown', e => {
+      if (e.key === 'Escape') loginModal.classList.remove('active');
+    });
+  </script>
 </body>
 </html>
