@@ -111,8 +111,10 @@
   </div>
 
   <div id="game">
-    <input id="bet-amount" placeholder="Twoja stawka" type="number" />
-    <button onclick="placeBet()">Postaw</button>
+    <div id="betting-controls">
+      <input id="bet-amount" placeholder="Twoja stawka" type="number" />
+      <button onclick="placeBet()">Postaw</button>
+    </div>
 
     <div id="actions" style="display:none">
       <button onclick="hit()">Dobierz</button>
@@ -138,13 +140,18 @@
     document.getElementById('logged-user').innerText = username;
 
     socket.on('table_update', updateHands);
-    socket.on('round_started', updateHands);
+    socket.on('round_started', (table) => {
+      updateHands(table);
+      document.getElementById('betting-controls').style.display = 'none';
+    });
+    socket.on('round_result', (table) => {
+      updateHands(table);
+      document.getElementById('betting-controls').style.display = 'inline-block';
+    });
     socket.on('your_turn', (turnUser) => {
       document.getElementById('actions').style.display = turnUser === username ? 'block' : 'none';
       document.getElementById('result').innerText = turnUser === username ? 'Twoja tura!' : `Tura gracza: ${turnUser}`;
     });
-
-    socket.on('round_result', updateHands);
 
     function updateHands(table) {
       joinedSlot = null;
