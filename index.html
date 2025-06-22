@@ -32,6 +32,7 @@
       cursor: pointer;
       font-weight: bold;
       transition: background 0.3s ease;
+      margin-left: 10px;
     }
     header button:hover {
       background: #e84118;
@@ -60,7 +61,7 @@
       background: #e84118;
     }
     /* Modal styles */
-    #login-modal {
+    .modal {
       display: none;
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -69,10 +70,10 @@
       align-items: center;
       z-index: 1000;
     }
-    #login-modal.active {
+    .modal.active {
       display: flex;
     }
-    #login-box {
+    .modal-box {
       background: #2f3542;
       padding: 2em;
       border-radius: 10px;
@@ -80,17 +81,17 @@
       text-align: left;
       color: white;
     }
-    #login-box h2 {
+    .modal-box h2 {
       margin-top: 0;
       margin-bottom: 1em;
       color: #ffa502;
     }
-    #login-box label {
+    .modal-box label {
       display: block;
       margin-bottom: 0.3em;
       font-weight: bold;
     }
-    #login-box input {
+    .modal-box input {
       width: 100%;
       padding: 0.5em;
       margin-bottom: 1em;
@@ -98,7 +99,7 @@
       border: none;
       font-size: 1em;
     }
-    #login-box button {
+    .modal-box button {
       width: 100%;
       background: #ff4757;
       border: none;
@@ -109,17 +110,17 @@
       cursor: pointer;
       transition: background 0.3s ease;
     }
-    #login-box button:hover {
+    .modal-box button:hover {
       background: #e84118;
     }
-    #login-box .close-btn {
+    .modal-box .close-btn {
       background: #555;
       margin-top: 1em;
     }
-    #login-box .close-btn:hover {
+    .modal-box .close-btn:hover {
       background: #444;
     }
-    #login-error {
+    .modal-error {
       color: #ff6b6b;
       margin-bottom: 1em;
       font-weight: bold;
@@ -130,6 +131,7 @@
 <body class="landing">
   <header>
     <button id="login-open-btn">Loguj się</button>
+    <button id="register-open-btn">Zarejestruj się</button>
   </header>
 
   <h1>🎰 Karol's Kasyno 🎰</h1>
@@ -137,10 +139,10 @@
   <a href="blackjack.html"><button>♠ Zagraj w Blackjacka ♠</button></a>
 
   <!-- Modal logowania -->
-  <div id="login-modal">
-    <div id="login-box">
+  <div id="login-modal" class="modal">
+    <div class="modal-box">
       <h2>Logowanie</h2>
-      <div id="login-error"></div>
+      <div id="login-error" class="modal-error"></div>
       <label for="login-username">Nazwa użytkownika</label>
       <input type="text" id="login-username" autocomplete="username" />
       <label for="login-password">Hasło</label>
@@ -150,24 +152,60 @@
     </div>
   </div>
 
-  <script>
-    const loginModal = document.getElementById('login-modal');
-    const loginOpenBtn = document.getElementById('login-open-btn');
-    const loginCloseBtn = document.getElementById('login-close-btn');
-    const loginSubmitBtn = document.getElementById('login-submit-btn');
-    const loginError = document.getElementById('login-error');
+  <!-- Modal rejestracji -->
+  <div id="register-modal" class="modal">
+    <div class="modal-box">
+      <h2>Rejestracja</h2>
+      <div id="register-error" class="modal-error"></div>
+      <label for="register-username">Nazwa użytkownika</label>
+      <input type="text" id="register-username" autocomplete="username" />
+      <label for="register-email">Email</label>
+      <input type="email" id="register-email" autocomplete="email" />
+      <label for="register-password">Hasło</label>
+      <input type="password" id="register-password" autocomplete="new-password" />
+      <button id="register-submit-btn">Zarejestruj się</button>
+      <button class="close-btn" id="register-close-btn">Anuluj</button>
+    </div>
+  </div>
 
+  <script>
+    // Modale
+    const loginModal = document.getElementById('login-modal');
+    const registerModal = document.getElementById('register-modal');
+
+    // Przyciski otwierające
+    const loginOpenBtn = document.getElementById('login-open-btn');
+    const registerOpenBtn = document.getElementById('register-open-btn');
+
+    // Przyciski zamykające
+    const loginCloseBtn = document.getElementById('login-close-btn');
+    const registerCloseBtn = document.getElementById('register-close-btn');
+
+    // Elementy błędów
+    const loginError = document.getElementById('login-error');
+    const registerError = document.getElementById('register-error');
+
+    // Otwieranie modalów
     loginOpenBtn.onclick = () => {
       loginError.style.display = 'none';
       loginError.textContent = '';
       loginModal.classList.add('active');
+      registerModal.classList.remove('active');
     };
 
-    loginCloseBtn.onclick = () => {
+    registerOpenBtn.onclick = () => {
+      registerError.style.display = 'none';
+      registerError.textContent = '';
+      registerModal.classList.add('active');
       loginModal.classList.remove('active');
     };
 
-    loginSubmitBtn.onclick = async () => {
+    // Zamknięcie modalów
+    loginCloseBtn.onclick = () => loginModal.classList.remove('active');
+    registerCloseBtn.onclick = () => registerModal.classList.remove('active');
+
+    // Logowanie
+    document.getElementById('login-submit-btn').onclick = async () => {
       loginError.style.display = 'none';
       loginError.textContent = '';
       const username = document.getElementById('login-username').value.trim();
@@ -201,9 +239,47 @@
       }
     };
 
-    // Zamknij modal na ESC
+    // Rejestracja
+    document.getElementById('register-submit-btn').onclick = async () => {
+      registerError.style.display = 'none';
+      registerError.textContent = '';
+      const username = document.getElementById('register-username').value.trim();
+      const email = document.getElementById('register-email').value.trim();
+      const password = document.getElementById('register-password').value;
+
+      if (!username || !email || !password) {
+        registerError.style.display = 'block';
+        registerError.textContent = 'Wypełnij wszystkie pola.';
+        return;
+      }
+
+      try {
+        const res = await fetch('https://gadsino.onrender.com/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password }),
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          registerError.style.display = 'block';
+          registerError.textContent = data.message || 'Błąd rejestracji.';
+          return;
+        }
+        const data = await res.json();
+        registerModal.classList.remove('active');
+        alert('Zarejestrowano pomyślnie! Możesz się teraz zalogować.');
+      } catch (e) {
+        registerError.style.display = 'block';
+        registerError.textContent = 'Błąd połączenia z serwerem.';
+      }
+    };
+
+    // Zamknij modale na ESC
     window.addEventListener('keydown', e => {
-      if (e.key === 'Escape') loginModal.classList.remove('active');
+      if (e.key === 'Escape') {
+        loginModal.classList.remove('active');
+        registerModal.classList.remove('active');
+      }
     });
   </script>
 </body>
