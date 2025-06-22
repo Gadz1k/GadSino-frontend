@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8" />
-  <title>GadSino's Blackjack</title>
+  <title>Karol's Kasyno Blackjack</title>
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <style>
     body {
@@ -97,7 +97,7 @@
   <div id="user-info">
     <div><strong>Zalogowany jako:</strong> <span id="logged-user">–</span></div>
     <div><strong>Saldo:</strong> <span id="user-balance">–</span> żetonów</div>
-    <button onclick="leaveSlot()">Opuść stół</button>
+    <button id="leave-btn" style="display:none" onclick="leaveTable()">Opuść stół</button>
   </div>
 
   <div id="table">
@@ -133,11 +133,9 @@
     const username = user.username;
     const socket = io('https://gadsino.onrender.com');
     const defaultTableId = 'default';
-    let mySlotIndex = null;
+    let joinedSlot = null;
 
     document.getElementById('logged-user').innerText = username;
-
-    socket.emit('join_table', { tableId: defaultTableId, username }); // Wywoła update
 
     socket.on('table_update', (table) => {
       updateHands(table);
@@ -149,13 +147,8 @@
     });
 
     socket.on('your_turn', (turnUser) => {
-      if (turnUser === username) {
-        document.getElementById('actions').style.display = 'block';
-        document.getElementById('result').innerText = 'Twoja tura!';
-      } else {
-        document.getElementById('actions').style.display = 'none';
-        document.getElementById('result').innerText = `Tura gracza: ${turnUser}`;
-      }
+      document.getElementById('actions').style.display = turnUser === username ? 'block' : 'none';
+      document.getElementById('result').innerText = turnUser === username ? 'Twoja tura!' : `Tura gracza: ${turnUser}`;
     });
 
     socket.on('round_result', (table) => {
@@ -165,32 +158,48 @@
       updateUserInfo();
     });
 
+    socket.on('player_updated', ({ username: userUpdated, hand }) => {
+      const slots = Array.from(document.querySelectorAll('.table-slot'));
+      slots.forEach(slot => {
+        if (slot.innerHTML.includes(userUpdated)) {
+          slot.innerHTML = `<b>${userUpdated}</b>: ${hand.join(', ')}`;
+        }
+      });
+    });
+
     function updateHands(table) {
       table.players.forEach((player, i) => {
         const el = document.getElementById(`slot-${i}`);
         if (player) {
           el.innerHTML = `<b>${player.username}</b>: ${player.hand?.join(', ') || ''}`;
           if (player.username === username) {
-            mySlotIndex = i;
+            joinedSlot = i;
             document.getElementById('player-hand').innerText = player.hand.join(', ');
+            document.getElementById('leave-btn').style.display = 'inline-block';
           }
         } else {
-          el.innerHTML = `<button onclick="joinSlot(${i})">Dołącz</button>`;
+          if (joinedSlot === null) {
+            el.innerHTML = `<button onclick="joinSlot(${i})">Dołącz</button>`;
+          } else {
+            el.innerHTML = `Wolne miejsce`;
+          }
         }
       });
       document.getElementById('dealer-hand').innerText = table.dealerHand?.join(', ') || '';
     }
 
     function joinSlot(slotIndex) {
-      if (mySlotIndex !== null) return;
+      if (joinedSlot !== null) return;
       socket.emit('join_table', { tableId: defaultTableId, username, slotIndex });
     }
 
-    function leaveSlot() {
-      if (mySlotIndex !== null) {
-        socket.emit('leave_table', { tableId: defaultTableId, username });
-        mySlotIndex = null;
-      }
+    function leaveTable() {
+      if (joinedSlot === null) return;
+      socket.emit('join_table', { tableId: defaultTableId, username, slotIndex: -1 });
+      joinedSlot = null;
+      document.getElementById('player-hand').innerText = '';
+      document.getElementById('actions').style.display = 'none';
+      document.getElementById('leave-btn').style.display = 'none';
     }
 
     function updateUserInfo() {
