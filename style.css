@@ -1,0 +1,27 @@
+body {
+  background: #1c1c1c;
+  color: white;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  padding: 3em;
+}
+button {
+  background-color: #ff4757;
+  color: white;
+  font-size: 1.3em;
+  padding: 0.5em 1em;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #e84118;
+}
+.landing h1 {
+  font-size: 3em;
+  margin-bottom: 0.2em;
+}
+.landing p {
+  font-size: 1.5em;
+  margin-bottom: 1em;
+}
