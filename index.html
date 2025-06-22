@@ -30,7 +30,7 @@
     #game, #lobby {
       margin-top: 2em;
     }
-    #player-hand, #dealer-hand, #players-list {
+    #player-hand, #dealer-hand, #players-list, #other-hands {
       margin: 1em auto;
       font-size: 1.3em;
       background: #2f3542;
@@ -77,13 +77,20 @@
   </div>
 
   <div id="game">
-    <button onclick="startRound()">Start Rundy</button>
+    <input id="bet-amount" placeholder="Twoja stawka" type="number" />
+    <button onclick="placeBet()">Postaw</button>
+
+    <div id="actions" style="display:none">
+      <button onclick="hit()">Dobierz</button>
+      <button onclick="stand()">Stój</button>
+    </div>
+
     <h2>Twoja ręka:</h2>
     <div id="player-hand"></div>
     <h2>Dealer:</h2>
     <div id="dealer-hand"></div>
+    <div id="other-hands"></div>
     <p id="result"></p>
-    <p id="balance"></p>
   </div>
 
   <script>
@@ -99,12 +106,26 @@
     socket.on('round_started', (table) => {
       const player = table.players.find(p => p.username === username);
       document.getElementById('player-hand').innerText = player.hand.join(', ');
-      document.getElementById('dealer-hand').innerText = table.dealerHand.join(', ') + ', ?';
-      document.getElementById('result').innerText = 'Runda rozpoczęta';
+      document.getElementById('dealer-hand').innerText = table.dealerHand[0] + ', ?';
+
+      const others = table.players.filter(p => p.username !== username).map(p => `<div><b>${p.username}</b>: ${p.hand.join(', ')}</div>`).join('');
+      document.getElementById('other-hands').innerHTML = others;
     });
 
-    socket.on('timer_end', () => {
-      document.getElementById('result').innerText = 'Koniec czasu rundy!';
+    socket.on('your_turn', (turnUser) => {
+      if (turnUser === username) {
+        document.getElementById('actions').style.display = 'block';
+        document.getElementById('result').innerText = 'Twoja tura!';
+      } else {
+        document.getElementById('actions').style.display = 'none';
+        document.getElementById('result').innerText = `Tura gracza: ${turnUser}`;
+      }
+    });
+
+    socket.on('round_result', (table) => {
+      const player = table.players.find(p => p.username === username);
+      document.getElementById('result').innerText = `Wynik: ${player.result}`;
+      updateUserInfo();
     });
 
     function updateUserInfo() {
@@ -157,8 +178,18 @@
       });
     }
 
-    function startRound() {
-      socket.emit('start_round', { tableId: currentTableId });
+    function placeBet() {
+      const amount = parseInt(document.getElementById('bet-amount').value);
+      if (!amount || amount <= 0) return alert('Podaj poprawną stawkę');
+      socket.emit('place_bet', { tableId: currentTableId, username, amount });
+    }
+
+    function hit() {
+      socket.emit('player_action', { tableId: currentTableId, username, action: 'hit' });
+    }
+
+    function stand() {
+      socket.emit('player_action', { tableId: currentTableId, username, action: 'stand' });
     }
   </script>
 </body>
