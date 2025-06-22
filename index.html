@@ -104,12 +104,8 @@
     });
 
     socket.on('round_started', (table) => {
-      const player = table.players.find(p => p.username === username);
-      document.getElementById('player-hand').innerText = player.hand.join(', ');
-      document.getElementById('dealer-hand').innerText = table.dealerHand[0] + ', ?';
-
-      const others = table.players.filter(p => p.username !== username).map(p => `<div><b>${p.username}</b>: ${p.hand.join(', ')}</div>`).join('');
-      document.getElementById('other-hands').innerHTML = others;
+      updateHands(table);
+      document.getElementById('result').innerText = 'Runda rozpoczęta';
     });
 
     socket.on('your_turn', (turnUser) => {
@@ -123,10 +119,20 @@
     });
 
     socket.on('round_result', (table) => {
+      updateHands(table);
       const player = table.players.find(p => p.username === username);
       document.getElementById('result').innerText = `Wynik: ${player.result}`;
       updateUserInfo();
     });
+
+    function updateHands(table) {
+      const player = table.players.find(p => p.username === username);
+      document.getElementById('player-hand').innerText = player.hand.join(', ');
+      document.getElementById('dealer-hand').innerText = table.dealerHand.join(', ');
+
+      const others = table.players.filter(p => p.username !== username).map(p => `<div><b>${p.username}</b>: ${p.hand.join(', ')}</div>`).join('');
+      document.getElementById('other-hands').innerHTML = others;
+    }
 
     function updateUserInfo() {
       document.getElementById('logged-user').innerText = username;
