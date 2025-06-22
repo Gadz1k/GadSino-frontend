@@ -12,7 +12,10 @@
       text-align: center;
       padding: 2em;
     }
-    button, select {
+    h1 {
+      color: #ffa502;
+    }
+    button {
       padding: 0.5em;
       margin: 0.5em;
       border-radius: 5px;
@@ -25,9 +28,6 @@
     button:hover {
       background: #e84118;
     }
-    h1 {
-      color: #ffa502;
-    }
     #user-info {
       position: absolute;
       top: 20px;
@@ -38,20 +38,22 @@
       text-align: left;
     }
     #table-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1em;
-      max-width: 1400px;
+      position: relative;
+      width: 1000px;
+      height: 500px;
       margin: 2em auto;
     }
     #dealer-area {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       background: #ffa502;
       color: black;
       font-weight: bold;
       padding: 1em;
       border-radius: 10px;
-      width: 300px;
+      min-width: 150px;
     }
     .dealer-cards {
       margin-top: 0.5em;
@@ -59,17 +61,14 @@
       justify-content: center;
       gap: 8px;
     }
-    #player-slots {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1em;
-      width: 100%;
-    }
     .table-slot {
+      position: absolute;
       background: #1e272e;
       border-radius: 10px;
       padding: 1em;
+      min-width: 120px;
       min-height: 100px;
+      text-align: center;
     }
     .slot-cards {
       display: flex;
@@ -115,14 +114,13 @@
       Dealer:
       <div class="dealer-cards" id="dealer-hand"></div>
     </div>
-    <div id="player-slots">
-      <div id="slot-0" class="table-slot"></div>
-      <div id="slot-1" class="table-slot"></div>
-      <div id="slot-2" class="table-slot"></div>
-      <div id="slot-3" class="table-slot"></div>
-      <div id="slot-4" class="table-slot"></div>
-      <div id="slot-5" class="table-slot"></div>
-    </div>
+    <!-- Sloty graczy rozmieszczone półkolem -->
+    <div id="slot-0" class="table-slot" style="left: 60px; top: 280px;"></div>
+    <div id="slot-1" class="table-slot" style="left: 220px; top: 360px;"></div>
+    <div id="slot-2" class="table-slot" style="left: 400px; top: 400px;"></div>
+    <div id="slot-3" class="table-slot" style="left: 580px; top: 400px;"></div>
+    <div id="slot-4" class="table-slot" style="left: 760px; top: 360px;"></div>
+    <div id="slot-5" class="table-slot" style="left: 900px; top: 280px;"></div>
   </div>
 
   <div id="countdown-timer"></div>
