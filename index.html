@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Karol's Kasyno Blackjack</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-cdrBlrKDWgC5DdD+5kykB8eFhEy6LoOMYA+2QIPT2gGI/uvRh3sl1b3w7RZt+5f5" crossorigin="anonymous"></script>
   <style>
     body {
       background: #1c1c1c;
@@ -76,21 +77,35 @@
   </div>
 
   <div id="game">
-    <input id="bet" type="number" placeholder="Zakład" />
-    <button onclick="startGame()">Start Blackjacka</button>
+    <button onclick="startRound()">Start Rundy</button>
     <h2>Twoja ręka:</h2>
     <div id="player-hand"></div>
     <h2>Dealer:</h2>
     <div id="dealer-hand"></div>
-    <button onclick="hit()">Dobierz kartę</button>
-    <button onclick="stand()">Pas</button>
     <p id="result"></p>
     <p id="balance"></p>
   </div>
 
   <script>
+    const socket = io('https://gadsino.onrender.com');
     let username = '';
     let currentTableId = '';
+
+    socket.on('table_update', (table) => {
+      const names = table.players.map(p => p.username);
+      document.getElementById('players-list').innerText = 'Gracze przy stole: ' + names.join(', ');
+    });
+
+    socket.on('round_started', (table) => {
+      const player = table.players.find(p => p.username === username);
+      document.getElementById('player-hand').innerText = player.hand.join(', ');
+      document.getElementById('dealer-hand').innerText = table.dealerHand.join(', ') + ', ?';
+      document.getElementById('result').innerText = 'Runda rozpoczęta';
+    });
+
+    socket.on('timer_end', () => {
+      document.getElementById('result').innerText = 'Koniec czasu rundy!';
+    });
 
     function updateUserInfo() {
       document.getElementById('logged-user').innerText = username;
@@ -120,8 +135,7 @@
     }
 
     function createTable() {
-      fetch('https://gadsino.onrender.com/create-table', {
-        method: 'POST' })
+      fetch('https://gadsino.onrender.com/create-table', { method: 'POST' })
         .then(res => res.json())
         .then(data => {
           currentTableId = data.tableId;
@@ -139,54 +153,12 @@
       .then(res => res.json())
       .then(data => {
         alert(data.message);
-        document.getElementById('players-list').innerText = 'Gracze przy stole: ' + data.players.join(', ');
+        socket.emit('join_table', { tableId: currentTableId, username });
       });
     }
 
-    function startGame() {
-      const bet = parseInt(document.getElementById('bet').value);
-      fetch('https://gadsino.onrender.com/blackjack/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, bet })
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById('player-hand').innerText = data.playerHand.join(', ');
-        document.getElementById('dealer-hand').innerText = data.dealerHand.join(', ') + ', ?';
-        document.getElementById('result').innerText = '';
-        updateUserInfo();
-      });
-    }
-
-    function hit() {
-      fetch('https://gadsino.onrender.com/blackjack/hit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username })
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById('player-hand').innerText = data.playerHand.join(', ');
-        if (data.status === 'bust') document.getElementById('result').innerText = 'Przegiąłeś!';
-        updateUserInfo();
-      });
-    }
-
-    function stand() {
-      fetch('https://gadsino.onrender.com/blackjack/stand', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username })
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById('dealer-hand').innerText = data.dealerHand.join(', ');
-        document.getElementById('player-hand').innerText = data.playerHand.join(', ');
-        document.getElementById('result').innerText = data.result.toUpperCase();
-        document.getElementById('balance').innerText = 'Saldo: ' + data.balance + ' żetonów';
-        updateUserInfo();
-      });
+    function startRound() {
+      socket.emit('start_round', { tableId: currentTableId });
     }
   </script>
 </body>
