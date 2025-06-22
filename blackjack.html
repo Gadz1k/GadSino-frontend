@@ -25,24 +25,6 @@
     button:hover {
       background: #e84118;
     }
-    #game {
-      margin-top: 2em;
-    }
-    #player-hand, .dealer-cards {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 1em;
-    }
-    #player-hand img, .dealer-cards img {
-      height: 80px;
-    }
-    #result {
-      font-size: 1.5em;
-      font-weight: bold;
-      margin-top: 1em;
-    }
     h1 {
       color: #ffa502;
     }
@@ -55,46 +37,68 @@
       border-radius: 10px;
       text-align: left;
     }
-    #table {
+    #table-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1em;
+      max-width: 1400px;
+      margin: 2em auto;
+    }
+    #dealer-area {
+      background: #ffa502;
+      color: black;
+      font-weight: bold;
+      padding: 1em;
+      border-radius: 10px;
+      width: 300px;
+    }
+    .dealer-cards {
+      margin-top: 0.5em;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+    #player-slots {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 1em;
-      max-width: 1000px;
-      margin: 3em auto 1em auto;
-      padding: 1em;
-      background: #2f3542;
-      border-radius: 10px;
+      width: 100%;
     }
     .table-slot {
       background: #1e272e;
       border-radius: 10px;
       padding: 1em;
-      color: white;
-      min-height: 60px;
+      min-height: 100px;
     }
-    .dealer-slot {
-      grid-column: span 3;
-      text-align: center;
-      background: #ffa502;
-      color: black;
-      font-weight: bold;
-    }
-    .table-slot button {
+    .slot-cards {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: wrap;
       margin-top: 0.5em;
-      padding: 0.3em 1em;
-      background-color: #3742fa;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
     }
-    .table-slot button:hover {
-      background-color: #2f3542;
+    .table-slot img, .dealer-cards img, #player-hand img {
+      height: 70px;
     }
     #countdown-timer {
       font-size: 1.5em;
       margin-top: 10px;
       color: #00ffcc;
+    }
+    #game {
+      margin-top: 2em;
+    }
+    #player-hand {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 1em;
+    }
+    #result {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-top: 1em;
     }
   </style>
 </head>
@@ -105,15 +109,22 @@
     <div><strong>Saldo:</strong> <span id="user-balance">--</span> żetonów</div>
     <button id="leave-btn" style="display:none" onclick="leaveTable()">Opuść stół</button>
   </div>
-  <div id="table">
-    <div class="dealer-slot">Dealer: <div class="dealer-cards" id="dealer-hand"></div></div>
-    <div id="slot-0" class="table-slot"></div>
-    <div id="slot-1" class="table-slot"></div>
-    <div id="slot-2" class="table-slot"></div>
-    <div id="slot-3" class="table-slot"></div>
-    <div id="slot-4" class="table-slot"></div>
-    <div id="slot-5" class="table-slot"></div>
+
+  <div id="table-container">
+    <div id="dealer-area">
+      Dealer:
+      <div class="dealer-cards" id="dealer-hand"></div>
+    </div>
+    <div id="player-slots">
+      <div id="slot-0" class="table-slot"></div>
+      <div id="slot-1" class="table-slot"></div>
+      <div id="slot-2" class="table-slot"></div>
+      <div id="slot-3" class="table-slot"></div>
+      <div id="slot-4" class="table-slot"></div>
+      <div id="slot-5" class="table-slot"></div>
+    </div>
   </div>
+
   <div id="countdown-timer"></div>
   <div id="game">
     <div id="betting-controls">
@@ -128,6 +139,7 @@
     <div id="player-hand"></div>
     <p id="result"></p>
   </div>
+
   <script>
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user || !user.username) {
@@ -140,25 +152,23 @@
     const defaultTableId = 'default';
     let joinedSlot = null;
 
-    const basePath = window.location.pathname.includes('GadSino-frontend') ? '/GadSino-frontend/' : '/';
-
     document.getElementById('logged-user').innerText = username;
 
     socket.on('table_update', updateHands);
-    socket.on('round_started', (table) => {
+    socket.on('round_started', table => {
       updateHands(table);
       document.getElementById('betting-controls').style.display = 'none';
       document.getElementById('countdown-timer').innerText = '';
     });
-    socket.on('round_result', (table) => {
+    socket.on('round_result', table => {
       updateHands(table);
       document.getElementById('betting-controls').style.display = 'inline-block';
     });
-    socket.on('your_turn', (turnUser) => {
+    socket.on('your_turn', turnUser => {
       document.getElementById('actions').style.display = turnUser === username ? 'block' : 'none';
       document.getElementById('result').innerText = turnUser === username ? 'Twoja tura!' : `Tura gracza: ${turnUser}`;
     });
-    socket.on('countdown_tick', (secondsLeft) => {
+    socket.on('countdown_tick', secondsLeft => {
       document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
     });
 
@@ -168,7 +178,7 @@
       const val = map[card] || card;
       const suits = ['clubs', 'diamonds', 'hearts', 'spades'];
       const suit = suits[Math.floor(Math.random() * 4)];
-      return `<img src="${basePath}svg-cards/${val}_of_${suit}.svg" alt="${card}" />`;
+      return `<img src="svg-cards/${val}_of_${suit}.svg" alt="${card}" />`;
     }
 
     function updateHands(table) {
@@ -177,7 +187,7 @@
         const el = document.getElementById(`slot-${i}`);
         if (player) {
           const cardsHTML = player.hand?.map(getCardImg).join('') || '';
-          el.innerHTML = `<b>${player.username}</b>:<br>${cardsHTML}`;
+          el.innerHTML = `<b>${player.username}:</b><div class="slot-cards">${cardsHTML}</div>`;
           if (player.username === username) {
             joinedSlot = i;
             document.getElementById('player-hand').innerHTML = cardsHTML;
