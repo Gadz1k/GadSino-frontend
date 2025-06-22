@@ -28,15 +28,21 @@
     #game {
       margin-top: 2em;
     }
-    #player-hand, .dealer-cards {
+    #player-hand {
+      margin: 1em auto;
+      font-size: 1.3em;
+      background: #2f3542;
+      padding: 1em;
+      border-radius: 10px;
+      width: fit-content;
       display: flex;
       justify-content: center;
-      flex-wrap: wrap;
       gap: 10px;
-      margin-top: 1em;
+      flex-wrap: wrap;
     }
-    #player-hand img, .dealer-cards img {
-      height: 80px;
+    #player-hand img {
+      width: 70px;
+      height: auto;
     }
     #result {
       font-size: 1.5em;
@@ -70,7 +76,11 @@
       border-radius: 10px;
       padding: 1em;
       color: white;
-      min-height: 60px;
+      min-height: 120px;
+    }
+    .table-slot img {
+      width: 60px;
+      margin: 2px;
     }
     .dealer-slot {
       grid-column: span 3;
@@ -78,6 +88,7 @@
       background: #ffa502;
       color: black;
       font-weight: bold;
+      padding: 1em;
     }
     .table-slot button {
       margin-top: 0.5em;
@@ -100,13 +111,15 @@
 </head>
 <body>
   <h1>♠ Karol's Kasyno ♠</h1>
+
   <div id="user-info">
-    <div><strong>Zalogowany jako:</strong> <span id="logged-user">--</span></div>
-    <div><strong>Saldo:</strong> <span id="user-balance">--</span> żetonów</div>
+    <div><strong>Zalogowany jako:</strong> <span id="logged-user">–</span></div>
+    <div><strong>Saldo:</strong> <span id="user-balance">–</span> żetonów</div>
     <button id="leave-btn" style="display:none" onclick="leaveTable()">Opuść stół</button>
   </div>
+
   <div id="table">
-    <div class="dealer-slot">Dealer: <div class="dealer-cards" id="dealer-hand"></div></div>
+    <div class="dealer-slot">Dealer: <span id="dealer-hand"></span></div>
     <div id="slot-0" class="table-slot"></div>
     <div id="slot-1" class="table-slot"></div>
     <div id="slot-2" class="table-slot"></div>
@@ -114,20 +127,25 @@
     <div id="slot-4" class="table-slot"></div>
     <div id="slot-5" class="table-slot"></div>
   </div>
+
   <div id="countdown-timer"></div>
+
   <div id="game">
     <div id="betting-controls">
       <input id="bet-amount" placeholder="Twoja stawka" type="number" />
       <button onclick="placeBet()">Postaw</button>
     </div>
+
     <div id="actions" style="display:none">
       <button onclick="hit()">Dobierz</button>
       <button onclick="stand()">Stój</button>
     </div>
+
     <h2>Twoja ręka:</h2>
     <div id="player-hand"></div>
     <p id="result"></p>
   </div>
+
   <script>
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user || !user.username) {
@@ -143,50 +161,77 @@
     document.getElementById('logged-user').innerText = username;
 
     socket.on('table_update', updateHands);
+
     socket.on('round_started', (table) => {
       updateHands(table);
       document.getElementById('betting-controls').style.display = 'none';
       document.getElementById('countdown-timer').innerText = '';
     });
+
     socket.on('round_result', (table) => {
       updateHands(table);
       document.getElementById('betting-controls').style.display = 'inline-block';
     });
+
     socket.on('your_turn', (turnUser) => {
       document.getElementById('actions').style.display = turnUser === username ? 'block' : 'none';
       document.getElementById('result').innerText = turnUser === username ? 'Twoja tura!' : `Tura gracza: ${turnUser}`;
     });
+
     socket.on('countdown_tick', (secondsLeft) => {
       document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
     });
-
-    function getCardImg(card) {
-      if (card === '❓' || !card) return ''; // ❓
-      const map = { 'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace' };
-      const val = map[card] || card;
-      const suits = ['clubs', 'diamonds', 'hearts', 'spades'];
-      const suit = suits[Math.floor(Math.random() * 4)];
-      return `<img src="svg-cards/${val}_of_${suit}.svg" alt="${card}" />`;
-    }
 
     function updateHands(table) {
       joinedSlot = null;
       table.players.forEach((player, i) => {
         const el = document.getElementById(`slot-${i}`);
         if (player) {
-          const cardsHTML = player.hand?.map(getCardImg).join('') || '';
-          el.innerHTML = `<b>${player.username}</b>:<br>${cardsHTML}`;
+          el.innerHTML = `<b>${player.username}</b><br>`;
+          player.hand.forEach(card => {
+            const img = document.createElement('img');
+            img.src = `/svg-cards/${formatCardFilename(card)}.svg`;
+            el.appendChild(img);
+          });
           if (player.username === username) {
             joinedSlot = i;
-            document.getElementById('player-hand').innerHTML = cardsHTML;
+            const playerHandDiv = document.getElementById('player-hand');
+            playerHandDiv.innerHTML = '';
+            player.hand.forEach(card => {
+              const img = document.createElement('img');
+              img.src = `/svg-cards/${formatCardFilename(card)}.svg`;
+              playerHandDiv.appendChild(img);
+            });
             document.getElementById('leave-btn').style.display = 'inline-block';
           }
         } else {
           el.innerHTML = joinedSlot === null ? `<button onclick="joinSlot(${i})">Dołącz</button>` : 'Wolne miejsce';
         }
       });
-      document.getElementById('dealer-hand').innerHTML = table.dealerHand?.map(getCardImg).join('') || '';
+
+      const dealerEl = document.getElementById('dealer-hand');
+      dealerEl.innerHTML = '';
+      table.dealerHand.forEach(card => {
+        const img = document.createElement('img');
+        img.src = card === '❓' ? '/svg-cards/back.svg' : `/svg-cards/${formatCardFilename(card)}.svg`;
+        img.style.width = '60px';
+        dealerEl.appendChild(img);
+      });
+
       updateUserInfo();
+    }
+
+    function formatCardFilename(card) {
+      if (typeof card === 'number') return `${card}_of_spades`; // fallback
+      const suits = ['clubs', 'diamonds', 'hearts', 'spades'];
+      const values = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+      for (let suit of suits) {
+        for (let val of values) {
+          const filename = `${val}_of_${suit}`;
+          if (card.toUpperCase() === val) return filename;
+        }
+      }
+      return 'back';
     }
 
     function joinSlot(slotIndex) {
@@ -205,7 +250,7 @@
       fetch(`https://gadsino.onrender.com/player/${username}`)
         .then(res => res.json())
         .then(data => document.getElementById('user-balance').innerText = data.balance)
-        .catch(() => document.getElementById('user-balance').innerText = '--');
+        .catch(() => document.getElementById('user-balance').innerText = '–');
     }
 
     function placeBet() {
