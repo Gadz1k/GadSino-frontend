@@ -158,7 +158,7 @@
     socket.on('round_result', (table) => {
       updateHands(table);
       const player = table.players.find(p => p && p.username === username);
-      document.getElementById('result').innerText = `Wynik: ${player.result}`;
+      document.getElementById('result').innerText = `Wynik: ${player?.result || ''}`;
       updateUserInfo();
     });
 
@@ -208,7 +208,22 @@
         });
     }
 
+    function placeBet() {
+      const amount = parseInt(document.getElementById('bet-amount').value);
+      if (!amount || amount <= 0) return alert('Podaj poprawną stawkę');
+      socket.emit('place_bet', { tableId: defaultTableId, username, amount });
+    }
+
+    function hit() {
+      socket.emit('player_action', { tableId: defaultTableId, username, action: 'hit' });
+    }
+
+    function stand() {
+      socket.emit('player_action', { tableId: defaultTableId, username, action: 'stand' });
+    }
+
     updateUserInfo();
+    // nie dołączamy automatycznie — czekamy aż gracz kliknie slot
   </script>
 </body>
 </html>
