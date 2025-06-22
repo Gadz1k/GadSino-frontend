@@ -25,10 +25,10 @@
     button:hover {
       background: #e84118;
     }
-    #game, #lobby {
+    #game {
       margin-top: 2em;
     }
-    #player-hand, #dealer-hand, #players-list, #other-hands {
+    #player-hand {
       margin: 1em auto;
       font-size: 1.3em;
       background: #2f3542;
@@ -53,6 +53,30 @@
       border-radius: 10px;
       text-align: left;
     }
+    #table {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1em;
+      max-width: 1000px;
+      margin: 3em auto 1em auto;
+      padding: 1em;
+      background: #2f3542;
+      border-radius: 10px;
+    }
+    .table-slot {
+      background: #1e272e;
+      border-radius: 10px;
+      padding: 1em;
+      color: white;
+      min-height: 60px;
+    }
+    .dealer-slot {
+      grid-column: span 3;
+      text-align: center;
+      background: #ffa502;
+      color: black;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -63,8 +87,14 @@
     <div><strong>Saldo:</strong> <span id="user-balance">–</span> żetonów</div>
   </div>
 
-  <div id="lobby">
-    <div id="players-list"></div>
+  <div id="table">
+    <div class="dealer-slot">Dealer: <span id="dealer-hand"></span></div>
+    <div id="slot-0" class="table-slot"></div>
+    <div id="slot-1" class="table-slot"></div>
+    <div id="slot-2" class="table-slot"></div>
+    <div id="slot-3" class="table-slot"></div>
+    <div id="slot-4" class="table-slot"></div>
+    <div id="slot-5" class="table-slot"></div>
   </div>
 
   <div id="game">
@@ -78,28 +108,23 @@
 
     <h2>Twoja ręka:</h2>
     <div id="player-hand"></div>
-    <h2>Dealer:</h2>
-    <div id="dealer-hand"></div>
-    <div id="other-hands"></div>
     <p id="result"></p>
   </div>
 
   <script>
-    // Sprawdź czy użytkownik jest zalogowany, jeśli nie, wróć do index.html
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user || !user.username) {
       alert('Musisz się najpierw zalogować!');
       window.location.href = 'index.html';
     }
-
+    const username = user.username;
     const socket = io('https://gadsino.onrender.com');
     const defaultTableId = 'default';
 
     document.getElementById('logged-user').innerText = username;
 
     socket.on('table_update', (table) => {
-      const names = table.players.filter(p => p).map(p => p.username);
-      document.getElementById('players-list').innerText = 'Gracze przy stole: ' + names.join(', ');
+      updateHands(table);
     });
 
     socket.on('round_started', (table) => {
@@ -124,26 +149,27 @@
       updateUserInfo();
     });
 
-    socket.on('player_updated', ({ username: user, hand }) => {
-      if (user === username) {
-        document.getElementById('player-hand').innerText = hand.join(', ');
-      } else {
-        const playerDivs = Array.from(document.getElementById('other-hands').children);
-        playerDivs.forEach(div => {
-          if (div.innerHTML.includes(user)) {
-            div.innerHTML = `<b>${user}</b>: ${hand.join(', ')}`;
-          }
-        });
-      }
+    socket.on('player_updated', ({ username: userUpdated, hand }) => {
+      const slots = Array.from(document.querySelectorAll('.table-slot'));
+      slots.forEach(slot => {
+        if (slot.innerHTML.includes(userUpdated)) {
+          slot.innerHTML = `<b>${userUpdated}</b>: ${hand.join(', ')}`;
+        }
+      });
     });
 
     function updateHands(table) {
-      const player = table.players.find(p => p && p.username === username);
-      if (!player) return;
-      document.getElementById('player-hand').innerText = player.hand.join(', ');
+      table.players.forEach((player, i) => {
+        if (!player) return;
+        const el = document.getElementById(`slot-${i}`);
+        if (player.username === username) {
+          el.innerHTML = `<b>${player.username}</b> (TY): ${player.hand.join(', ')}`;
+          document.getElementById('player-hand').innerText = player.hand.join(', ');
+        } else {
+          el.innerHTML = `<b>${player.username}</b>: ${player.hand.join(', ')}`;
+        }
+      });
       document.getElementById('dealer-hand').innerText = table.dealerHand.join(', ');
-      const others = table.players.filter(p => p && p.username !== username).map(p => `<div><b>${p.username}</b>: ${p.hand.join(', ')}</div>`).join('');
-      document.getElementById('other-hands').innerHTML = others;
     }
 
     function updateUserInfo() {
@@ -156,9 +182,8 @@
           document.getElementById('user-balance').innerText = '–';
         });
     }
-    updateUserInfo();
 
-    // Po wejściu do strony wysyłamy join_table żeby dołączyć do stołu
+    updateUserInfo();
     socket.emit('join_table', { tableId: defaultTableId, username });
 
     function placeBet() {
