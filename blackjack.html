@@ -172,7 +172,7 @@
 
     function leaveTable() {
       if (joinedSlot === null) return;
-      socket.emit('join_table', { tableId: defaultTableId, username, slotIndex: -1 });
+      socket.emit('leave_table', { tableId: defaultTableId, username });
       joinedSlot = null;
       document.getElementById('leave-btn').style.display = 'none';
     }
@@ -190,8 +190,13 @@
       socket.emit('place_bet', { tableId: defaultTableId, username, amount });
     }
 
-    function hit() { socket.emit('player_action', { tableId: defaultTableId, username, action: 'hit' }); }
-    function stand() { socket.emit('player_action', { tableId: defaultTableId, username, action: 'stand' }); }
+    function hit() {
+      socket.emit('player_action', { tableId: defaultTableId, username, action: 'hit' });
+    }
+
+    function stand() {
+      socket.emit('player_action', { tableId: defaultTableId, username, action: 'stand' });
+    }
 
     updateUserInfo();
   </script>
