@@ -94,7 +94,7 @@
 
     function updateUserInfo() {
       document.getElementById('logged-user').innerText = username;
-      fetch(`http://localhost:3000/player/${username}`)
+      fetch(`https://gadsino.onrender.com/player/${username}`)
         .then(res => res.json())
         .then(data => {
           document.getElementById('user-balance').innerText = data.balance;
@@ -106,7 +106,7 @@
 
     function register() {
       username = document.getElementById('username').value;
-      fetch('http://localhost:3000/register', {
+      fetch('https://gadsino.onrender.com/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username })
@@ -120,7 +120,7 @@
     }
 
     function createTable() {
-      fetch('http://localhost:3000/create-table', {
+      fetch('https://gadsino.onrender.com/create-table', {
         method: 'POST' })
         .then(res => res.json())
         .then(data => {
@@ -131,7 +131,7 @@
 
     function joinTable() {
       currentTableId = document.getElementById('table-id').value;
-      fetch('http://localhost:3000/join-table', {
+      fetch('https://gadsino.onrender.com/join-table', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, tableId: currentTableId })
@@ -145,7 +145,7 @@
 
     function startGame() {
       const bet = parseInt(document.getElementById('bet').value);
-      fetch('http://localhost:3000/blackjack/start', {
+      fetch('https://gadsino.onrender.com/blackjack/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, bet })
@@ -160,7 +160,7 @@
     }
 
     function hit() {
-      fetch('http://localhost:3000/blackjack/hit', {
+      fetch('https://gadsino.onrender.com/blackjack/hit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username })
@@ -174,7 +174,7 @@
     }
 
     function stand() {
-      fetch('http://localhost:3000/blackjack/stand', {
+      fetch('https://gadsino.onrender.com/blackjack/stand', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username })
