@@ -184,9 +184,9 @@
           if (!hasJoined) {
             el.innerHTML = `<button onclick="joinSlot(${i})">Dołącz</button>`;
           } else {
-            el.innerHTML = `Wolne miejsce`;
+            el.innerHTML = `<button disabled>Dołącz</button>`;
           }
-        }
+        }      
       });
       document.getElementById('dealer-hand').innerText = table.dealerHand?.join(', ') || '';
     }
