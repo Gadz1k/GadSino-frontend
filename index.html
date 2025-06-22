@@ -169,103 +169,89 @@
   </div>
 
   <script>
-    // Modale
     const loginModal = document.getElementById('login-modal');
     const registerModal = document.getElementById('register-modal');
-
-    // Przyciski otwierające
     const loginOpenBtn = document.getElementById('login-open-btn');
     const registerOpenBtn = document.getElementById('register-open-btn');
-
-    // Przyciski zamykające
     const loginCloseBtn = document.getElementById('login-close-btn');
     const registerCloseBtn = document.getElementById('register-close-btn');
-
-    // Elementy błędów
     const loginError = document.getElementById('login-error');
     const registerError = document.getElementById('register-error');
-
-    // Otwieranie modalów
+  
     loginOpenBtn.onclick = () => {
       loginError.style.display = 'none';
       loginError.textContent = '';
       loginModal.classList.add('active');
       registerModal.classList.remove('active');
     };
-
     registerOpenBtn.onclick = () => {
       registerError.style.display = 'none';
       registerError.textContent = '';
       registerModal.classList.add('active');
       loginModal.classList.remove('active');
     };
-
-    // Zamknięcie modalów
     loginCloseBtn.onclick = () => loginModal.classList.remove('active');
     registerCloseBtn.onclick = () => registerModal.classList.remove('active');
-
-    // Logowanie
+  
     document.getElementById('login-submit-btn').onclick = async () => {
       loginError.style.display = 'none';
       loginError.textContent = '';
       const username = document.getElementById('login-username').value.trim();
       const password = document.getElementById('login-password').value;
-
+  
       if (!username || !password) {
         loginError.style.display = 'block';
         loginError.textContent = 'Podaj nazwę użytkownika i hasło.';
         return;
       }
-
+  
       try {
         const res = await fetch('https://gadsino.onrender.com/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password }),
         });
+        const data = await res.json();
         if (!res.ok) {
-          const data = await res.json();
           loginError.style.display = 'block';
           loginError.textContent = data.message || 'Błąd logowania.';
           return;
         }
-        const data = await res.json();
         loginModal.classList.remove('active');
         alert(`Witaj, ${data.username}! Zalogowano pomyślnie.`);
-        // Tu możesz zapisać token do localStorage lub cookie
+        localStorage.setItem('user', JSON.stringify(data));
+        window.location.reload();
       } catch (e) {
         loginError.style.display = 'block';
         loginError.textContent = 'Błąd połączenia z serwerem.';
       }
     };
-
-    // Rejestracja
+  
     document.getElementById('register-submit-btn').onclick = async () => {
       registerError.style.display = 'none';
       registerError.textContent = '';
       const username = document.getElementById('register-username').value.trim();
       const email = document.getElementById('register-email').value.trim();
       const password = document.getElementById('register-password').value;
-
+  
       if (!username || !email || !password) {
         registerError.style.display = 'block';
         registerError.textContent = 'Wypełnij wszystkie pola.';
         return;
       }
-
+  
       try {
         const res = await fetch('https://gadsino.onrender.com/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, email, password }),
         });
+        const data = await res.json();
         if (!res.ok) {
-          const data = await res.json();
           registerError.style.display = 'block';
           registerError.textContent = data.message || 'Błąd rejestracji.';
           return;
         }
-        const data = await res.json();
         registerModal.classList.remove('active');
         alert('Zarejestrowano pomyślnie! Możesz się teraz zalogować.');
       } catch (e) {
@@ -273,14 +259,29 @@
         registerError.textContent = 'Błąd połączenia z serwerem.';
       }
     };
-
-    // Zamknij modale na ESC
+  
+    // ESC zamyka modale
     window.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
         loginModal.classList.remove('active');
         registerModal.classList.remove('active');
       }
     });
+  
+    // 🧠 LOGIKA ZALOGOWANEGO UŻYTKOWNIKA
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      loginOpenBtn.style.display = 'none';
+      registerOpenBtn.style.display = 'none';
+  
+      const userInfo = document.createElement('div');
+      userInfo.innerHTML = `👤 Zalogowany jako: ${user.username} | 💰 ${user.balance}`;
+      document.querySelector('header').appendChild(userInfo);
+  
+      document.querySelector('a[href="blackjack.html"] button').disabled = false;
+    } else {
+      document.querySelector('a[href="blackjack.html"] button').disabled = true;
+    }
   </script>
 </body>
 </html>
