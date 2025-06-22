@@ -28,13 +28,15 @@
     #game {
       margin-top: 2em;
     }
-    #player-hand {
-      margin: 1em auto;
-      font-size: 1.3em;
-      background: #2f3542;
-      padding: 1em;
-      border-radius: 10px;
-      width: 300px;
+    #player-hand, .dealer-cards {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 1em;
+    }
+    #player-hand img, .dealer-cards img {
+      height: 80px;
     }
     #result {
       font-size: 1.5em;
@@ -98,15 +100,13 @@
 </head>
 <body>
   <h1>♠ Karol's Kasyno ♠</h1>
-
   <div id="user-info">
-    <div><strong>Zalogowany jako:</strong> <span id="logged-user">–</span></div>
-    <div><strong>Saldo:</strong> <span id="user-balance">–</span> żetonów</div>
+    <div><strong>Zalogowany jako:</strong> <span id="logged-user">--</span></div>
+    <div><strong>Saldo:</strong> <span id="user-balance">--</span> żetonów</div>
     <button id="leave-btn" style="display:none" onclick="leaveTable()">Opuść stół</button>
   </div>
-
   <div id="table">
-    <div class="dealer-slot">Dealer: <span id="dealer-hand"></span></div>
+    <div class="dealer-slot">Dealer: <div class="dealer-cards" id="dealer-hand"></div></div>
     <div id="slot-0" class="table-slot"></div>
     <div id="slot-1" class="table-slot"></div>
     <div id="slot-2" class="table-slot"></div>
@@ -114,25 +114,20 @@
     <div id="slot-4" class="table-slot"></div>
     <div id="slot-5" class="table-slot"></div>
   </div>
-
   <div id="countdown-timer"></div>
-
   <div id="game">
     <div id="betting-controls">
       <input id="bet-amount" placeholder="Twoja stawka" type="number" />
       <button onclick="placeBet()">Postaw</button>
     </div>
-
     <div id="actions" style="display:none">
       <button onclick="hit()">Dobierz</button>
       <button onclick="stand()">Stój</button>
     </div>
-
     <h2>Twoja ręka:</h2>
     <div id="player-hand"></div>
     <p id="result"></p>
   </div>
-
   <script>
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user || !user.username) {
@@ -148,43 +143,49 @@
     document.getElementById('logged-user').innerText = username;
 
     socket.on('table_update', updateHands);
-
     socket.on('round_started', (table) => {
       updateHands(table);
       document.getElementById('betting-controls').style.display = 'none';
       document.getElementById('countdown-timer').innerText = '';
     });
-
     socket.on('round_result', (table) => {
       updateHands(table);
       document.getElementById('betting-controls').style.display = 'inline-block';
     });
-
     socket.on('your_turn', (turnUser) => {
       document.getElementById('actions').style.display = turnUser === username ? 'block' : 'none';
       document.getElementById('result').innerText = turnUser === username ? 'Twoja tura!' : `Tura gracza: ${turnUser}`;
     });
-
     socket.on('countdown_tick', (secondsLeft) => {
       document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
     });
+
+    function getCardImg(card) {
+      if (card === '❓' || !card) return ''; // ❓
+      const map = { 'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace' };
+      const val = map[card] || card;
+      const suits = ['clubs', 'diamonds', 'hearts', 'spades'];
+      const suit = suits[Math.floor(Math.random() * 4)];
+      return `<img src="svg-cards/${val}_of_${suit}.svg" alt="${card}" />`;
+    }
 
     function updateHands(table) {
       joinedSlot = null;
       table.players.forEach((player, i) => {
         const el = document.getElementById(`slot-${i}`);
         if (player) {
-          el.innerHTML = `<b>${player.username}</b>: ${player.hand?.join(', ')}`;
+          const cardsHTML = player.hand?.map(getCardImg).join('') || '';
+          el.innerHTML = `<b>${player.username}</b>:<br>${cardsHTML}`;
           if (player.username === username) {
             joinedSlot = i;
-            document.getElementById('player-hand').innerText = player.hand.join(', ');
+            document.getElementById('player-hand').innerHTML = cardsHTML;
             document.getElementById('leave-btn').style.display = 'inline-block';
           }
         } else {
           el.innerHTML = joinedSlot === null ? `<button onclick="joinSlot(${i})">Dołącz</button>` : 'Wolne miejsce';
         }
       });
-      document.getElementById('dealer-hand').innerText = table.dealerHand?.join(', ') || '';
+      document.getElementById('dealer-hand').innerHTML = table.dealerHand?.map(getCardImg).join('') || '';
       updateUserInfo();
     }
 
@@ -204,7 +205,7 @@
       fetch(`https://gadsino.onrender.com/player/${username}`)
         .then(res => res.json())
         .then(data => document.getElementById('user-balance').innerText = data.balance)
-        .catch(() => document.getElementById('user-balance').innerText = '–');
+        .catch(() => document.getElementById('user-balance').innerText = '--');
     }
 
     function placeBet() {
