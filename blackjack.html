@@ -170,9 +170,12 @@
     });
 
     function getCardImg(card) {
-      if (!card || card === '❓') return '';
-      const { rank, suit } = card;
-      return `<img src="svg-cards/${rank}_of_${suit}.svg" alt="${rank} of ${suit}" />`;
+      if (!card || card.rank === '❓') {
+        return '<img src="svg-cards/back.svg" alt="Zakryta karta">';
+      }
+      const map = { 'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace' };
+      const val = map[card.rank] || card.rank;
+      return `<img src="svg-cards/${val}_of_${card.suit}.svg" alt="${card.rank}" />`;
     }
 
     function updateHands(table) {
