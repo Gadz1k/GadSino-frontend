@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Karol's Kasyno Blackjack</title>
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <style>
@@ -12,14 +12,12 @@
       text-align: center;
       padding: 2em;
     }
-    input, button, select {
+    button, select {
       padding: 0.5em;
       margin: 0.5em;
       border-radius: 5px;
       border: none;
       font-size: 1em;
-    }
-    button {
       background: #ff4757;
       color: white;
       cursor: pointer;
@@ -65,18 +63,6 @@
     <div><strong>Saldo:</strong> <span id="user-balance">–</span> żetonów</div>
   </div>
 
-  <input id="username" placeholder="Twoja ksywka" />
-  <select id="slot-select">
-    <option value="">Wybierz slot</option>
-    <option value="0">Slot 1</option>
-    <option value="1">Slot 2</option>
-    <option value="2">Slot 3</option>
-    <option value="3">Slot 4</option>
-    <option value="4">Slot 5</option>
-    <option value="5">Slot 6</option>
-  </select>
-  <button onclick="register()">Zaloguj się i dołącz</button>
-
   <div id="lobby">
     <div id="players-list"></div>
   </div>
@@ -99,12 +85,20 @@
   </div>
 
   <script>
+    // Sprawdź czy użytkownik jest zalogowany, jeśli nie, wróć do index.html
+    let username = localStorage.getItem('username');
+    if (!username) {
+      alert('Musisz się najpierw zalogować!');
+      window.location.href = 'index.html';
+    }
+
     const socket = io('https://gadsino.onrender.com');
     const defaultTableId = 'default';
-    let username = '';
-  
+
+    document.getElementById('logged-user').innerText = username;
+
     socket.on('table_update', (table) => {
-      const names = table.players.map(p => p.username);
+      const names = table.players.filter(p => p).map(p => p.username);
       document.getElementById('players-list').innerText = 'Gracze przy stole: ' + names.join(', ');
     });
 
@@ -125,7 +119,7 @@
 
     socket.on('round_result', (table) => {
       updateHands(table);
-      const player = table.players.find(p => p.username === username);
+      const player = table.players.find(p => p && p.username === username);
       document.getElementById('result').innerText = `Wynik: ${player.result}`;
       updateUserInfo();
     });
@@ -144,15 +138,15 @@
     });
 
     function updateHands(table) {
-      const player = table.players.find(p => p.username === username);
+      const player = table.players.find(p => p && p.username === username);
+      if (!player) return;
       document.getElementById('player-hand').innerText = player.hand.join(', ');
       document.getElementById('dealer-hand').innerText = table.dealerHand.join(', ');
-      const others = table.players.filter(p => p.username !== username).map(p => `<div><b>${p.username}</b>: ${p.hand.join(', ')}</div>`).join('');
+      const others = table.players.filter(p => p && p.username !== username).map(p => `<div><b>${p.username}</b>: ${p.hand.join(', ')}</div>`).join('');
       document.getElementById('other-hands').innerHTML = others;
     }
 
     function updateUserInfo() {
-      document.getElementById('logged-user').innerText = username;
       fetch(`https://gadsino.onrender.com/player/${username}`)
         .then(res => res.json())
         .then(data => {
@@ -162,31 +156,10 @@
           document.getElementById('user-balance').innerText = '–';
         });
     }
+    updateUserInfo();
 
-    function register() {
-      username = document.getElementById('username').value;
-      const slot = document.getElementById('slot-select').value;
-      if (!username || slot === '') return alert("Podaj ksywkę i wybierz slot");
-
-      fetch('https://gadsino.onrender.com/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username })
-      })
-      .then(() => {
-        fetch('https://gadsino.onrender.com/join-table', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, tableId: defaultTableId, slot })
-        })
-        .then(res => res.json())
-        .then(data => {
-          alert(data.message);
-          socket.emit('join_table', { tableId: defaultTableId, username });
-          updateUserInfo();
-        });
-      });
-    }
+    // Po wejściu do strony wysyłamy join_table żeby dołączyć do stołu
+    socket.emit('join_table', { tableId: defaultTableId, username });
 
     function placeBet() {
       const amount = parseInt(document.getElementById('bet-amount').value);
