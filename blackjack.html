@@ -77,6 +77,18 @@
       color: black;
       font-weight: bold;
     }
+    .table-slot button {
+      margin-top: 0.5em;
+      padding: 0.3em 1em;
+      background-color: #3742fa;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .table-slot button:hover {
+      background-color: #2f3542;
+    }
   </style>
 </head>
 <body>
@@ -120,6 +132,7 @@
     const username = user.username;
     const socket = io('https://gadsino.onrender.com');
     const defaultTableId = 'default';
+    let hasJoined = false;
 
     document.getElementById('logged-user').innerText = username;
 
@@ -160,16 +173,28 @@
 
     function updateHands(table) {
       table.players.forEach((player, i) => {
-        if (!player) return;
         const el = document.getElementById(`slot-${i}`);
-        if (player.username === username) {
-          el.innerHTML = `<b>${player.username}</b> (TY): ${player.hand.join(', ')}`;
-          document.getElementById('player-hand').innerText = player.hand.join(', ');
+        if (player) {
+          el.innerHTML = `<b>${player.username}</b>: ${player.hand?.join(', ') || ''}`;
+          if (player.username === username) {
+            hasJoined = true;
+            document.getElementById('player-hand').innerText = player.hand.join(', ');
+          }
         } else {
-          el.innerHTML = `<b>${player.username}</b>: ${player.hand.join(', ')}`;
+          if (!hasJoined) {
+            el.innerHTML = `<button onclick="joinSlot(${i})">Dołącz</button>`;
+          } else {
+            el.innerHTML = `Wolne miejsce`;
+          }
         }
       });
-      document.getElementById('dealer-hand').innerText = table.dealerHand.join(', ');
+      document.getElementById('dealer-hand').innerText = table.dealerHand?.join(', ') || '';
+    }
+
+    function joinSlot(slotIndex) {
+      if (hasJoined) return;
+      socket.emit('join_table', { tableId: defaultTableId, username, slotIndex });
+      hasJoined = true;
     }
 
     function updateUserInfo() {
@@ -184,21 +209,6 @@
     }
 
     updateUserInfo();
-    socket.emit('join_table', { tableId: defaultTableId, username });
-
-    function placeBet() {
-      const amount = parseInt(document.getElementById('bet-amount').value);
-      if (!amount || amount <= 0) return alert('Podaj poprawną stawkę');
-      socket.emit('place_bet', { tableId: defaultTableId, username, amount });
-    }
-
-    function hit() {
-      socket.emit('player_action', { tableId: defaultTableId, username, action: 'hit' });
-    }
-
-    function stand() {
-      socket.emit('player_action', { tableId: defaultTableId, username, action: 'stand' });
-    }
   </script>
 </body>
 </html>
