@@ -147,13 +147,18 @@
     socket.on('round_result', updateHands);
 
     function updateHands(table) {
+      joinedSlot = null;
       table.players.forEach((player, i) => {
         const el = document.getElementById(`slot-${i}`);
-        el.innerHTML = player ? `<b>${player.username}</b>: ${player.hand?.join(', ')}` : `<button onclick="joinSlot(${i})">Dołącz</button>`;
-        if(player?.username === username) {
-          joinedSlot = i;
-          document.getElementById('player-hand').innerText = player.hand.join(', ');
-          document.getElementById('leave-btn').style.display = 'inline-block';
+        if (player) {
+          el.innerHTML = `<b>${player.username}</b>: ${player.hand?.join(', ')}`;
+          if (player.username === username) {
+            joinedSlot = i;
+            document.getElementById('player-hand').innerText = player.hand.join(', ');
+            document.getElementById('leave-btn').style.display = 'inline-block';
+          }
+        } else {
+          el.innerHTML = joinedSlot === null ? `<button onclick="joinSlot(${i})">Dołącz</button>` : 'Wolne miejsce';
         }
       });
       document.getElementById('dealer-hand').innerText = table.dealerHand?.join(', ') || '';
