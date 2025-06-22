@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Karol's Kasyno Blackjack</title>
+  <style>
+    body {
+      background: #1c1c1c;
+      color: #fff;
+      font-family: 'Courier New', Courier, monospace;
+      text-align: center;
+      padding: 2em;
+    }
+    input, button {
+      padding: 0.5em;
+      margin: 0.5em;
+      border-radius: 5px;
+      border: none;
+      font-size: 1em;
+    }
+    button {
+      background: #ff4757;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #e84118;
+    }
+    #game, #lobby {
+      margin-top: 2em;
+    }
+    #player-hand, #dealer-hand, #players-list {
+      margin: 1em auto;
+      font-size: 1.3em;
+      background: #2f3542;
+      padding: 1em;
+      border-radius: 10px;
+      width: 300px;
+    }
+    #result {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-top: 1em;
+    }
+    h1 {
+      color: #ffa502;
+    }
+    #user-info {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #2f3542;
+      padding: 1em;
+      border-radius: 10px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <h1>♠ Karol's Kasyno ♠</h1>
+
+  <div id="user-info">
+    <div><strong>Zalogowany jako:</strong> <span id="logged-user">–</span></div>
+    <div><strong>Saldo:</strong> <span id="user-balance">–</span> żetonów</div>
+  </div>
+
+  <input id="username" placeholder="Twoja ksywka" />
+  <button onclick="register()">Zaloguj się / Zarejestruj</button>
+
+  <div id="lobby">
+    <br><br>
+    <button onclick="createTable()">Stwórz nowy stół</button>
+    <input id="table-id" placeholder="Wklej ID stołu" />
+    <button onclick="joinTable()">Dołącz do stołu</button>
+    <div id="players-list"></div>
+  </div>
+
+  <div id="game">
+    <input id="bet" type="number" placeholder="Zakład" />
+    <button onclick="startGame()">Start Blackjacka</button>
+    <h2>Twoja ręka:</h2>
+    <div id="player-hand"></div>
+    <h2>Dealer:</h2>
+    <div id="dealer-hand"></div>
+    <button onclick="hit()">Dobierz kartę</button>
+    <button onclick="stand()">Pas</button>
+    <p id="result"></p>
+    <p id="balance"></p>
+  </div>
+
+  <script>
+    let username = '';
+    let currentTableId = '';
+
+    function updateUserInfo() {
+      document.getElementById('logged-user').innerText = username;
+      fetch(`http://localhost:3000/player/${username}`)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('user-balance').innerText = data.balance;
+        })
+        .catch(() => {
+          document.getElementById('user-balance').innerText = '–';
+        });
+    }
+
+    function register() {
+      username = document.getElementById('username').value;
+      fetch('http://localhost:3000/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message);
+        updateUserInfo();
+      })
+      .catch(() => alert('Błąd rejestracji.')); 
+    }
+
+    function createTable() {
+      fetch('http://localhost:3000/create-table', {
+        method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          currentTableId = data.tableId;
+          alert(`Stół stworzony! ID: ${data.tableId}`);
+        });
+    }
+
+    function joinTable() {
+      currentTableId = document.getElementById('table-id').value;
+      fetch('http://localhost:3000/join-table', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, tableId: currentTableId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message);
+        document.getElementById('players-list').innerText = 'Gracze przy stole: ' + data.players.join(', ');
+      });
+    }
+
+    function startGame() {
+      const bet = parseInt(document.getElementById('bet').value);
+      fetch('http://localhost:3000/blackjack/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, bet })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('player-hand').innerText = data.playerHand.join(', ');
+        document.getElementById('dealer-hand').innerText = data.dealerHand.join(', ') + ', ?';
+        document.getElementById('result').innerText = '';
+        updateUserInfo();
+      });
+    }
+
+    function hit() {
+      fetch('http://localhost:3000/blackjack/hit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('player-hand').innerText = data.playerHand.join(', ');
+        if (data.status === 'bust') document.getElementById('result').innerText = 'Przegiąłeś!';
+        updateUserInfo();
+      });
+    }
+
+    function stand() {
+      fetch('http://localhost:3000/blackjack/stand', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('dealer-hand').innerText = data.dealerHand.join(', ');
+        document.getElementById('player-hand').innerText = data.playerHand.join(', ');
+        document.getElementById('result').innerText = data.result.toUpperCase();
+        document.getElementById('balance').innerText = 'Saldo: ' + data.balance + ' żetonów';
+        updateUserInfo();
+      });
+    }
+  </script>
+</body>
+</html>
