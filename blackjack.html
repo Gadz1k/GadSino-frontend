@@ -89,6 +89,11 @@
     .table-slot button:hover {
       background-color: #2f3542;
     }
+    #countdown-timer {
+      font-size: 1.5em;
+      margin-top: 10px;
+      color: #00ffcc;
+    }
   </style>
 </head>
 <body>
@@ -109,6 +114,8 @@
     <div id="slot-4" class="table-slot"></div>
     <div id="slot-5" class="table-slot"></div>
   </div>
+
+  <div id="countdown-timer"></div>
 
   <div id="game">
     <div id="betting-controls">
@@ -132,6 +139,7 @@
       alert('Musisz się najpierw zalogować!');
       window.location.href = 'index.html';
     }
+
     const username = user.username;
     const socket = io('https://gadsino.onrender.com');
     const defaultTableId = 'default';
@@ -140,17 +148,25 @@
     document.getElementById('logged-user').innerText = username;
 
     socket.on('table_update', updateHands);
+
     socket.on('round_started', (table) => {
       updateHands(table);
       document.getElementById('betting-controls').style.display = 'none';
+      document.getElementById('countdown-timer').innerText = '';
     });
+
     socket.on('round_result', (table) => {
       updateHands(table);
       document.getElementById('betting-controls').style.display = 'inline-block';
     });
+
     socket.on('your_turn', (turnUser) => {
       document.getElementById('actions').style.display = turnUser === username ? 'block' : 'none';
       document.getElementById('result').innerText = turnUser === username ? 'Twoja tura!' : `Tura gracza: ${turnUser}`;
+    });
+
+    socket.on('countdown_tick', (secondsLeft) => {
+      document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
     });
 
     function updateHands(table) {
