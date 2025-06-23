@@ -347,13 +347,18 @@
           const htmlSlot = document.getElementById(`slot-${i}`);
           if (!svgSlot || !htmlSlot) continue;
     
-          const svgRect = svgSlot.getBoundingClientRect();
-          const objectRect = svgObject.getBoundingClientRect();
-    
-          htmlSlot.style.left = `${svgRect.left - objectRect.left}px`;
-          htmlSlot.style.top = `${svgRect.top - objectRect.top}px`;
-          htmlSlot.style.width = `${svgRect.width}px`;
-          htmlSlot.style.height = `${svgRect.height}px`;
+          const bbox = svgSlot.getBBox();
+          const svgRoot = svgDoc.documentElement;
+          
+          const left = (bbox.x / svgRoot.viewBox.baseVal.width) * 100;
+          const top = (bbox.y / svgRoot.viewBox.baseVal.height) * 100;
+          const width = (bbox.width / svgRoot.viewBox.baseVal.width) * 100;
+          const height = (bbox.height / svgRoot.viewBox.baseVal.height) * 100;
+          
+          htmlSlot.style.left = `${left}%`;
+          htmlSlot.style.top = `${top}%`;
+          htmlSlot.style.width = `${width}%`;
+          htmlSlot.style.height = `${height}%`;
           htmlSlot.style.position = 'absolute';
           htmlSlot.style.zIndex = '5';
         }
