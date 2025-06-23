@@ -204,12 +204,13 @@
     function updateHands(table) {
       joinedSlot = null;
       let playerIsSeated = false;
-  
+    
       table.players.forEach((player, i) => {
         const el = document.getElementById(`slot-${i}`);
         if (player) {
           const cardsHTML = player.hand?.map(getCardImg).join('') || '';
-          el.innerHTML = `<b>${player.username}:</b><div class="slot-cards">${cardsHTML}</div>`;
+          const betInfo = player.bet > 0 ? `: 💰 ${player.bet} żetonów` : '';
+          el.innerHTML = `<b>${player.username}${betInfo}</b><div class="slot-cards">${cardsHTML}</div>`;
           if (player.username === username) {
             joinedSlot = i;
             playerIsSeated = true;
@@ -220,6 +221,15 @@
           el.innerHTML = joinedSlot === null ? `<button onclick="joinSlot(${i})">Dołącz</button>` : 'Wolne miejsce';
         }
       });
+    
+      document.getElementById('dealer-hand').innerHTML = table.dealerHand?.map(getCardImg).join('') || '';
+      updateUserInfo();
+    
+      // 💰 Pokaż modal tylko gdy faza to "waiting_for_bets" i gracz siedzi
+      const chipModal = document.getElementById('chip-modal');
+      chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
+    }
+
   
       document.getElementById('dealer-hand').innerHTML = table.dealerHand?.map(getCardImg).join('') || '';
       updateUserInfo();
