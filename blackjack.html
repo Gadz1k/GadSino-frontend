@@ -200,6 +200,13 @@
     </div>
   </div>
 
+  <!-- W TYM MIEJSCU DODAJEMY SLOTY DO HTML, NA STAŁE -->
+  <div id="slot-0" class="table-slot"></div>
+  <div id="slot-1" class="table-slot"></div>
+  <div id="slot-2" class="table-slot"></div>
+  <div id="slot-3" class="table-slot"></div>
+  <div id="slot-4" class="table-slot"></div>
+
   <div id="countdown-timer"></div>
   <div id="game">
     <div id="actions" style="display:none">
@@ -337,20 +344,18 @@
         const svgDoc = svgObject.contentDocument;
         for (let i = 0; i < 5; i++) {
           const svgSlot = svgDoc.getElementById(`Slot-${i}`);
-          if (!svgSlot) continue;
+          const htmlSlot = document.getElementById(`slot-${i}`);
+          if (!svgSlot || !htmlSlot) continue;
+    
           const rect = svgSlot.getBoundingClientRect();
           const objectRect = svgObject.getBoundingClientRect();
-
-          const div = document.createElement('div');
-          div.className = 'table-slot';
-          div.id = `slot-${i}`;
-          div.style.left = `${rect.left - objectRect.left}px`;
-          div.style.top = `${rect.top - objectRect.top}px`;
-          div.style.width = `${rect.width}px`;
-          div.style.height = `${rect.height}px`;
-          div.style.position = 'absolute';
-
-          document.getElementById('table-container').appendChild(div);
+    
+          htmlSlot.style.left = `${rect.left - objectRect.left}px`;
+          htmlSlot.style.top = `${rect.top - objectRect.top}px`;
+          htmlSlot.style.width = `${rect.width}px`;
+          htmlSlot.style.height = `${rect.height}px`;
+          htmlSlot.style.position = 'absolute';
+          htmlSlot.style.zIndex = '5';
         }
       });
     });
