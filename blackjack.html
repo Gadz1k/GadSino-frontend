@@ -123,12 +123,6 @@
       transform: scale(1.1);
     }
 
-    #slot-0 { left: 12%; top: 56%; }
-    #slot-1 { left: 27%; top: 65.5%; }
-    #slot-2 { left: 44%; top: 70.5%; }
-    #slot-3 { left: 60.5%; top: 65.5%; }
-    #slot-4 { left: 75%; top: 56%; }
-
     #countdown-timer {
       font-size: 1.5em;
       color: #00ffcc;
@@ -199,18 +193,11 @@
   </div>
 
   <div id="table-container">
-    <object type="image/svg+xml" data="img/bj-table.svg"></object>
-
+    <object id="svg-table" type="image/svg+xml" data="img/bj-table.svg"></object>
     <div id="dealer-area">
       Dealer:
       <div class="dealer-cards" id="dealer-hand"></div>
     </div>
-
-    <div id="slot-0" class="table-slot"></div>
-    <div id="slot-1" class="table-slot"></div>
-    <div id="slot-2" class="table-slot"></div>
-    <div id="slot-3" class="table-slot"></div>
-    <div id="slot-4" class="table-slot"></div>
   </div>
 
   <div id="countdown-timer"></div>
@@ -229,6 +216,7 @@
     <img src="chips/100.svg" class="chip" onclick="placeBet(100)" />
     <img src="chips/500.svg" class="chip" onclick="placeBet(500)" />
   </div>
+
   <script>
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user || !user.username) {
@@ -274,7 +262,7 @@
 
       table.players.forEach((player, i) => {
         const el = document.getElementById(`slot-${i}`);
-        if (player) {
+        if (player && el) {
           const cardsHTML = player.hand?.map(getCardImg).join('') || '';
           const betInfo = player.bet > 0 ? `: 💰 ${player.bet} żetonów` : '';
           let resultText = '';
@@ -292,7 +280,7 @@
             playerIsSeated = true;
             document.getElementById('leave-btn').style.display = 'inline-block';
           }
-        } else {
+        } else if (el) {
           el.style.pointerEvents = 'auto';
           el.innerHTML = joinedSlot === null
             ? `<button class="join-btn" onclick="joinSlot(${i})">👤</button>`
@@ -341,6 +329,31 @@
 
     updateUserInfo();
     socket.emit('get_table_state', { tableId: defaultTableId });
+
+    // SLOT DIV CREATION BASED ON SVG ID POSITIONS
+    window.addEventListener('load', () => {
+      const svgObject = document.getElementById('svg-table');
+      svgObject.addEventListener('load', () => {
+        const svgDoc = svgObject.contentDocument;
+        for (let i = 0; i < 5; i++) {
+          const svgSlot = svgDoc.getElementById(`Slot-${i}`);
+          if (!svgSlot) continue;
+          const rect = svgSlot.getBoundingClientRect();
+          const objectRect = svgObject.getBoundingClientRect();
+
+          const div = document.createElement('div');
+          div.className = 'table-slot';
+          div.id = `slot-${i}`;
+          div.style.left = `${rect.left - objectRect.left}px`;
+          div.style.top = `${rect.top - objectRect.top}px`;
+          div.style.width = `${rect.width}px`;
+          div.style.height = `${rect.height}px`;
+          div.style.position = 'absolute';
+
+          document.getElementById('table-container').appendChild(div);
+        }
+      });
+    });
   </script>
 </body>
 </html>
