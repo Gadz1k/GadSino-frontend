@@ -337,23 +337,30 @@
     updateUserInfo();
     socket.emit('get_table_state', { tableId: defaultTableId });
 
-    // SLOT DIV CREATION BASED ON SVG ID POSITIONS
+        // SLOT DIV CREATION BASED ON SVG ID POSITIONS
     window.addEventListener('load', () => {
       const svgObject = document.getElementById('svg-table');
       svgObject.addEventListener('load', () => {
         const svgDoc = svgObject.contentDocument;
+        const svgRoot = svgDoc.documentElement;
+    
         for (let i = 0; i < 5; i++) {
           const svgSlot = svgDoc.getElementById(`Slot-${i}`);
           const htmlSlot = document.getElementById(`slot-${i}`);
           if (!svgSlot || !htmlSlot) continue;
     
-          const rect = svgSlot.getBoundingClientRect();
-          const objectRect = svgObject.getBoundingClientRect();
+          const bbox = svgSlot.getBBox();
     
-          htmlSlot.style.left = `${rect.left - objectRect.left}px`;
-          htmlSlot.style.top = `${rect.top - objectRect.top}px`;
-          htmlSlot.style.width = `${rect.width}px`;
-          htmlSlot.style.height = `${rect.height}px`;
+          // Przelicz na procenty względem SVG
+          const left = (bbox.x / svgRoot.viewBox.baseVal.width) * 100;
+          const top = (bbox.y / svgRoot.viewBox.baseVal.height) * 100;
+          const width = (bbox.width / svgRoot.viewBox.baseVal.width) * 100;
+          const height = (bbox.height / svgRoot.viewBox.baseVal.height) * 100;
+    
+          htmlSlot.style.left = `${left}%`;
+          htmlSlot.style.top = `${top}%`;
+          htmlSlot.style.width = `${width}%`;
+          htmlSlot.style.height = `${height}%`;
           htmlSlot.style.position = 'absolute';
           htmlSlot.style.zIndex = '5';
         }
