@@ -229,15 +229,6 @@
       const chipModal = document.getElementById('chip-modal');
       chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
     }
-
-  
-      document.getElementById('dealer-hand').innerHTML = table.dealerHand?.map(getCardImg).join('') || '';
-      updateUserInfo();
-  
-      // 💰 Pokaż modal tylko gdy faza to "waiting_for_bets" i gracz siedzi
-      const chipModal = document.getElementById('chip-modal');
-      chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
-    }
   
     function joinSlot(slotIndex) {
       if (joinedSlot !== null) return;
