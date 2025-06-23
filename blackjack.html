@@ -99,6 +99,26 @@
       font-weight: bold;
       margin-top: 1em;
     }
+    #chip-modal {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      padding: 1em;
+      border-radius: 15px 15px 0 0;
+      display: flex;
+      gap: 15px;
+      z-index: 999;
+    }
+    .chip {
+      height: 50px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .chip:hover {
+      transform: scale(1.2);
+    }
   </style>
 </head>
 <body>
@@ -124,10 +144,6 @@
 
   <div id="countdown-timer"></div>
   <div id="game">
-    <div id="betting-controls">
-      <input id="bet-amount" placeholder="Twoja stawka" type="number" />
-      <button onclick="placeBet()">Postaw</button>
-    </div>
     <div id="actions" style="display:none">
       <button onclick="hit()">Dobierz</button>
       <button onclick="stand()">Stój</button>
@@ -137,29 +153,38 @@
     <p id="result"></p>
   </div>
 
+  <!-- Żetony do obstawiania -->
+  <div id="chip-modal">
+    <img src="chips/10.svg" class="chip" onclick="placeBet(10)" />
+    <img src="chips/25.svg" class="chip" onclick="placeBet(25)" />
+    <img src="chips/50.svg" class="chip" onclick="placeBet(50)" />
+    <img src="chips/100.svg" class="chip" onclick="placeBet(100)" />
+    <img src="chips/500.svg" class="chip" onclick="placeBet(500)" />
+  </div>
+
   <script>
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user || !user.username) {
       alert('Musisz się najpierw zalogować!');
       window.location.href = 'index.html';
     }
-
+  
     const username = user.username;
     const socket = io('https://gadsino.onrender.com');
     const defaultTableId = 'default';
     let joinedSlot = null;
-
+  
     document.getElementById('logged-user').innerText = username;
-
+  
     socket.on('table_update', updateHands);
     socket.on('round_started', table => {
       updateHands(table);
-      document.getElementById('betting-controls').style.display = 'none';
       document.getElementById('countdown-timer').innerText = '';
+      document.getElementById('chip-modal').style.display = 'none';
     });
     socket.on('round_result', table => {
       updateHands(table);
-      document.getElementById('betting-controls').style.display = 'inline-block';
+      document.getElementById('chip-modal').style.display = 'none';
     });
     socket.on('your_turn', turnUser => {
       document.getElementById('actions').style.display = turnUser === username ? 'block' : 'none';
@@ -168,18 +193,18 @@
     socket.on('countdown_tick', secondsLeft => {
       document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
     });
-
+  
     function getCardImg(card) {
-      if (!card || card.rank === '❓') {
-        return '<img src="svg-cards/back.svg" alt="Zakryta karta">';
-      }
+      if (!card || card.rank === '❓') return '<img src="svg-cards/back.svg" alt="Zakryta karta">';
       const map = { 'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace' };
       const val = map[card.rank] || card.rank;
       return `<img src="svg-cards/${val}_of_${card.suit}.svg" alt="${card.rank}" />`;
     }
-
+  
     function updateHands(table) {
       joinedSlot = null;
+      let playerIsSeated = false;
+  
       table.players.forEach((player, i) => {
         const el = document.getElementById(`slot-${i}`);
         if (player) {
@@ -187,6 +212,7 @@
           el.innerHTML = `<b>${player.username}:</b><div class="slot-cards">${cardsHTML}</div>`;
           if (player.username === username) {
             joinedSlot = i;
+            playerIsSeated = true;
             document.getElementById('player-hand').innerHTML = cardsHTML;
             document.getElementById('leave-btn').style.display = 'inline-block';
           }
@@ -194,43 +220,39 @@
           el.innerHTML = joinedSlot === null ? `<button onclick="joinSlot(${i})">Dołącz</button>` : 'Wolne miejsce';
         }
       });
+  
       document.getElementById('dealer-hand').innerHTML = table.dealerHand?.map(getCardImg).join('') || '';
       updateUserInfo();
+  
+      // 💰 Pokaż modal tylko gdy faza to "waiting_for_bets" i gracz siedzi
+      const chipModal = document.getElementById('chip-modal');
+      chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
     }
-
+  
     function joinSlot(slotIndex) {
       if (joinedSlot !== null) return;
       socket.emit('join_table', { tableId: defaultTableId, username, slotIndex });
     }
-
+  
     function leaveTable() {
       if (joinedSlot === null) return;
       socket.emit('leave_table', { tableId: defaultTableId, username });
       joinedSlot = null;
       document.getElementById('leave-btn').style.display = 'none';
     }
-
+  
     function updateUserInfo() {
       fetch(`https://gadsino.onrender.com/player/${username}`)
         .then(res => res.json())
         .then(data => document.getElementById('user-balance').innerText = data.balance)
         .catch(() => document.getElementById('user-balance').innerText = '--');
     }
-
-    function placeBet() {
-      const amount = parseInt(document.getElementById('bet-amount').value);
-      if (!amount || amount <= 0) return alert('Podaj poprawną stawkę');
+  
+    function placeBet(amount) {
+      if (joinedSlot === null) return alert('Najpierw dołącz do stołu!');
       socket.emit('place_bet', { tableId: defaultTableId, username, amount });
     }
-
-    function hit() {
-      socket.emit('player_action', { tableId: defaultTableId, username, action: 'hit' });
-    }
-
-    function stand() {
-      socket.emit('player_action', { tableId: defaultTableId, username, action: 'stand' });
-    }
-
+  
     updateUserInfo();
     socket.emit('get_table_state', { tableId: defaultTableId });
   </script>
