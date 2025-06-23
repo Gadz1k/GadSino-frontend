@@ -11,13 +11,13 @@
       font-family: 'Courier New', Courier, monospace;
       margin: 0;
     }
-
+    
     h1 {
       color: #ffa502;
       text-align: center;
       margin-top: 1em;
     }
-
+    
     #user-info {
       position: absolute;
       top: 20px;
@@ -27,7 +27,7 @@
       border-radius: 10px;
       text-align: left;
     }
-
+    
     #table-container {
       position: relative;
       width: 100%;
@@ -38,29 +38,30 @@
       background-position: center top;
       overflow: hidden;
     }
-
+    
     #dealer-area {
       position: absolute;
-      top: 14%;
+      top: 8%;
       left: 50%;
       transform: translateX(-50%);
       background: #ffa502;
       color: black;
       font-weight: bold;
-      padding: 0.5em 1em;
+      padding: 0.5em;
       border-radius: 10px;
-      min-width: 120px;
+      max-width: 45%;
       text-align: center;
       z-index: 2;
     }
-
+    
     .dealer-cards {
       margin-top: 0.5em;
       display: flex;
       justify-content: center;
       gap: 8px;
+      flex-wrap: wrap;
     }
-
+    
     .table-slot {
       position: absolute;
       background: transparent;
@@ -73,7 +74,7 @@
       font-weight: bold;
       pointer-events: none;
     }
-
+    
     .slot-cards {
       display: flex;
       justify-content: center;
@@ -81,7 +82,7 @@
       flex-wrap: wrap;
       margin-top: 2px;
     }
-
+    
     .table-slot b {
       display: block;
       margin-bottom: 4px;
@@ -90,35 +91,41 @@
       padding: 2px 6px;
       border-radius: 6px;
     }
-
-    #slot-0 { left: 18.5%; top: 64%; }
-    #slot-1 { left: 32%; top: 74%; }
-    #slot-2 { left: 46.5%; top: 80%; }
-    #slot-3 { left: 61%; top: 74%; }
-    #slot-4 { left: 74.5%; top: 64%; }
-
+    
+    .slot-cards img,
+    .dealer-cards img {
+      height: 80px;
+      border-radius: 5px;
+    }
+    
+    #slot-0 { left: 18.5%; top: 54%; }
+    #slot-1 { left: 32%; top: 63%; }
+    #slot-2 { left: 46.5%; top: 68%; }
+    #slot-3 { left: 61%; top: 63%; }
+    #slot-4 { left: 74.5%; top: 54%; }
+    
     #countdown-timer {
       font-size: 1.5em;
       color: #00ffcc;
       text-align: center;
       margin-top: 1em;
     }
-
+    
     #game {
       text-align: center;
       margin-top: 1em;
     }
-
+    
     #actions {
       margin-top: 1em;
     }
-
+    
     #result {
       font-size: 1.5em;
       font-weight: bold;
       margin-top: 1em;
     }
-
+    
     #chip-modal {
       position: fixed;
       bottom: 0;
@@ -131,17 +138,17 @@
       gap: 15px;
       z-index: 999;
     }
-
+    
     .chip {
       height: 50px;
       cursor: pointer;
       transition: transform 0.2s;
     }
-
+    
     .chip:hover {
       transform: scale(1.2);
     }
-
+    
     button {
       padding: 0.5em 1em;
       margin: 0.5em;
@@ -152,7 +159,7 @@
       color: white;
       cursor: pointer;
     }
-
+    
     button:hover {
       background: #e84118;
     }
