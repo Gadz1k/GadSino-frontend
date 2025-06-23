@@ -236,53 +236,28 @@
     function updateHands(table) {
       joinedSlot = null;
       let playerIsSeated = false;
-
+    
       table.players.forEach((player, i) => {
         const el = document.getElementById(`slot-${i}`);
         if (player) {
           const cardsHTML = player.hand?.map(getCardImg).join('') || '';
           const betInfo = player.bet > 0 ? `: 💰 ${player.bet} żetonów` : '';
-
+    
           let resultText = '';
           if (player.result === 'Wygrana') resultText = ' ✅';
           else if (player.result === 'Remis') resultText = ' ➖';
           else if (player.result === 'Przegrana') resultText = ' ❌';
           else if (player.status === 'bust') resultText = ' 💀';
-
+    
           el.innerHTML = `<b>${player.username}${betInfo}${resultText}</b><div class="slot-cards">${cardsHTML}</div>`;
-
-          if (player) {
-            const cardsHTML = player.hand?.map(getCardImg).join('') || '';
-            const betInfo = player.bet > 0 ? `: 💰 ${player.bet} żetonów` : '';
-          
-            let resultText = '';
-            if (player.result === 'Wygrana') resultText = ' ✅';
-            else if (player.result === 'Remis') resultText = ' ➖';
-            else if (player.result === 'Przegrana') resultText = ' ❌';
-            else if (player.status === 'bust') resultText = ' 💀';
-          
-            el.innerHTML = `<b>${player.username}${betInfo}${resultText}</b><div class="slot-cards">${cardsHTML}</div>`;
-            
-            el.style.pointerEvents = 'none';
-          
-            if (player.username === username) {
-              joinedSlot = i;
-              playerIsSeated = true;
-              document.getElementById('leave-btn').style.display = 'inline-block';
-            }
-          } else {
-            el.style.pointerEvents = 'auto';
-            el.innerHTML = joinedSlot === null
-              ? `<button onclick="joinSlot(${i})">Dołącz</button>`
-              : '';
+          el.style.pointerEvents = 'none';
+    
+          if (player.username === username) {
+            joinedSlot = i;
+            playerIsSeated = true;
+            document.getElementById('leave-btn').style.display = 'inline-block';
           }
-
-      document.getElementById('dealer-hand').innerHTML = table.dealerHand?.map(getCardImg).join('') || '';
-      updateUserInfo();
-
-      const chipModal = document.getElementById('chip-modal');
-      chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
-    }
+        } else {
 
     function joinSlot(slotIndex) {
       if (joinedSlot !== null) return;
