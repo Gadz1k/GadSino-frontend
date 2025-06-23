@@ -77,7 +77,7 @@
       flex-wrap: wrap;
       margin-top: 0.5em;
     }
-    .table-slot img, .dealer-cards img, #player-hand img {
+    .table-slot img, .dealer-cards img {
       height: 70px;
     }
     #countdown-timer {
@@ -87,12 +87,6 @@
     }
     #game {
       margin-top: 2em;
-    }
-    #player-hand {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 1em;
     }
     #result {
       font-size: 1.5em;
@@ -151,7 +145,6 @@
     <p id="result"></p>
   </div>
 
-  <!-- Żetony do obstawiania -->
   <div id="chip-modal">
     <img src="chips/10.svg" class="chip" onclick="placeBet(10)" />
     <img src="chips/25.svg" class="chip" onclick="placeBet(25)" />
@@ -166,14 +159,14 @@
       alert('Musisz się najpierw zalogować!');
       window.location.href = 'index.html';
     }
-  
+
     const username = user.username;
     const socket = io('https://gadsino.onrender.com');
     const defaultTableId = 'default';
     let joinedSlot = null;
-  
+
     document.getElementById('logged-user').innerText = username;
-  
+
     socket.on('table_update', updateHands);
     socket.on('round_started', table => {
       updateHands(table);
@@ -191,36 +184,35 @@
     socket.on('countdown_tick', secondsLeft => {
       document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
     });
-  
+
     function getCardImg(card) {
       if (!card || card.rank === '❓') return '<img src="svg-cards/back.svg" alt="Zakryta karta">';
       const map = { 'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace' };
       const val = map[card.rank] || card.rank;
       return `<img src="svg-cards/${val}_of_${card.suit}.svg" alt="${card.rank}" />`;
     }
-  
+
     function updateHands(table) {
       joinedSlot = null;
       let playerIsSeated = false;
-    
+
       table.players.forEach((player, i) => {
         const el = document.getElementById(`slot-${i}`);
         if (player) {
           const cardsHTML = player.hand?.map(getCardImg).join('') || '';
           const betInfo = player.bet > 0 ? `: 💰 ${player.bet} żetonów` : '';
-    
+
           let resultText = '';
           if (player.result === 'Wygrana') resultText = ' ✅';
           else if (player.result === 'Remis') resultText = ' ➖';
           else if (player.result === 'Przegrana') resultText = ' ❌';
           else if (player.status === 'bust') resultText = ' 💀';
-    
+
           el.innerHTML = `<b>${player.username}${betInfo}${resultText}</b><div class="slot-cards">${cardsHTML}</div>`;
-    
+
           if (player.username === username) {
             joinedSlot = i;
             playerIsSeated = true;
-            document.getElementById('player-hand').innerHTML = cardsHTML;
             document.getElementById('leave-btn').style.display = 'inline-block';
           }
         } else {
@@ -229,60 +221,46 @@
             : 'Wolne miejsce';
         }
       });
-    
+
       document.getElementById('dealer-hand').innerHTML = table.dealerHand?.map(getCardImg).join('') || '';
       updateUserInfo();
-    
+
       const chipModal = document.getElementById('chip-modal');
       chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
     }
-    
-      document.getElementById('dealer-hand').innerHTML = table.dealerHand?.map(getCardImg).join('') || '';
-      updateUserInfo();
-    
-      // 💰 Pokaż modal tylko gdy faza to "waiting_for_bets" i gracz siedzi
-      const chipModal = document.getElementById('chip-modal');
-      chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
-    }
-  
+
     function joinSlot(slotIndex) {
       if (joinedSlot !== null) return;
       socket.emit('join_table', { tableId: defaultTableId, username, slotIndex });
     }
-  
+
     function leaveTable() {
       if (joinedSlot === null) return;
       socket.emit('leave_table', { tableId: defaultTableId, username });
       joinedSlot = null;
       document.getElementById('leave-btn').style.display = 'none';
     }
-  
+
     function updateUserInfo() {
       fetch(`https://gadsino.onrender.com/player/${username}`)
         .then(res => res.json())
         .then(data => document.getElementById('user-balance').innerText = data.balance)
         .catch(() => document.getElementById('user-balance').innerText = '--');
     }
-  
+
     function placeBet(amount) {
       if (joinedSlot === null) return alert('Najpierw dołącz do stołu!');
       socket.emit('place_bet', { tableId: defaultTableId, username, amount });
     }
+
     function hit() {
-      socket.emit('player_action', {
-        tableId: defaultTableId,
-        username,
-        action: 'hit'
-      });
+      socket.emit('player_action', { tableId: defaultTableId, username, action: 'hit' });
     }
-  
+
     function stand() {
-      socket.emit('player_action', {
-        tableId: defaultTableId,
-        username,
-        action: 'stand'
-      });
+      socket.emit('player_action', { tableId: defaultTableId, username, action: 'stand' });
     }
+
     updateUserInfo();
     socket.emit('get_table_state', { tableId: defaultTableId });
   </script>
