@@ -148,8 +148,6 @@
       <button onclick="hit()">Dobierz</button>
       <button onclick="stand()">Stój</button>
     </div>
-    <h2>Twoja ręka:</h2>
-    <div id="player-hand"></div>
     <p id="result"></p>
   </div>
 
@@ -214,7 +212,6 @@
           if (player.username === username) {
             joinedSlot = i;
             playerIsSeated = true;
-            document.getElementById('player-hand').innerHTML = cardsHTML;
             document.getElementById('leave-btn').style.display = 'inline-block';
           }
         } else {
