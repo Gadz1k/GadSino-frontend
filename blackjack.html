@@ -208,16 +208,34 @@
         if (player) {
           const cardsHTML = player.hand?.map(getCardImg).join('') || '';
           const betInfo = player.bet > 0 ? `: 💰 ${player.bet} żetonów` : '';
-          el.innerHTML = `<b>${player.username}${betInfo}</b><div class="slot-cards">${cardsHTML}</div>`;
+    
+          let resultText = '';
+          if (player.result === 'Wygrana') resultText = ' ✅';
+          else if (player.result === 'Remis') resultText = ' ➖';
+          else if (player.result === 'Przegrana') resultText = ' ❌';
+          else if (player.status === 'bust') resultText = ' 💀';
+    
+          el.innerHTML = `<b>${player.username}${betInfo}${resultText}</b><div class="slot-cards">${cardsHTML}</div>`;
+    
           if (player.username === username) {
             joinedSlot = i;
             playerIsSeated = true;
+            document.getElementById('player-hand').innerHTML = cardsHTML;
             document.getElementById('leave-btn').style.display = 'inline-block';
           }
         } else {
-          el.innerHTML = joinedSlot === null ? `<button onclick="joinSlot(${i})">Dołącz</button>` : 'Wolne miejsce';
+          el.innerHTML = joinedSlot === null
+            ? `<button onclick="joinSlot(${i})">Dołącz</button>`
+            : 'Wolne miejsce';
         }
       });
+    
+      document.getElementById('dealer-hand').innerHTML = table.dealerHand?.map(getCardImg).join('') || '';
+      updateUserInfo();
+    
+      const chipModal = document.getElementById('chip-modal');
+      chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
+    }
     
       document.getElementById('dealer-hand').innerHTML = table.dealerHand?.map(getCardImg).join('') || '';
       updateUserInfo();
