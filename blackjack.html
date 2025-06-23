@@ -10,6 +10,7 @@
       color: #fff;
       font-family: 'Courier New', Courier, monospace;
       margin: 0;
+      overflow: hidden;
     }
 
     h1 {
@@ -26,22 +27,24 @@
       padding: 1em;
       border-radius: 10px;
       text-align: left;
+      z-index: 10;
     }
 
     #table-container {
       position: relative;
-      width: 100%;
+      width: 100vw;
       height: 700px;
-      background-image: url('img/bj-table.png');
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center top;
-      overflow: hidden;
+    }
+
+    #table-container object {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
 
     #dealer-area {
       position: absolute;
-      top: 8%;
+      top: 7%;
       left: 50%;
       transform: translateX(-50%);
       background: #ffa502;
@@ -112,6 +115,7 @@
       justify-content: center;
       margin: 0 auto;
       transition: background 0.2s, transform 0.2s;
+      pointer-events: auto;
     }
 
     .join-btn:hover {
@@ -119,11 +123,11 @@
       transform: scale(1.1);
     }
 
-    #slot-0 { left: 18.5%; top: 54%; }
-    #slot-1 { left: 32%; top: 63%; }
-    #slot-2 { left: 46.5%; top: 68%; }
-    #slot-3 { left: 61%; top: 63%; }
-    #slot-4 { left: 74.5%; top: 54%; }
+    #slot-0 { left: 12%; top: 56%; }
+    #slot-1 { left: 27%; top: 65.5%; }
+    #slot-2 { left: 44%; top: 70.5%; }
+    #slot-3 { left: 60.5%; top: 65.5%; }
+    #slot-4 { left: 75%; top: 56%; }
 
     #countdown-timer {
       font-size: 1.5em;
@@ -195,10 +199,13 @@
   </div>
 
   <div id="table-container">
+    <object type="image/svg+xml" data="img/bj-table.svg"></object>
+
     <div id="dealer-area">
       Dealer:
       <div class="dealer-cards" id="dealer-hand"></div>
     </div>
+
     <div id="slot-0" class="table-slot"></div>
     <div id="slot-1" class="table-slot"></div>
     <div id="slot-2" class="table-slot"></div>
@@ -222,7 +229,6 @@
     <img src="chips/100.svg" class="chip" onclick="placeBet(100)" />
     <img src="chips/500.svg" class="chip" onclick="placeBet(500)" />
   </div>
-
   <script>
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user || !user.username) {
