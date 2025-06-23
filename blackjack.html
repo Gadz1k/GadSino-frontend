@@ -253,7 +253,21 @@
       if (joinedSlot === null) return alert('Najpierw dołącz do stołu!');
       socket.emit('place_bet', { tableId: defaultTableId, username, amount });
     }
+    function hit() {
+      socket.emit('player_action', {
+        tableId: defaultTableId,
+        username,
+        action: 'hit'
+      });
+    }
   
+    function stand() {
+      socket.emit('player_action', {
+        tableId: defaultTableId,
+        username,
+        action: 'stand'
+      });
+    }
     updateUserInfo();
     socket.emit('get_table_state', { tableId: defaultTableId });
   </script>
