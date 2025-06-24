@@ -191,6 +191,20 @@
       left: 50%;
       transform: translate(-50%, -50%);
     }
+    @keyframes slideIn {
+    from {
+      transform: translateY(-30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  .slide-in-card {
+    animation: slideIn 0.3s ease forwards;
+  }
   </style>
 </head>
 <body>
@@ -313,12 +327,14 @@
             const cardsContainer = document.createElement('div');
             cardsContainer.className = 'slot-cards';
     
-            (player.hand || []).forEach(card => {
-              const img = document.createElement('img');
-              img.src = getCardSrc(card);
-              img.alt = card.rank || '?';
-              img.classList.add('new-card');
-              cardsContainer.appendChild(img);
+            (player.hand || []).forEach((card, index) => {
+              setTimeout(() => {
+                const img = document.createElement('img');
+                img.src = getCardSrc(card);
+                img.alt = card.rank || '?';
+                img.classList.add('slide-in-card');
+                cardsContainer.appendChild(img);
+              }, index * 300); // co 300ms, karta po karcie
             });
     
             el.appendChild(cardsContainer);
