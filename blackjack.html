@@ -341,8 +341,8 @@
       if (!svgDoc) return;
     
       const svgRoot = svgDoc.documentElement;
-      const viewBox = svgRoot.viewBox.baseVal;
-      const svgBBox = svgObject.getBoundingClientRect();
+      const svgBBox = svgRoot.getBBox();
+      const svgClientRect = svgObject.getBoundingClientRect();
     
       for (let i = 0; i < 5; i++) {
         const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
@@ -353,11 +353,11 @@
         const centerX = bbox.x + bbox.width / 2;
         const centerY = bbox.y + bbox.height / 2;
     
-        const left = (centerX / viewBox.width) * 100;
-        const top = (centerY / viewBox.height) * 100;
+        const left = ((centerX - svgBBox.x) / svgBBox.width) * 100;
+        const top = ((centerY - svgBBox.y) / svgBBox.height) * 100;
     
-        htmlSlot.style.left = `calc(${left}% - 2.5%)`;  // przesunięcie o pół szerokości
-        htmlSlot.style.top = `calc(${top}% - 5%)`;     // przesunięcie o pół wysokości
+        htmlSlot.style.left = `calc(${left}% - 2.5%)`;
+        htmlSlot.style.top = `calc(${top}% - 5%)`;
         htmlSlot.style.width = `5%`;
         htmlSlot.style.height = `10%`;
         htmlSlot.style.position = 'absolute';
