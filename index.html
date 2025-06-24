@@ -125,6 +125,50 @@
       font-weight: bold;
       display: none;
     }
+    #logo {
+      font-family: 'Courier New', monospace;
+      font-size: 3em;
+      text-align: center;
+      margin-bottom: 0.3em;
+    }
+    #logo .text {
+      font-weight: bold;
+      color: #ffa502;
+      animation: neonGlow 1.5s infinite alternate;
+    }
+    
+    #logo .emoji {
+      font-size: 0.9em;
+      display: inline-block;
+    }
+    
+    .flicker {
+      animation: flicker 2s infinite steps(2, start);
+    }
+    
+    @keyframes neonGlow {
+      from {
+        text-shadow:
+          0 0 5px #ffa502,
+          0 0 10px #fffa65,
+          0 0 20px #ff6f00;
+      }
+      to {
+        text-shadow:
+          0 0 10px #ff9f1a,
+          0 0 20px #ff6f00,
+          0 0 30px #ff3f00;
+      }
+    }
+    
+    @keyframes flicker {
+      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+        opacity: 1;
+      }
+      20%, 22%, 24%, 55% {
+        opacity: 0.1;
+      }
+    }
   </style>
 </head>
 <body class="landing">
@@ -133,7 +177,11 @@
     <button id="register-open-btn">Zarejestruj się</button>
   </header>
 
-  <h1>🎰 GadSino 🎰</h1>
+  <h1 id="logo">
+    <span class="emoji flicker">🎰</span>
+    <span class="text">GadSino</span>
+    <span class="emoji flicker">🎰</span>
+  </h1>
   <p>Witamy w miejscu, gdzie marzenia umierają szybciej niż twoje saldo.</p>
   <a href="blackjack.html"><button>♠ Zagraj w Blackjacka ♠</button></a>
 
