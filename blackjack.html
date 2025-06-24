@@ -341,18 +341,19 @@
       if (!svgDoc) return;
     
       const svgRoot = svgDoc.documentElement;
+      const svgBBox = svgObject.getBoundingClientRect();
     
       for (let i = 0; i < 5; i++) {
         const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
         const htmlSlot = document.getElementById(`slot-${i}`);
         if (!svgSlot || !htmlSlot) continue;
     
-        const bbox = svgSlot.getBBox();
+        const slotBBox = svgSlot.getBoundingClientRect();
     
-        const left = (bbox.x / svgRoot.viewBox.baseVal.width) * 100;
-        const top = (bbox.y / svgRoot.viewBox.baseVal.height) * 100;
-        const width = (bbox.width / svgRoot.viewBox.baseVal.width) * 100;
-        const height = (bbox.height / svgRoot.viewBox.baseVal.height) * 100;
+        const left = ((slotBBox.x - svgBBox.x) / svgBBox.width) * 100;
+        const top = ((slotBBox.y - svgBBox.y) / svgBBox.height) * 100;
+        const width = (slotBBox.width / svgBBox.width) * 100;
+        const height = (slotBBox.height / svgBBox.height) * 100;
     
         htmlSlot.style.left = `${left}%`;
         htmlSlot.style.top = `${top}%`;
