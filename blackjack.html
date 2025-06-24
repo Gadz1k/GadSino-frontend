@@ -205,6 +205,14 @@
   .slide-in-card {
     animation: slideIn 0.3s ease forwards;
   }
+  .flying-card {
+    position: absolute;
+    width: 60px;
+    height: auto;
+    z-index: 999;
+    pointer-events: none;
+    transition: transform 0.5s ease, opacity 0.5s ease;
+  }
   </style>
 </head>
 <body>
@@ -303,6 +311,29 @@
         const val = map[card.rank] || card.rank;
         return `svg-cards/${val}_of_${card.suit}.svg`;
       }
+      
+      function flyCard(fromEl, toEl, cardSrc, delay = 0) {
+        const card = document.createElement('img');
+        card.src = cardSrc;
+        card.classList.add('flying-card');
+        document.body.appendChild(card);
+      
+        const fromBox = fromEl.getBoundingClientRect();
+        const toBox = toEl.getBoundingClientRect();
+      
+        card.style.left = `${fromBox.left + fromBox.width / 2 - 30}px`;
+        card.style.top = `${fromBox.top + fromBox.height / 2 - 40}px`;
+      
+        setTimeout(() => {
+          const dx = toBox.left + toBox.width / 2 - 30;
+          const dy = toBox.top + toBox.height / 2 - 40;
+      
+          card.style.transform = `translate(${dx - (fromBox.left + fromBox.width / 2 - 30)}px, ${dy - (fromBox.top + fromBox.height / 2 - 40)}px)`;
+          card.style.opacity = '0';
+      
+          setTimeout(() => card.remove(), 500); // remove after animation
+        }, delay);
+      }
     
       function updateHands(table) {
         joinedSlot = null;
@@ -328,13 +359,22 @@
             cardsContainer.className = 'slot-cards';
     
             (player.hand || []).forEach((card, index) => {
+              const cardSrc = getCardSrc(card);
               setTimeout(() => {
-                const img = document.createElement('img');
-                img.src = getCardSrc(card);
-                img.alt = card.rank || '?';
-                img.classList.add('slide-in-card');
-                cardsContainer.appendChild(img);
-              }, index * 700); // co 300ms, karta po karcie
+                const from = document.getElementById('dealer-slot');
+                const to = el; // slot gracza
+            
+                flyCard(from, to, cardSrc, 0);
+            
+                // Po animacji dodajemy normalną kartę do ręki:
+                setTimeout(() => {
+                  const img = document.createElement('img');
+                  img.src = cardSrc;
+                  img.alt = card.rank || '?';
+                  img.classList.add('slide-in-card');
+                  cardsContainer.appendChild(img);
+                }, 500);
+              }, index * 500);
             });
     
             el.appendChild(cardsContainer);
@@ -379,6 +419,7 @@
         const chipModal = document.getElementById('chip-modal');
         chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
       }
+      
     
       function joinSlot(slotIndex) {
         if (joinedSlot !== null) return;
