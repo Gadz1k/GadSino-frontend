@@ -348,7 +348,7 @@
         const htmlSlot = document.getElementById(`slot-${i}`);
         if (!svgSlot || !htmlSlot) continue;
     
-        const slotBBox = svgSlot.getBoundingClientRect();
+        const slotBBox = svgSlot.getBBox();
     
         const left = ((slotBBox.x - svgBBox.x) / svgBBox.width) * 100;
         const top = ((slotBBox.y - svgBBox.y) / svgBBox.height) * 100;
