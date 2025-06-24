@@ -362,8 +362,6 @@
     
         const chipModal = document.getElementById('chip-modal');
         chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
-    
-        document.getElementById('action-modal').style.display = 'none';
       }
     
       function joinSlot(slotIndex) {
@@ -416,8 +414,6 @@
           dealerSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
           dealerSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
           dealerSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
-          dealerSlot.style.position = 'absolute';
-          dealerSlot.style.zIndex = '5';
         }
     
         for (let i = 0; i < 5; i++) {
@@ -429,24 +425,12 @@
             htmlSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
             htmlSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
             htmlSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
-            htmlSlot.style.position = 'absolute';
-            htmlSlot.style.zIndex = '5';
           }
         }
       }
     
-      function waitForSVGReady(callback) {
-        const svgDoc = svgObject.contentDocument;
-        const testSlot = svgDoc?.getElementById('bj-table-u-slot-0');
-        if (svgDoc && testSlot?.getBBox().width > 0) {
-          callback();
-        } else {
-          setTimeout(() => waitForSVGReady(callback), 50);
-        }
-      }
-    
       svgObject.addEventListener('load', () => {
-        waitForSVGReady(positionSlots);
+        positionSlots();
       });
     </script>
 </body>
