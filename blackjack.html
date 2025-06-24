@@ -78,21 +78,6 @@
       border-radius: 5px;
     }
 
-    .new-card {
-      animation: slideUpCard 0.3s ease-out;
-    }
-
-    @keyframes slideUpCard {
-      0% {
-        opacity: 0;
-        transform: translateY(20px) scale(0.9);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
     .join-btn {
       background: rgba(255, 255, 255, 0.1);
       color: #fff;
@@ -415,7 +400,6 @@
           const img = document.createElement('img');
           img.src = getCardSrc(card);
           img.alt = card.rank || '?';
-          img.classList.add('new-card');
           dealerHandEl.appendChild(img);
         });
     
