@@ -55,22 +55,6 @@
       pointer-events: none;
     }
 
-    @keyframes slideUpCard {
-      0% {
-        opacity: 0;
-        transform: translateY(20px) scale(0.9);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-    
-    .slot-cards img,
-    #dealer-hand img {
-      animation: slideUpCard 0.3s ease-out;
-    }
-    
     .slot-cards {
       display: flex;
       justify-content: center;
@@ -88,9 +72,25 @@
       border-radius: 6px;
     }
 
-    .slot-cards img {
+    .slot-cards img,
+    #dealer-hand img {
       height: 80px;
       border-radius: 5px;
+    }
+
+    .new-card {
+      animation: slideUpCard 0.3s ease-out;
+    }
+
+    @keyframes slideUpCard {
+      0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.9);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
     .join-btn {
@@ -259,11 +259,11 @@
       document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
     });
 
-    function getCardImg(card) {
-      if (!card || card.rank === '❓') return '<img src="svg-cards/back.svg" alt="Zakryta karta">';
+    function getCardSrc(card) {
+      if (!card || card.rank === '❓') return 'svg-cards/back.svg';
       const map = { 'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace' };
       const val = map[card.rank] || card.rank;
-      return `<img src="svg-cards/${val}_of_${card.suit}.svg" alt="${card.rank}" />`;
+      return `svg-cards/${val}_of_${card.suit}.svg`;
     }
 
     function updateHands(table) {
@@ -273,7 +273,8 @@
       table.players.forEach((player, i) => {
         const el = document.getElementById(`slot-${i}`);
         if (player && el) {
-          const cardsHTML = player.hand?.map(getCardImg).join('') || '';
+          el.innerHTML = '';
+          const name = document.createElement('b');
           const betInfo = player.bet > 0 ? `: 💰 ${player.bet} żetonów` : '';
           let resultText = '';
 
@@ -282,7 +283,21 @@
           else if (player.result === 'Przegrana') resultText = ' ❌';
           else if (player.status === 'bust') resultText = ' 💀';
 
-          el.innerHTML = `<b>${player.username}${betInfo}${resultText}</b><div class="slot-cards">${cardsHTML}</div>`;
+          name.textContent = `${player.username}${betInfo}${resultText}`;
+          el.appendChild(name);
+
+          const cardsContainer = document.createElement('div');
+          cardsContainer.className = 'slot-cards';
+
+          (player.hand || []).forEach(card => {
+            const img = document.createElement('img');
+            img.src = getCardSrc(card);
+            img.alt = card.rank || '?';
+            img.classList.add('new-card');
+            cardsContainer.appendChild(img);
+          });
+
+          el.appendChild(cardsContainer);
           el.style.pointerEvents = 'none';
 
           if (player.username === username) {
@@ -298,7 +313,16 @@
         }
       });
 
-      document.getElementById('dealer-hand').innerHTML = table.dealerHand?.map(getCardImg).join('') || '';
+      const dealerHandEl = document.getElementById('dealer-hand');
+      dealerHandEl.innerHTML = '';
+      (table.dealerHand || []).forEach(card => {
+        const img = document.createElement('img');
+        img.src = getCardSrc(card);
+        img.alt = card.rank || '?';
+        img.classList.add('new-card');
+        dealerHandEl.appendChild(img);
+      });
+
       updateUserInfo();
 
       const chipModal = document.getElementById('chip-modal');
@@ -348,8 +372,7 @@
       const svgDoc = svgObject.contentDocument;
       const svgRoot = svgDoc.documentElement;
       const viewBox = svgRoot.viewBox.baseVal;
-    
-      // Najpierw dealer
+
       const dealerArea = svgDoc.getElementById('bj-table-u-dealer-area');
       if (dealerArea) {
         const bbox = dealerArea.getBBox();
@@ -361,8 +384,7 @@
         dealerSlot.style.position = 'absolute';
         dealerSlot.style.zIndex = '5';
       }
-    
-      // Teraz gracze: slot-0 do slot-4
+
       for (let i = 0; i < 5; i++) {
         const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
         const htmlSlot = document.getElementById(`slot-${i}`);
@@ -377,7 +399,7 @@
         }
       }
     }
-    
+
     function waitForSVGReady(callback) {
       const svgDoc = svgObject.contentDocument;
       const testSlot = svgDoc?.getElementById('bj-table-u-slot-0');
