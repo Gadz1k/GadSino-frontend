@@ -337,30 +337,24 @@
     const svgObject = document.getElementById('svg-table');
     
     function positionSlots() {
-      const svgDoc = svgObject.contentDocument;
-      if (!svgDoc) return;
+      const slotStyles = [
+        { left: '16%', top: '40%', width: '11%', height: '14%' },
+        { left: '28%', top: '57%', width: '11%', height: '17%' },
+        { left: '47%', top: '66%', width: '6%', height: '15%' },
+        { left: '63%', top: '57%', width: '11%', height: '17%' },
+        { left: '74%', top: '40%', width: '11%', height: '14%' },
+      ];
     
-      const svgRoot = svgDoc.documentElement;
-      const viewBox = svgRoot.viewBox.baseVal;
-    
-      for (let i = 0; i < 5; i++) {
-        const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
-        const htmlSlot = document.getElementById(`slot-${i}`);
-        if (!svgSlot || !htmlSlot) continue;
-    
-        const bbox = svgSlot.getBBox();
-    
-        const left = (bbox.x / viewBox.width) * 100;
-        const top = (bbox.y / viewBox.height) * 100;
-        const width = (bbox.width / viewBox.width) * 100;
-        const height = (bbox.height / viewBox.height) * 100;
-    
-        htmlSlot.style.left = `${left}%`;
-        htmlSlot.style.top = `${top}%`;
-        htmlSlot.style.width = `${width}%`;
-        htmlSlot.style.height = `${height}%`;
-        htmlSlot.style.position = 'absolute';
-        htmlSlot.style.zIndex = '5';
+      for (let i = 0; i < slotStyles.length; i++) {
+        const el = document.getElementById(`slot-${i}`);
+        if (!el) continue;
+        const style = slotStyles[i];
+        el.style.left = style.left;
+        el.style.top = style.top;
+        el.style.width = style.width;
+        el.style.height = style.height;
+        el.style.position = 'absolute';
+        el.style.zIndex = '5';
       }
     }
     
