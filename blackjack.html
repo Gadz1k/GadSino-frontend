@@ -337,7 +337,7 @@
         { left: '63%', top: '57%', width: '11%', height: '17%' },
         { left: '74%', top: '40%', width: '11%', height: '14%' },
       ];
-
+    
       for (let i = 0; i < slotStyles.length; i++) {
         const el = document.getElementById(`slot-${i}`);
         if (!el) continue;
@@ -349,20 +349,21 @@
         el.style.position = 'absolute';
         el.style.zIndex = '5';
       }
-
+    
       const svgDoc = svgObject.contentDocument;
       const dealerArea = svgDoc?.getElementById('bj-table-u-dealer-area');
-
-      if (dealerArea) {
+    
+      if (dealerArea && svgDoc) {
         const bbox = dealerArea.getBBox();
+        const svgRoot = svgDoc.documentElement;
+        const viewBox = svgRoot.viewBox.baseVal;
+    
+        const leftPercent = (bbox.x / viewBox.width) * 100;
+        const topPercent = (bbox.y / viewBox.height) * 100;
+        const widthPercent = (bbox.width / viewBox.width) * 100;
+        const heightPercent = (bbox.height / viewBox.height) * 100;
+    
         const dealerSlot = document.getElementById('dealer-slot');
-        const svgBounds = svgObject.getBoundingClientRect();
-
-        const leftPercent = (bbox.x / svgBounds.width) * 100;
-        const topPercent = (bbox.y / svgBounds.height) * 100;
-        const widthPercent = (bbox.width / svgBounds.width) * 100;
-        const heightPercent = (bbox.height / svgBounds.height) * 100;
-
         dealerSlot.style.left = `${leftPercent}%`;
         dealerSlot.style.top = `${topPercent}%`;
         dealerSlot.style.width = `${widthPercent}%`;
@@ -371,7 +372,7 @@
         dealerSlot.style.zIndex = '5';
       }
     }
-
+    
     function waitForSVGReady(callback) {
       const svgDoc = svgObject.contentDocument;
       const testSlot = svgDoc?.getElementById('bj-table-u-slot-0');
