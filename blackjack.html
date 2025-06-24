@@ -226,14 +226,14 @@
       alert('Musisz się najpierw zalogować!');
       window.location.href = 'index.html';
     }
-  
+    
     const username = user.username;
     const socket = io('https://gadsino.onrender.com');
     const defaultTableId = 'default';
     let joinedSlot = null;
-  
+    
     document.getElementById('logged-user').innerText = username;
-  
+    
     socket.on('table_update', updateHands);
     socket.on('round_started', table => {
       updateHands(table);
@@ -251,33 +251,33 @@
     socket.on('countdown_tick', secondsLeft => {
       document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
     });
-  
+    
     function getCardImg(card) {
       if (!card || card.rank === '❓') return '<img src="svg-cards/back.svg" alt="Zakryta karta">';
       const map = { 'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace' };
       const val = map[card.rank] || card.rank;
       return `<img src="svg-cards/${val}_of_${card.suit}.svg" alt="${card.rank}" />`;
     }
-  
+    
     function updateHands(table) {
       joinedSlot = null;
       let playerIsSeated = false;
-  
+    
       table.players.forEach((player, i) => {
         const el = document.getElementById(`slot-${i}`);
         if (player && el) {
           const cardsHTML = player.hand?.map(getCardImg).join('') || '';
           const betInfo = player.bet > 0 ? `: 💰 ${player.bet} żetonów` : '';
           let resultText = '';
-  
+    
           if (player.result === 'Wygrana') resultText = ' ✅';
           else if (player.result === 'Remis') resultText = ' ➖';
           else if (player.result === 'Przegrana') resultText = ' ❌';
           else if (player.status === 'bust') resultText = ' 💀';
-  
+    
           el.innerHTML = `<b>${player.username}${betInfo}${resultText}</b><div class="slot-cards">${cardsHTML}</div>`;
           el.style.pointerEvents = 'none';
-  
+    
           if (player.username === username) {
             joinedSlot = i;
             playerIsSeated = true;
@@ -290,70 +290,70 @@
             : '';
         }
       });
-  
+    
       document.getElementById('dealer-hand').innerHTML = table.dealerHand?.map(getCardImg).join('') || '';
       updateUserInfo();
-  
+    
       const chipModal = document.getElementById('chip-modal');
       chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
     }
-  
+    
     function joinSlot(slotIndex) {
       if (joinedSlot !== null) return;
       socket.emit('join_table', { tableId: defaultTableId, username, slotIndex });
     }
-  
+    
     function leaveTable() {
       if (joinedSlot === null) return;
       socket.emit('leave_table', { tableId: defaultTableId, username });
       joinedSlot = null;
       document.getElementById('leave-btn').style.display = 'none';
     }
-  
+    
     function updateUserInfo() {
       fetch(`https://gadsino.onrender.com/player/${username}`)
         .then(res => res.json())
         .then(data => document.getElementById('user-balance').innerText = data.balance)
         .catch(() => document.getElementById('user-balance').innerText = '--');
     }
-  
+    
     function placeBet(amount) {
       if (joinedSlot === null) return alert('Najpierw dołącz do stołu!');
       socket.emit('place_bet', { tableId: defaultTableId, username, amount });
     }
-  
+    
     function hit() {
       socket.emit('player_action', { tableId: defaultTableId, username, action: 'hit' });
     }
-  
+    
     function stand() {
       socket.emit('player_action', { tableId: defaultTableId, username, action: 'stand' });
     }
-  
+    
     updateUserInfo();
     socket.emit('get_table_state', { tableId: defaultTableId });
-  
+    
     // SLOT DIV POZYCJONOWANIE NA SVG
     const svgObject = document.getElementById('svg-table');
-  
+    
     function positionSlots() {
       const svgDoc = svgObject.contentDocument;
       if (!svgDoc) return;
-  
+    
       const svgRoot = svgDoc.documentElement;
-  
+    
       for (let i = 0; i < 5; i++) {
         const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
         const htmlSlot = document.getElementById(`slot-${i}`);
         if (!svgSlot || !htmlSlot) continue;
-  
+    
         const bbox = svgSlot.getBBox();
-  
+    
         const left = (bbox.x / svgRoot.viewBox.baseVal.width) * 100;
         const top = (bbox.y / svgRoot.viewBox.baseVal.height) * 100;
         const width = (bbox.width / svgRoot.viewBox.baseVal.width) * 100;
         const height = (bbox.height / svgRoot.viewBox.baseVal.height) * 100;
-  
+    
         htmlSlot.style.left = `${left}%`;
         htmlSlot.style.top = `${top}%`;
         htmlSlot.style.width = `${width}%`;
@@ -362,12 +362,20 @@
         htmlSlot.style.zIndex = '5';
       }
     }
-  
-    if (svgObject.contentDocument?.readyState === 'complete') {
-      positionSlots();
-    } else {
-      svgObject.addEventListener('load', positionSlots);
+    
+    function waitForSVGReady(callback) {
+      const svgDoc = svgObject.contentDocument;
+      const testSlot = svgDoc?.getElementById('bj-table-u-slot-0');
+      if (svgDoc && testSlot?.getBBox().width > 0) {
+        callback();
+      } else {
+        setTimeout(() => waitForSVGReady(callback), 50);
+      }
     }
-  </script>
+    
+    svgObject.addEventListener('load', () => {
+      waitForSVGReady(positionSlots);
+    });
+    </script>
 </body>
 </html>
