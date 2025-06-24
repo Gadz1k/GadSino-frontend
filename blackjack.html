@@ -342,7 +342,6 @@
     
       const svgRoot = svgDoc.documentElement;
       const viewBox = svgRoot.viewBox.baseVal;
-      const svgClientRect = svgObject.getBoundingClientRect();
     
       for (let i = 0; i < 5; i++) {
         const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
@@ -351,14 +350,15 @@
     
         const bbox = svgSlot.getBBox();
     
-        // Przelicz współrzędne SVG na procenty względem viewBoxa
-        const left = (bbox.x + bbox.width / 2 - viewBox.x) / viewBox.width * 100;
-        const top = (bbox.y + bbox.height / 2 - viewBox.y) / viewBox.height * 100;
+        const left = (bbox.x / viewBox.width) * 100;
+        const top = (bbox.y / viewBox.height) * 100;
+        const width = (bbox.width / viewBox.width) * 100;
+        const height = (bbox.height / viewBox.height) * 100;
     
-        htmlSlot.style.left = `calc(${left}% - 2.5%)`;
-        htmlSlot.style.top = `calc(${top}% - 5%)`;
-        htmlSlot.style.width = `5%`;
-        htmlSlot.style.height = `10%`;
+        htmlSlot.style.left = `${left}%`;
+        htmlSlot.style.top = `${top}%`;
+        htmlSlot.style.width = `${width}%`;
+        htmlSlot.style.height = `${height}%`;
         htmlSlot.style.position = 'absolute';
         htmlSlot.style.zIndex = '5';
       }
