@@ -42,29 +42,6 @@
       display: block;
     }
 
-    #dealer-area {
-      position: absolute;
-      top: 7%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #ffa502;
-      color: black;
-      font-weight: bold;
-      padding: 0.5em;
-      border-radius: 10px;
-      max-width: 45%;
-      text-align: center;
-      z-index: 2;
-    }
-
-    .dealer-cards {
-      margin-top: 0.5em;
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
     .table-slot {
       position: absolute;
       background: transparent;
@@ -95,8 +72,7 @@
       border-radius: 6px;
     }
 
-    .slot-cards img,
-    .dealer-cards img {
+    .slot-cards img {
       height: 80px;
       border-radius: 5px;
     }
@@ -136,7 +112,7 @@
       margin-top: 1em;
     }
 
-    #svg-table{
+    #svg-table {
       z-index: 1;
     }
 
@@ -205,9 +181,9 @@
 
   <div id="table-container">
     <object id="svg-table" type="image/svg+xml" data="img/bj-table.svg"></object>
-    <div id="dealer-area">
-      Dealer:
-      <div class="dealer-cards" id="dealer-hand"></div>
+    <div id="dealer-slot" class="table-slot">
+      <b>Dealer</b>
+      <div class="slot-cards" id="dealer-hand"></div>
     </div>
     <div id="slot-0" class="table-slot"></div>
     <div id="slot-1" class="table-slot"></div>
@@ -215,12 +191,15 @@
     <div id="slot-3" class="table-slot"></div>
     <div id="slot-4" class="table-slot"></div>
   </div>
+
   <div id="countdown-timer"></div>
   <p id="result"></p>
+
   <div id="action-modal">
     <button onclick="hit()">+</button>
     <button onclick="stand()">⛔</button>
   </div>
+
   <div id="chip-modal">
     <img src="chips/10.svg" class="chip" onclick="placeBet(10)" />
     <img src="chips/25.svg" class="chip" onclick="placeBet(25)" />
@@ -228,20 +207,21 @@
     <img src="chips/100.svg" class="chip" onclick="placeBet(100)" />
     <img src="chips/500.svg" class="chip" onclick="placeBet(500)" />
   </div>
-    <script>
+
+  <script>
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user || !user.username) {
       alert('Musisz się najpierw zalogować!');
       window.location.href = 'index.html';
     }
-  
+
     const username = user.username;
     const socket = io('https://gadsino.onrender.com');
     const defaultTableId = 'default';
     let joinedSlot = null;
-  
+
     document.getElementById('logged-user').innerText = username;
-  
+
     socket.on('table_update', updateHands);
     socket.on('round_started', table => {
       updateHands(table);
@@ -262,33 +242,33 @@
     socket.on('countdown_tick', secondsLeft => {
       document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
     });
-  
+
     function getCardImg(card) {
       if (!card || card.rank === '❓') return '<img src="svg-cards/back.svg" alt="Zakryta karta">';
       const map = { 'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace' };
       const val = map[card.rank] || card.rank;
       return `<img src="svg-cards/${val}_of_${card.suit}.svg" alt="${card.rank}" />`;
     }
-  
+
     function updateHands(table) {
       joinedSlot = null;
       let playerIsSeated = false;
-  
+
       table.players.forEach((player, i) => {
         const el = document.getElementById(`slot-${i}`);
         if (player && el) {
           const cardsHTML = player.hand?.map(getCardImg).join('') || '';
           const betInfo = player.bet > 0 ? `: 💰 ${player.bet} żetonów` : '';
           let resultText = '';
-  
+
           if (player.result === 'Wygrana') resultText = ' ✅';
           else if (player.result === 'Remis') resultText = ' ➖';
           else if (player.result === 'Przegrana') resultText = ' ❌';
           else if (player.status === 'bust') resultText = ' 💀';
-  
+
           el.innerHTML = `<b>${player.username}${betInfo}${resultText}</b><div class="slot-cards">${cardsHTML}</div>`;
           el.style.pointerEvents = 'none';
-  
+
           if (player.username === username) {
             joinedSlot = i;
             playerIsSeated = true;
@@ -301,22 +281,21 @@
             : '';
         }
       });
-  
+
       document.getElementById('dealer-hand').innerHTML = table.dealerHand?.map(getCardImg).join('') || '';
       updateUserInfo();
-  
+
       const chipModal = document.getElementById('chip-modal');
       chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
-  
-      // Jeśli nie twoja tura to ukryj modal akcji
+
       document.getElementById('action-modal').style.display = 'none';
     }
-  
+
     function joinSlot(slotIndex) {
       if (joinedSlot !== null) return;
       socket.emit('join_table', { tableId: defaultTableId, username, slotIndex });
     }
-  
+
     function leaveTable() {
       if (joinedSlot === null) return;
       socket.emit('leave_table', { tableId: defaultTableId, username });
@@ -324,33 +303,32 @@
       document.getElementById('leave-btn').style.display = 'none';
       document.getElementById('action-modal').style.display = 'none';
     }
-  
+
     function updateUserInfo() {
       fetch(`https://gadsino.onrender.com/player/${username}`)
         .then(res => res.json())
         .then(data => document.getElementById('user-balance').innerText = data.balance)
         .catch(() => document.getElementById('user-balance').innerText = '--');
     }
-  
+
     function placeBet(amount) {
       if (joinedSlot === null) return alert('Najpierw dołącz do stołu!');
       socket.emit('place_bet', { tableId: defaultTableId, username, amount });
     }
-  
+
     function hit() {
       socket.emit('player_action', { tableId: defaultTableId, username, action: 'hit' });
     }
-  
+
     function stand() {
       socket.emit('player_action', { tableId: defaultTableId, username, action: 'stand' });
     }
-  
+
     updateUserInfo();
     socket.emit('get_table_state', { tableId: defaultTableId });
-  
-    // SLOT DIV POZYCJONOWANIE NA SVG
+
     const svgObject = document.getElementById('svg-table');
-  
+
     function positionSlots() {
       const slotStyles = [
         { left: '16%', top: '40%', width: '11%', height: '14%' },
@@ -359,7 +337,7 @@
         { left: '63%', top: '57%', width: '11%', height: '17%' },
         { left: '74%', top: '40%', width: '11%', height: '14%' },
       ];
-  
+
       for (let i = 0; i < slotStyles.length; i++) {
         const el = document.getElementById(`slot-${i}`);
         if (!el) continue;
@@ -371,8 +349,29 @@
         el.style.position = 'absolute';
         el.style.zIndex = '5';
       }
+
+      const svgDoc = svgObject.contentDocument;
+      const dealerArea = svgDoc?.getElementById('bj-table-u-dealer-area');
+
+      if (dealerArea) {
+        const bbox = dealerArea.getBBox();
+        const dealerSlot = document.getElementById('dealer-slot');
+        const svgBounds = svgObject.getBoundingClientRect();
+
+        const leftPercent = (bbox.x / svgBounds.width) * 100;
+        const topPercent = (bbox.y / svgBounds.height) * 100;
+        const widthPercent = (bbox.width / svgBounds.width) * 100;
+        const heightPercent = (bbox.height / svgBounds.height) * 100;
+
+        dealerSlot.style.left = `${leftPercent}%`;
+        dealerSlot.style.top = `${topPercent}%`;
+        dealerSlot.style.width = `${widthPercent}%`;
+        dealerSlot.style.height = `${heightPercent}%`;
+        dealerSlot.style.position = 'absolute';
+        dealerSlot.style.zIndex = '5';
+      }
     }
-  
+
     function waitForSVGReady(callback) {
       const svgDoc = svgObject.contentDocument;
       const testSlot = svgDoc?.getElementById('bj-table-u-slot-0');
@@ -382,7 +381,7 @@
         setTimeout(() => waitForSVGReady(callback), 50);
       }
     }
-  
+
     svgObject.addEventListener('load', () => {
       waitForSVGReady(positionSlots);
     });
