@@ -55,6 +55,12 @@
       pointer-events: none;
     }
 
+    .table-slot.active-turn {
+      box-shadow: 0 0 15px 5px #00ffe1;
+      border-radius: 15px;
+      transition: box-shadow 0.3s ease;
+    }
+
     .slot-cards {
       display: flex;
       justify-content: center;
@@ -229,196 +235,206 @@
     <img src="chips/100.svg" class="chip" onclick="placeBet(100)" />
     <img src="chips/500.svg" class="chip" onclick="placeBet(500)" />
   </div>
-
-  <script>
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (!user || !user.username) {
-      alert('Musisz się najpierw zalogować!');
-      window.location.href = 'index.html';
-    }
-
-    const username = user.username;
-    const socket = io('https://gadsino.onrender.com');
-    const defaultTableId = 'default';
-    let joinedSlot = null;
-
-    document.getElementById('logged-user').innerText = username;
-
-    socket.on('table_update', updateHands);
-    socket.on('round_started', table => {
-      updateHands(table);
-      document.getElementById('countdown-timer').innerText = '';
-      document.getElementById('chip-modal').style.display = 'none';
-      document.getElementById('action-modal').style.display = 'none';
-    });
-    socket.on('round_result', table => {
-      updateHands(table);
-      document.getElementById('chip-modal').style.display = 'none';
-      document.getElementById('action-modal').style.display = 'none';
-    });
-    socket.on('your_turn', turnUser => {
-      const isYourTurn = turnUser === username;
-      document.getElementById('action-modal').style.display = isYourTurn ? 'flex' : 'none';
-      document.getElementById('result').innerText = isYourTurn ? 'Twoja tura!' : `Tura gracza: ${turnUser}`;
-    });
-    socket.on('countdown_tick', secondsLeft => {
-      document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
-    });
-
-    function getCardSrc(card) {
-      if (!card || card.rank === '❓') return 'svg-cards/back.svg';
-      const map = { 'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace' };
-      const val = map[card.rank] || card.rank;
-      return `svg-cards/${val}_of_${card.suit}.svg`;
-    }
-
-    function updateHands(table) {
-      joinedSlot = null;
-      let playerIsSeated = false;
-
-      table.players.forEach((player, i) => {
-        const el = document.getElementById(`slot-${i}`);
-        if (player && el) {
-          el.innerHTML = '';
-          const name = document.createElement('b');
-          const betInfo = player.bet > 0 ? `: 💰 ${player.bet} żetonów` : '';
-          let resultText = '';
-
-          if (player.result === 'Wygrana') resultText = ' ✅';
-          else if (player.result === 'Remis') resultText = ' ➖';
-          else if (player.result === 'Przegrana') resultText = ' ❌';
-          else if (player.status === 'bust') resultText = ' 💀';
-
-          name.textContent = `${player.username}${betInfo}${resultText}`;
-          el.appendChild(name);
-
-          const cardsContainer = document.createElement('div');
-          cardsContainer.className = 'slot-cards';
-
-          (player.hand || []).forEach(card => {
-            const img = document.createElement('img');
-            img.src = getCardSrc(card);
-            img.alt = card.rank || '?';
-            img.classList.add('new-card');
-            cardsContainer.appendChild(img);
-          });
-
-          el.appendChild(cardsContainer);
-          el.style.pointerEvents = 'none';
-
-          if (player.username === username) {
-            joinedSlot = i;
-            playerIsSeated = true;
-            document.getElementById('leave-btn').style.display = 'inline-block';
+    <script>
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (!user || !user.username) {
+        alert('Musisz się najpierw zalogować!');
+        window.location.href = 'index.html';
+      }
+    
+      const username = user.username;
+      const socket = io('https://gadsino.onrender.com');
+      const defaultTableId = 'default';
+      let joinedSlot = null;
+    
+      document.getElementById('logged-user').innerText = username;
+    
+      socket.on('table_update', updateHands);
+      socket.on('round_started', table => {
+        updateHands(table);
+        document.getElementById('countdown-timer').innerText = '';
+        document.getElementById('chip-modal').style.display = 'none';
+        document.getElementById('action-modal').style.display = 'none';
+      });
+      socket.on('round_result', table => {
+        updateHands(table);
+        document.getElementById('chip-modal').style.display = 'none';
+        document.getElementById('action-modal').style.display = 'none';
+      });
+      socket.on('your_turn', turnUser => {
+        const isYourTurn = turnUser === username;
+        document.getElementById('action-modal').style.display = isYourTurn ? 'flex' : 'none';
+        document.getElementById('result').innerText = isYourTurn ? 'Twoja tura!' : `Tura gracza: ${turnUser}`;
+      });
+      socket.on('countdown_tick', secondsLeft => {
+        document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
+      });
+    
+      function getCardSrc(card) {
+        if (!card || card.rank === '❓') return 'svg-cards/back.svg';
+        const map = { 'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace' };
+        const val = map[card.rank] || card.rank;
+        return `svg-cards/${val}_of_${card.suit}.svg`;
+      }
+    
+      function updateHands(table) {
+        joinedSlot = null;
+        let playerIsSeated = false;
+    
+        table.players.forEach((player, i) => {
+          const el = document.getElementById(`slot-${i}`);
+          if (player && el) {
+            el.innerHTML = '';
+            const name = document.createElement('b');
+            const betInfo = player.bet > 0 ? `: 💰 ${player.bet} żetonów` : '';
+            let resultText = '';
+    
+            if (player.result === 'Wygrana') resultText = ' ✅';
+            else if (player.result === 'Remis') resultText = ' ➖';
+            else if (player.result === 'Przegrana') resultText = ' ❌';
+            else if (player.status === 'bust') resultText = ' 💀';
+    
+            name.textContent = `${player.username}${betInfo}${resultText}`;
+            el.appendChild(name);
+    
+            const cardsContainer = document.createElement('div');
+            cardsContainer.className = 'slot-cards';
+    
+            (player.hand || []).forEach(card => {
+              const img = document.createElement('img');
+              img.src = getCardSrc(card);
+              img.alt = card.rank || '?';
+              img.classList.add('new-card');
+              cardsContainer.appendChild(img);
+            });
+    
+            el.appendChild(cardsContainer);
+            el.style.pointerEvents = 'none';
+    
+            if (player.username === username) {
+              joinedSlot = i;
+              playerIsSeated = true;
+              document.getElementById('leave-btn').style.display = 'inline-block';
+            }
+          } else if (el) {
+            el.style.pointerEvents = 'auto';
+            el.innerHTML = joinedSlot === null
+              ? `<button class="join-btn" onclick="joinSlot(${i})">👤</button>`
+              : '';
           }
-        } else if (el) {
-          el.style.pointerEvents = 'auto';
-          el.innerHTML = joinedSlot === null
-            ? `<button class="join-btn" onclick="joinSlot(${i})">👤</button>`
-            : '';
-        }
-      });
-
-      const dealerHandEl = document.getElementById('dealer-hand');
-      dealerHandEl.innerHTML = '';
-      (table.dealerHand || []).forEach(card => {
-        const img = document.createElement('img');
-        img.src = getCardSrc(card);
-        img.alt = card.rank || '?';
-        img.classList.add('new-card');
-        dealerHandEl.appendChild(img);
-      });
-
+        });
+    
+        const dealerHandEl = document.getElementById('dealer-hand');
+        dealerHandEl.innerHTML = '';
+        (table.dealerHand || []).forEach(card => {
+          const img = document.createElement('img');
+          img.src = getCardSrc(card);
+          img.alt = card.rank || '?';
+          img.classList.add('new-card');
+          dealerHandEl.appendChild(img);
+        });
+    
+        updateUserInfo();
+    
+        // highlight active turn slot
+        table.players.forEach((player, i) => {
+          const el = document.getElementById(`slot-${i}`);
+          if (!el) return;
+          if (table.phase === 'playing' && i === table.currentPlayerIndex && player?.status === 'playing') {
+            el.classList.add('active-turn');
+          } else {
+            el.classList.remove('active-turn');
+          }
+        });
+    
+        const chipModal = document.getElementById('chip-modal');
+        chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
+    
+        document.getElementById('action-modal').style.display = 'none';
+      }
+    
+      function joinSlot(slotIndex) {
+        if (joinedSlot !== null) return;
+        socket.emit('join_table', { tableId: defaultTableId, username, slotIndex });
+      }
+    
+      function leaveTable() {
+        if (joinedSlot === null) return;
+        socket.emit('leave_table', { tableId: defaultTableId, username });
+        joinedSlot = null;
+        document.getElementById('leave-btn').style.display = 'none';
+        document.getElementById('action-modal').style.display = 'none';
+      }
+    
+      function updateUserInfo() {
+        fetch(`https://gadsino.onrender.com/player/${username}`)
+          .then(res => res.json())
+          .then(data => document.getElementById('user-balance').innerText = data.balance)
+          .catch(() => document.getElementById('user-balance').innerText = '--');
+      }
+    
+      function placeBet(amount) {
+        if (joinedSlot === null) return alert('Najpierw dołącz do stołu!');
+        socket.emit('place_bet', { tableId: defaultTableId, username, amount });
+      }
+    
+      function hit() {
+        socket.emit('player_action', { tableId: defaultTableId, username, action: 'hit' });
+      }
+    
+      function stand() {
+        socket.emit('player_action', { tableId: defaultTableId, username, action: 'stand' });
+      }
+    
       updateUserInfo();
-
-      const chipModal = document.getElementById('chip-modal');
-      chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
-
-      document.getElementById('action-modal').style.display = 'none';
-    }
-
-    function joinSlot(slotIndex) {
-      if (joinedSlot !== null) return;
-      socket.emit('join_table', { tableId: defaultTableId, username, slotIndex });
-    }
-
-    function leaveTable() {
-      if (joinedSlot === null) return;
-      socket.emit('leave_table', { tableId: defaultTableId, username });
-      joinedSlot = null;
-      document.getElementById('leave-btn').style.display = 'none';
-      document.getElementById('action-modal').style.display = 'none';
-    }
-
-    function updateUserInfo() {
-      fetch(`https://gadsino.onrender.com/player/${username}`)
-        .then(res => res.json())
-        .then(data => document.getElementById('user-balance').innerText = data.balance)
-        .catch(() => document.getElementById('user-balance').innerText = '--');
-    }
-
-    function placeBet(amount) {
-      if (joinedSlot === null) return alert('Najpierw dołącz do stołu!');
-      socket.emit('place_bet', { tableId: defaultTableId, username, amount });
-    }
-
-    function hit() {
-      socket.emit('player_action', { tableId: defaultTableId, username, action: 'hit' });
-    }
-
-    function stand() {
-      socket.emit('player_action', { tableId: defaultTableId, username, action: 'stand' });
-    }
-
-    updateUserInfo();
-    socket.emit('get_table_state', { tableId: defaultTableId });
-
-    const svgObject = document.getElementById('svg-table');
-    function positionSlots() {
-      const svgDoc = svgObject.contentDocument;
-      const svgRoot = svgDoc.documentElement;
-      const viewBox = svgRoot.viewBox.baseVal;
-
-      const dealerArea = svgDoc.getElementById('bj-table-u-dealer-area');
-      if (dealerArea) {
-        const bbox = dealerArea.getBBox();
-        const dealerSlot = document.getElementById('dealer-slot');
-        dealerSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
-        dealerSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
-        dealerSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
-        dealerSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
-        dealerSlot.style.position = 'absolute';
-        dealerSlot.style.zIndex = '5';
-      }
-
-      for (let i = 0; i < 5; i++) {
-        const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
-        const htmlSlot = document.getElementById(`slot-${i}`);
-        if (svgSlot && htmlSlot) {
-          const bbox = svgSlot.getBBox();
-          htmlSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
-          htmlSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
-          htmlSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
-          htmlSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
-          htmlSlot.style.position = 'absolute';
-          htmlSlot.style.zIndex = '5';
+      socket.emit('get_table_state', { tableId: defaultTableId });
+    
+      const svgObject = document.getElementById('svg-table');
+      function positionSlots() {
+        const svgDoc = svgObject.contentDocument;
+        const svgRoot = svgDoc.documentElement;
+        const viewBox = svgRoot.viewBox.baseVal;
+    
+        const dealerArea = svgDoc.getElementById('bj-table-u-dealer-area');
+        if (dealerArea) {
+          const bbox = dealerArea.getBBox();
+          const dealerSlot = document.getElementById('dealer-slot');
+          dealerSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
+          dealerSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
+          dealerSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
+          dealerSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
+          dealerSlot.style.position = 'absolute';
+          dealerSlot.style.zIndex = '5';
+        }
+    
+        for (let i = 0; i < 5; i++) {
+          const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
+          const htmlSlot = document.getElementById(`slot-${i}`);
+          if (svgSlot && htmlSlot) {
+            const bbox = svgSlot.getBBox();
+            htmlSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
+            htmlSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
+            htmlSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
+            htmlSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
+            htmlSlot.style.position = 'absolute';
+            htmlSlot.style.zIndex = '5';
+          }
         }
       }
-    }
-
-    function waitForSVGReady(callback) {
-      const svgDoc = svgObject.contentDocument;
-      const testSlot = svgDoc?.getElementById('bj-table-u-slot-0');
-      if (svgDoc && testSlot?.getBBox().width > 0) {
-        callback();
-      } else {
-        setTimeout(() => waitForSVGReady(callback), 50);
+    
+      function waitForSVGReady(callback) {
+        const svgDoc = svgObject.contentDocument;
+        const testSlot = svgDoc?.getElementById('bj-table-u-slot-0');
+        if (svgDoc && testSlot?.getBBox().width > 0) {
+          callback();
+        } else {
+          setTimeout(() => waitForSVGReady(callback), 50);
+        }
       }
-    }
-
-    svgObject.addEventListener('load', () => {
-      waitForSVGReady(positionSlots);
-    });
-  </script>
+    
+      svgObject.addEventListener('load', () => {
+        waitForSVGReady(positionSlots);
+      });
+    </script>
 </body>
 </html>
