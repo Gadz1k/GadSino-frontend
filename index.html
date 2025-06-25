@@ -52,6 +52,18 @@
     #leaderboard-list li:last-child {
       border-bottom: none;
     }
+    #leaderboard-filter {
+      margin-bottom: 0.5em;
+      text-align: center;
+    }
+    #leaderboard-filter select {
+      background: #2f3542;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 0.3em 0.6em;
+      font-size: 1em;
+    }
     header {
       position: fixed;
       top: 0; right: 0;
@@ -255,8 +267,15 @@
     <span class="emoji flicker">🎰</span>
   </h1>
   <div id="leaderboard-panel">
-  <h2>🏆 Top Gracze</h2>
-  <ul id="leaderboard-list"></ul>
+    <h2>🏆 Top Gracze</h2>
+    <div id="leaderboard-filter">
+      <select id="leaderboard-select">
+        <option value="all">Cały czas</option>
+        <option value="daily">Dzisiaj</option>
+        <option value="monthly">Ten miesiąc</option>
+      </select>
+    </div>
+    <ul id="leaderboard-list"></ul>
   </div>
   <p>Witamy w miejscu, gdzie marzenia umierają szybciej niż twoje saldo.</p>
   <a href="blackjack.html"><button>♠ Zagraj w Blackjacka ♠</button></a>
@@ -440,8 +459,8 @@
     }
   };
 
-  function renderLeaderboard() {
-    fetch('https://gadsino.onrender.com/leaderboard')
+  function renderLeaderboard(mode = 'all') {
+    fetch(`https://gadsino.onrender.com/leaderboard/${mode}`)
       .then(res => res.json())
       .then(data => {
         const list = document.getElementById('leaderboard-list');
@@ -457,6 +476,13 @@
         list.innerHTML = '<li>Błąd ładowania</li>';
       });
   }
+
+  document.getElementById('leaderboard-select').addEventListener('change', (e) => {
+    renderLeaderboard(e.target.value);
+  });
+
+  // inicjalizacja z domyślnym widokiem
+  renderLeaderboard('all');
 
   const user = JSON.parse(localStorage.getItem('user'));
   if (user) {
