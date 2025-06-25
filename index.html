@@ -408,13 +408,6 @@
           userInfo.innerHTML = `👤 Zalogowany jako: ${user.username} | 💰 Błąd pobierania salda`;
         });
 
-      const logoutBtn = document.createElement('button');
-      logoutBtn.textContent = 'Wyloguj się';
-      logoutBtn.onclick = () => {
-        localStorage.removeItem('user');
-        window.location.reload();
-      };
-
       const header = document.querySelector('header');
       header.appendChild(userInfo);
       header.appendChild(logoutBtn);
