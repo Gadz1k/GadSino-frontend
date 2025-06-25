@@ -288,7 +288,16 @@
       <button class="close-btn" id="register-close-btn">Anuluj</button>
     </div>
   </div>
-
+  <div id="deposit-modal" class="modal">
+    <div class="modal-box">
+      <h2>💰 Wpłać żetony</h2>
+      <div id="deposit-error" class="modal-error"></div>
+      <label for="deposit-amount">Ilość żetonów</label>
+      <input type="number" id="deposit-amount" min="1" placeholder="Np. 100" />
+      <button id="deposit-submit-btn">Wpłać</button>
+      <button class="close-btn" id="deposit-close-btn">Anuluj</button>
+    </div>
+  </div>
   <script>
     const loginModal = document.getElementById('login-modal');
     const registerModal = document.getElementById('register-modal');
@@ -442,6 +451,52 @@
     localStorage.removeItem('user');
     window.location.reload();
   }
+    const depositModal = document.getElementById('deposit-modal');
+    const depositBtn = document.getElementById('deposit-submit-btn');
+    const depositCloseBtn = document.getElementById('deposit-close-btn');
+    const depositError = document.getElementById('deposit-error');
+    
+    function openAddChipsModal() {
+      depositError.style.display = 'none';
+      document.getElementById('deposit-amount').value = '';
+      depositModal.classList.add('active');
+    }
+    
+    depositCloseBtn.onclick = () => depositModal.classList.remove('active');
+    
+    depositBtn.onclick = async () => {
+      depositError.style.display = 'none';
+      const amount = parseInt(document.getElementById('deposit-amount').value);
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (!amount || amount <= 0) {
+        depositError.textContent = 'Podaj poprawną kwotę.';
+        depositError.style.display = 'block';
+        return;
+      }
+    
+      try {
+        const res = await fetch(`https://gadsino.onrender.com/player/${user.username}/deposit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Błąd wpłaty.');
+    
+        // Aktualizacja balansu na stronie
+        document.querySelector('#balance-display').textContent = `💰 ${data.balance} żetonów`;
+        document.querySelectorAll('span').forEach(el => {
+          if (el.textContent.includes('żeton')) {
+            el.textContent = `💰 ${data.balance} żetonów`;
+          }
+        });
+    
+        depositModal.classList.remove('active');
+      } catch (err) {
+        depositError.textContent = err.message || 'Błąd połączenia z serwerem.';
+        depositError.style.display = 'block';
+      }
+    };
   </script>
 </body>
 </html>
