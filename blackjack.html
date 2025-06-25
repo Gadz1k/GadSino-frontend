@@ -298,6 +298,33 @@
           hitAnimationFor = updatedUser;
         }
       });
+      function calculateHandValue(hand) {
+        let total = 0;
+        let aces = 0;
+      
+        for (let card of hand) {
+          if (!card || !card.rank) continue;
+          if (card.rank === 'A') {
+            aces++;
+            total += 11;
+          } else if (['K', 'Q', 'J'].includes(card.rank)) {
+            total += 10;
+          } else {
+            total += parseInt(card.rank);
+          }
+        }
+      
+        while (total > 21 && aces > 0) {
+          total -= 10;
+          aces--;
+        }
+      
+        if (aces > 0 && total + 10 <= 21) {
+          return `${total}/${total + 10}`; // miękki as
+        }
+      
+        return `${total}`;
+      }
     
       function getCardSrc(card) {
         if (!card || card.rank === '❓') return 'svg-cards/back.svg';
@@ -346,7 +373,8 @@
             else if (player.result === 'Przegrana') resultText = ' ❌';
             else if (player.status === 'bust') resultText = ' 💀';
     
-            name.textContent = `${player.username}${betInfo}${resultText}`;
+            const handValue = calculateHandValue(player.hand || []);
+            name.textContent = `${player.username} (${handValue})${betInfo}${resultText}`;
             el.appendChild(name);
     
             const cardsContainer = document.createElement('div');
