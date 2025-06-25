@@ -269,11 +269,12 @@
 
   <div id="countdown-timer"></div>
   <p id="result"></p>
-
+  
   <div id="action-modal">
     <button onclick="hit()">+</button>
     <button onclick="stand()">-</button>
     <button onclick="doubleDown()">2×</button>
+    <button id="split-btn" onclick="split()">🔀</button>
   </div>
 
   <div id="chip-modal">
@@ -343,12 +344,18 @@
       socket.on('your_turn', turnUser => {
         const isYourTurn = turnUser === username;
         if (isYourTurn) {
-          // 👇 pokaż modal tylko jeśli to twoja tura i jesteś aktywnym graczem
           document.getElementById('action-modal').style.display = 'flex';
           document.getElementById('result').innerText = 'Twoja tura!';
-        } else {
-          document.getElementById('action-modal').style.display = 'none';
-          document.getElementById('result').innerText = `Tura gracza: ${turnUser}`;
+        
+          // 🔍 znajdź siebie
+          const me = table?.players?.find(p => p?.username === username);
+          const splitBtn = document.getElementById('split-btn');
+        
+          if (me?.hand?.length === 2 && me.hand[0].rank === me.hand[1].rank) {
+            splitBtn.style.display = 'inline-block';
+          } else {
+            splitBtn.style.display = 'none';
+          }
         }
       });
       socket.on('countdown_tick', secondsLeft => {
@@ -550,6 +557,13 @@
           action: 'double'
         });
       }
+      function split() {
+        socket.emit('player_action', {
+          tableId: defaultTableId,
+          username,
+          action: 'split'
+        });
+      }  
     
       updateUserInfo();
       socket.emit('get_table_state', { tableId: defaultTableId });
