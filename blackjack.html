@@ -240,6 +240,19 @@
     z-index: 999;
     box-shadow: 0 0 20px #ffa502;
   "></div>
+  <div id="shoe-visual" style="
+    position: absolute;
+    top: 10px; right: 10px;
+    background: #2f3542;
+    color: white;
+    padding: 1em;
+    border-radius: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    z-index: 10;
+  ">
+    <div>🃏 Talia: <span id="shoe-count">...</span> kart</div>
+  </div>
   <div id="table-container">
     <object id="svg-table" type="image/svg+xml" data="img/bj-table.svg"></object>
     <div id="dealer-slot" class="table-slot">
@@ -288,7 +301,13 @@
         window.location.href = 'index.html';
       };
     
-      socket.on('table_update', updateHands);
+      socket.on('table_update', data => {
+        updateHands(data);
+      
+        if (data.shoeSize !== undefined) {
+          document.getElementById('shoe-count').textContent = data.shoeSize;
+        }
+      });
       socket.on('round_started', table => {
         dealingAnimation = true;
         hitAnimationFor = null;
