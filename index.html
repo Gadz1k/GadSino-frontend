@@ -81,6 +81,45 @@
       margin-bottom: 2em;
       max-width: 400px;
     }
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .dropdown-toggle {
+      background: none;
+      border: none;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1em;
+    }
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      background: #2f3542;
+      border-radius: 10px;
+      padding: 0.5em 0;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      z-index: 999;
+      min-width: 150px;
+    }
+    
+    .dropdown-item {
+      padding: 0.5em 1em;
+      cursor: pointer;
+      color: white;
+      transition: background 0.2s;
+    }
+    
+    .dropdown-item:hover {
+      background: #57606f;
+    }
+    
+    .dropdown:hover .dropdown-menu {
+      display: block;
+    }
     a button {
       font-size: 1.2em;
       padding: 1em 2em;
@@ -352,7 +391,19 @@
       fetch(`https://gadsino.onrender.com/player/${user.username}`)
         .then(res => res.json())
         .then(data => {
-          userInfo.innerHTML = `👤 Zalogowany jako: ${user.username} | 💰 ${data.balance} żetonów`;
+          userInfo.innerHTML = `
+            <div class="dropdown">
+              <button class="dropdown-toggle">
+                👤 ${user.username} ⏷
+              </button>
+              <div class="dropdown-menu">
+                <div class="dropdown-item" onclick="goToProfile()">👁 Profil</div>
+                <div class="dropdown-item" onclick="openAddChipsModal()">💰 Wpłać żetony</div>
+                <div class="dropdown-item" onclick="logout()">🚪 Wyloguj</div>
+              </div>
+            </div>
+            <span style="margin-left: 10px;">💰 ${data.balance} żetonów</span>
+          `;
         })
         .catch(() => {
           userInfo.innerHTML = `👤 Zalogowany jako: ${user.username} | 💰 Błąd pobierania salda`;
@@ -387,6 +438,18 @@
     const list = document.getElementById('leaderboard-list');
     list.innerHTML = '<li>Błąd ładowania</li>';
   });
+  function goToProfile() {
+    window.location.href = 'profile.html';
+  }
+  
+  function openAddChipsModal() {
+    alert("Tutaj zrobimy modal do dodawania żetonów 🤑");
+  }
+  
+  function logout() {
+    localStorage.removeItem('user');
+    window.location.reload();
+  }
   </script>
 </body>
 </html>
