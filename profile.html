@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Profil – Gadsino</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #1c1c1c;
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1em 2em;
+      background: transparent;
+    }
+
+    .content {
+      max-width: 600px;
+      margin: 3em auto;
+      background: #2f3542;
+      padding: 2em;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    }
+
+    h1 {
+      color: #ffa502;
+      text-align: center;
+      margin-bottom: 1em;
+    }
+
+    .info {
+      font-size: 1.2em;
+      margin-bottom: 1em;
+    }
+
+    .info span {
+      color: #fbc531;
+      font-weight: bold;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.7em 1.5em;
+      background: #ff4757;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: #e84118;
+    }
+
+    .emoji {
+      font-size: 1.3em;
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html" class="btn">← Powrót</a>
+    <div id="balance-display">💰 ...</div>
+  </header>
+
+  <div class="content">
+    <h1><span class="emoji">🧍‍♂️</span>Twój Profil</h1>
+    <div class="info">👤 Nazwa użytkownika: <span id="username">...</span></div>
+    <div class="info">💰 Saldo: <span id="balance">...</span> żetonów</div>
+    <div class="info">📧 E-mail: <span id="email">...</span></div>
+
+    <!-- Możliwość przyszłej edycji -->
+    <a class="btn" onclick="alert('Opcja edycji profilu będzie dostępna wkrótce!')">✏️ Edytuj profil</a>
+  </div>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    if (!user) {
+      window.location.href = 'index.html';
+    } else {
+      fetch(`https://gadsino.onrender.com/player/${user.username}`)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('username').textContent = user.username;
+          document.getElementById('balance').textContent = data.balance;
+          document.getElementById('email').textContent = data.email || 'brak danych';
+          document.getElementById('balance-display').textContent = `💰 ${data.balance} żetonów`;
+        })
+        .catch(() => {
+          alert('Błąd ładowania danych profilu.');
+        });
+    }
+  </script>
+</body>
+</html>
