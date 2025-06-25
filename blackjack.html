@@ -292,8 +292,8 @@
     
       const username = user.username;
       const socket = io('https://gadsino.onrender.com');
-      socket.emit('sync_state', { tableId: defaultTableId, username });
-      const defaultTableId = 'default';
+      const defaultTableId = 'default'; // ← najpierw zdefiniuj
+      socket.emit('sync_state', { tableId: defaultTableId, username }); // ← dopiero potem wyślij
       let joinedSlot = null;
       let dealingAnimation = false;
       let hitAnimationFor = null;
