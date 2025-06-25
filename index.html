@@ -18,6 +18,40 @@
       justify-content: center;
       align-items: center;
     }
+    #leaderboard-panel {
+  position: fixed;
+  top: 100px;
+  right: 30px;
+  background: #2f3542;
+  padding: 1em 1.5em;
+  border-radius: 15px;
+  color: white;
+  width: 220px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.6);
+  z-index: 50;
+}
+    #leaderboard-panel h2 {
+      margin-top: 0;
+      font-size: 1.4em;
+      color: #ffa502;
+      text-align: center;
+    }
+    
+    #leaderboard-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    #leaderboard-list li {
+      padding: 6px 0;
+      font-size: 1.1em;
+      border-bottom: 1px solid #444;
+    }
+    
+    #leaderboard-list li:last-child {
+      border-bottom: none;
+    }
     header {
       position: fixed;
       top: 0; right: 0;
@@ -182,6 +216,10 @@
     <span class="text">GadSino</span>
     <span class="emoji flicker">🎰</span>
   </h1>
+  <div id="leaderboard-panel">
+  <h2>🏆 Top Gracze</h2>
+  <ul id="leaderboard-list"></ul>
+  </div>
   <p>Witamy w miejscu, gdzie marzenia umierają szybciej niż twoje saldo.</p>
   <a href="blackjack.html"><button>♠ Zagraj w Blackjacka ♠</button></a>
 
@@ -335,6 +373,20 @@
     } else {
       document.querySelector('a[href="blackjack.html"] button').disabled = true;
     }
+    fetch('https://gadsino.onrender.com/leaderboard')
+  .then(res => res.json())
+  .then(data => {
+    const list = document.getElementById('leaderboard-list');
+    data.forEach((entry, i) => {
+      const li = document.createElement('li');
+      li.textContent = `${i + 1}. ${entry.username} – ${entry.balance} żetonów`;
+      list.appendChild(li);
+    });
+  })
+  .catch(() => {
+    const list = document.getElementById('leaderboard-list');
+    list.innerHTML = '<li>Błąd ładowania</li>';
+  });
   </script>
 </body>
 </html>
