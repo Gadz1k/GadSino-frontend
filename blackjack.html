@@ -225,7 +225,21 @@
     <div><strong>Saldo:</strong> <span id="user-balance">--</span> żetonów</div>
     <button id="leave-btn" style="display:none" onclick="leaveTable()">Opuść stół</button>
   </div>
-
+    <div id="round-feedback" style="
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.85);
+    padding: 1em 2em;
+    color: white;
+    border-radius: 10px;
+    font-size: 1.2em;
+    font-weight: bold;
+    display: none;
+    z-index: 999;
+    box-shadow: 0 0 20px #ffa502;
+  "></div>
   <div id="table-container">
     <object id="svg-table" type="image/svg+xml" data="img/bj-table.svg"></object>
     <div id="dealer-slot" class="table-slot">
@@ -287,6 +301,23 @@
         updateHands(table);
         document.getElementById('chip-modal').style.display = 'none';
         document.getElementById('action-modal').style.display = 'none';
+      
+        const me = table.players.find(p => p?.username === username);
+        const feedback = document.getElementById('round-feedback');
+      
+        if (me) {
+          let text = '';
+          if (me.result === 'Wygrana') text = `✅ Wygrałeś ${me.bet * 2} żetonów!`;
+          else if (me.result === 'Remis') text = `➖ Remis. Zachowałeś ${me.bet} żetonów.`;
+          else if (me.result === 'Przegrana') text = `❌ Przegrałeś ${me.bet} żetonów!`;
+          else if (me.status === 'bust') text = `💀 Przebiłeś się. Żegnamy żetony.`;
+      
+          if (text) {
+            feedback.innerText = text;
+            feedback.style.display = 'block';
+            setTimeout(() => feedback.style.display = 'none', 4000);
+          }
+        }
       });
       socket.on('your_turn', turnUser => {
         const isYourTurn = turnUser === username;
