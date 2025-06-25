@@ -18,11 +18,10 @@
       justify-content: space-between;
       align-items: center;
       padding: 1em 2em;
-      background: transparent;
     }
 
     .content {
-      max-width: 600px;
+      max-width: 900px;
       margin: 3em auto;
       background: #2f3542;
       padding: 2em;
@@ -57,6 +56,7 @@
       cursor: pointer;
       transition: background 0.3s ease;
       text-decoration: none;
+      margin-top: 1em;
     }
 
     .btn:hover {
@@ -66,6 +66,50 @@
     .emoji {
       font-size: 1.3em;
       margin-right: 5px;
+    }
+
+    .flexbox {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2em;
+    }
+
+    .profile-box, .history-box {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .history-box h2 {
+      color: #ffa502;
+      margin-top: 0.5em;
+      text-align: left;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1em;
+    }
+
+    th, td {
+      padding: 0.6em;
+      text-align: left;
+      border-bottom: 1px solid #444;
+    }
+
+    th {
+      background: #3a3a3a;
+      color: #ffa502;
+    }
+
+    td {
+      color: #f1f2f6;
+    }
+
+    .error {
+      color: #ff6b6b;
+      font-weight: bold;
+      margin-top: 1em;
     }
   </style>
 </head>
@@ -77,12 +121,33 @@
 
   <div class="content">
     <h1><span class="emoji">🧍‍♂️</span>Twój Profil</h1>
-    <div class="info">👤 Nazwa użytkownika: <span id="username">...</span></div>
-    <div class="info">💰 Saldo: <span id="balance">...</span> żetonów</div>
-    <div class="info">📧 E-mail: <span id="email">...</span></div>
+    <div class="flexbox">
+      <div class="profile-box">
+        <div class="info">👤 Nazwa użytkownika: <span id="username">...</span></div>
+        <div class="info">💰 Saldo: <span id="balance">...</span> żetonów</div>
+        <div class="info">📧 E-mail: <span id="email">...</span></div>
+        <div class="info">📅 Dołączył: <span id="createdAt">...</span></div>
+        <a class="btn" onclick="alert('Opcja edycji profilu będzie dostępna wkrótce!')">✏️ Edytuj profil</a>
+      </div>
 
-    <!-- Możliwość przyszłej edycji -->
-    <a class="btn" onclick="alert('Opcja edycji profilu będzie dostępna wkrótce!')">✏️ Edytuj profil</a>
+      <div class="history-box">
+        <h2>📜 Historia transakcji</h2>
+        <div id="history-error" class="error" style="display:none;"></div>
+        <table id="history-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Typ</th>
+              <th>Ilość</th>
+              <th>Saldo po</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="4">Ładowanie danych...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -97,10 +162,36 @@
           document.getElementById('username').textContent = user.username;
           document.getElementById('balance').textContent = data.balance;
           document.getElementById('email').textContent = data.email || 'brak danych';
+          document.getElementById('createdAt').textContent = new Date(data.createdAt).toLocaleDateString('pl-PL');
           document.getElementById('balance-display').textContent = `💰 ${data.balance} żetonów`;
         })
         .catch(() => {
           alert('Błąd ładowania danych profilu.');
+        });
+
+      fetch(`https://gadsino.onrender.com/player/${user.username}/history`)
+        .then(res => res.json())
+        .then(history => {
+          const tbody = document.querySelector('#history-table tbody');
+          tbody.innerHTML = '';
+          if (history.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4">Brak transakcji.</td></tr>';
+            return;
+          }
+          history.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${new Date(item.date).toLocaleDateString('pl-PL')}</td>
+              <td>${item.type}</td>
+              <td>${item.amount > 0 ? '+' : ''}${item.amount}</td>
+              <td>${item.balanceAfter}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(() => {
+          document.getElementById('history-error').textContent = 'Nie udało się pobrać historii.';
+          document.getElementById('history-error').style.display = 'block';
         });
     }
   </script>
