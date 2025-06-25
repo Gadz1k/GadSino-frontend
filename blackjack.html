@@ -341,8 +341,14 @@
       });
       socket.on('your_turn', turnUser => {
         const isYourTurn = turnUser === username;
-        document.getElementById('action-modal').style.display = isYourTurn ? 'flex' : 'none';
-        document.getElementById('result').innerText = isYourTurn ? 'Twoja tura!' : `Tura gracza: ${turnUser}`;
+        if (isYourTurn) {
+          // 👇 pokaż modal tylko jeśli to twoja tura i jesteś aktywnym graczem
+          document.getElementById('action-modal').style.display = 'flex';
+          document.getElementById('result').innerText = 'Twoja tura!';
+        } else {
+          document.getElementById('action-modal').style.display = 'none';
+          document.getElementById('result').innerText = `Tura gracza: ${turnUser}`;
+        }
       });
       socket.on('countdown_tick', secondsLeft => {
         document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
