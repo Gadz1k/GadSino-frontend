@@ -299,204 +299,205 @@
     </div>
   </div>
   <script>
-    const loginModal = document.getElementById('login-modal');
-    const registerModal = document.getElementById('register-modal');
-    const loginOpenBtn = document.getElementById('login-open-btn');
-    const registerOpenBtn = document.getElementById('register-open-btn');
-    const loginCloseBtn = document.getElementById('login-close-btn');
-    const registerCloseBtn = document.getElementById('register-close-btn');
-    const loginError = document.getElementById('login-error');
-    const registerError = document.getElementById('register-error');
+  const loginModal = document.getElementById('login-modal');
+  const registerModal = document.getElementById('register-modal');
+  const loginOpenBtn = document.getElementById('login-open-btn');
+  const registerOpenBtn = document.getElementById('register-open-btn');
+  const loginCloseBtn = document.getElementById('login-close-btn');
+  const registerCloseBtn = document.getElementById('register-close-btn');
+  const loginError = document.getElementById('login-error');
+  const registerError = document.getElementById('register-error');
+  const depositModal = document.getElementById('deposit-modal');
+  const depositBtn = document.getElementById('deposit-submit-btn');
+  const depositCloseBtn = document.getElementById('deposit-close-btn');
+  const depositError = document.getElementById('deposit-error');
 
-    loginOpenBtn.onclick = () => {
-      loginError.style.display = 'none';
-      loginModal.classList.add('active');
-      registerModal.classList.remove('active');
-    };
-    registerOpenBtn.onclick = () => {
-      registerError.style.display = 'none';
-      registerModal.classList.add('active');
-      loginModal.classList.remove('active');
-    };
-    loginCloseBtn.onclick = () => loginModal.classList.remove('active');
-    registerCloseBtn.onclick = () => registerModal.classList.remove('active');
+  loginOpenBtn.onclick = () => {
+    loginError.style.display = 'none';
+    loginModal.classList.add('active');
+    registerModal.classList.remove('active');
+  };
+  registerOpenBtn.onclick = () => {
+    registerError.style.display = 'none';
+    registerModal.classList.add('active');
+    loginModal.classList.remove('active');
+  };
+  loginCloseBtn.onclick = () => loginModal.classList.remove('active');
+  registerCloseBtn.onclick = () => registerModal.classList.remove('active');
 
-    document.getElementById('login-submit-btn').onclick = async () => {
-      loginError.style.display = 'none';
-      const username = document.getElementById('login-username').value.trim();
-      const password = document.getElementById('login-password').value;
-      if (!username || !password) {
-        loginError.style.display = 'block';
-        loginError.textContent = 'Podaj nazwę użytkownika i hasło.';
-        return;
-      }
-
-      try {
-        const res = await fetch('https://gadsino.onrender.com/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          loginError.style.display = 'block';
-          loginError.textContent = data.message || 'Błąd logowania.';
-          return;
-        }
-        localStorage.setItem('user', JSON.stringify(data));
-        alert(`Witaj, ${data.username}!`);
-        window.location.reload();
-      } catch (e) {
-        loginError.style.display = 'block';
-        loginError.textContent = 'Błąd połączenia z serwerem.';
-      }
-    };
-
-    document.getElementById('register-submit-btn').onclick = async () => {
-      registerError.style.display = 'none';
-      const username = document.getElementById('register-username').value.trim();
-      const email = document.getElementById('register-email').value.trim();
-      const password = document.getElementById('register-password').value;
-      if (!username || !email || !password) {
-        registerError.style.display = 'block';
-        registerError.textContent = 'Wypełnij wszystkie pola.';
-        return;
-      }
-
-      try {
-        const res = await fetch('https://gadsino.onrender.com/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, email, password })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          registerError.style.display = 'block';
-          registerError.textContent = data.message || 'Błąd rejestracji.';
-          return;
-        }
-        alert('Rejestracja udana! Możesz się zalogować.');
-        registerModal.classList.remove('active');
-      } catch (e) {
-        registerError.style.display = 'block';
-        registerError.textContent = 'Błąd połączenia z serwerem.';
-      }
-    };
-
-    window.addEventListener('keydown', e => {
-      if (e.key === 'Escape') {
-        loginModal.classList.remove('active');
-        registerModal.classList.remove('active');
-      }
-    });
-
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user) {
-      loginOpenBtn.style.display = 'none';
-      registerOpenBtn.style.display = 'none';
-
-      const userInfo = document.createElement('div');
-      fetch(`https://gadsino.onrender.com/player/${user.username}`)
-        .then(res => res.json())
-        .then(data => {
-          userInfo.innerHTML = `
-            <div class="dropdown">
-              <button class="dropdown-toggle">
-                👤 ${user.username} ⏷
-              </button>
-              <div class="dropdown-menu">
-                <div class="dropdown-item" onclick="goToProfile()">👁 Profil</div>
-                <div class="dropdown-item" onclick="openAddChipsModal()">💰 Wpłać żetony</div>
-                <div class="dropdown-item" onclick="logout()">🚪 Wyloguj</div>
-              </div>
-            </div>
-            <span style="margin-left: 10px;">💰 ${data.balance} żetonów</span>
-          `;
-        })
-        .catch(() => {
-          userInfo.innerHTML = `👤 Zalogowany jako: ${user.username} | 💰 Błąd pobierania salda`;
-        });
-
-      const header = document.querySelector('header');
-      header.appendChild(userInfo);
-      header.appendChild(logoutBtn);
-
-      document.querySelector('a[href="blackjack.html"] button').disabled = false;
-    } else {
-      document.querySelector('a[href="blackjack.html"] button').disabled = true;
+  document.getElementById('login-submit-btn').onclick = async () => {
+    loginError.style.display = 'none';
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!username || !password) {
+      loginError.style.display = 'block';
+      loginError.textContent = 'Podaj nazwę użytkownika i hasło.';
+      return;
     }
-    fetch('https://gadsino.onrender.com/leaderboard')
-  .then(res => res.json())
-  .then(data => {
-    const list = document.getElementById('leaderboard-list');
-    data.forEach((entry, i) => {
-      const li = document.createElement('li');
-      li.textContent = `${i + 1}. ${entry.username} – ${entry.balance} żetonów`;
-      list.appendChild(li);
-    });
-  })
-  .catch(() => {
-    const list = document.getElementById('leaderboard-list');
-    list.innerHTML = '<li>Błąd ładowania</li>';
+
+    try {
+      const res = await fetch('https://gadsino.onrender.com/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        loginError.style.display = 'block';
+        loginError.textContent = data.message || 'Błąd logowania.';
+        return;
+      }
+      localStorage.setItem('user', JSON.stringify(data));
+      alert(`Witaj, ${data.username}!`);
+      window.location.reload();
+    } catch (e) {
+      loginError.style.display = 'block';
+      loginError.textContent = 'Błąd połączenia z serwerem.';
+    }
+  };
+
+  document.getElementById('register-submit-btn').onclick = async () => {
+    registerError.style.display = 'none';
+    const username = document.getElementById('register-username').value.trim();
+    const email = document.getElementById('register-email').value.trim();
+    const password = document.getElementById('register-password').value;
+    if (!username || !email || !password) {
+      registerError.style.display = 'block';
+      registerError.textContent = 'Wypełnij wszystkie pola.';
+      return;
+    }
+
+    try {
+      const res = await fetch('https://gadsino.onrender.com/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        registerError.style.display = 'block';
+        registerError.textContent = data.message || 'Błąd rejestracji.';
+        return;
+      }
+      alert('Rejestracja udana! Możesz się zalogować.');
+      registerModal.classList.remove('active');
+    } catch (e) {
+      registerError.style.display = 'block';
+      registerError.textContent = 'Błąd połączenia z serwerem.';
+    }
+  };
+
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      loginModal.classList.remove('active');
+      registerModal.classList.remove('active');
+      depositModal.classList.remove('active');
+    }
   });
+
   function goToProfile() {
     window.location.href = 'profile.html';
   }
-  
+
   function openAddChipsModal() {
-    alert("Tutaj zrobimy modal do dodawania żetonów 🤑");
+    depositError.style.display = 'none';
+    document.getElementById('deposit-amount').value = '';
+    depositModal.classList.add('active');
   }
-  
+
+  depositCloseBtn.onclick = () => depositModal.classList.remove('active');
+
+  depositBtn.onclick = async () => {
+    depositError.style.display = 'none';
+    const amount = parseInt(document.getElementById('deposit-amount').value);
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!amount || amount <= 0) {
+      depositError.textContent = 'Podaj poprawną kwotę.';
+      depositError.style.display = 'block';
+      return;
+    }
+
+    try {
+      const res = await fetch(`https://gadsino.onrender.com/player/${user.username}/deposit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Błąd wpłaty.');
+
+      // Aktualizacja salda
+      document.querySelectorAll('span').forEach(el => {
+        if (el.textContent.includes('żeton')) {
+          el.textContent = `💰 ${data.balance} żetonów`;
+        }
+      });
+
+      depositModal.classList.remove('active');
+    } catch (err) {
+      depositError.textContent = err.message || 'Błąd połączenia z serwerem.';
+      depositError.style.display = 'block';
+    }
+  };
+
+  function renderLeaderboard() {
+    fetch('https://gadsino.onrender.com/leaderboard')
+      .then(res => res.json())
+      .then(data => {
+        const list = document.getElementById('leaderboard-list');
+        list.innerHTML = '';
+        data.forEach((entry, i) => {
+          const li = document.createElement('li');
+          li.textContent = `${i + 1}. ${entry.username} – ${entry.balance} żetonów`;
+          list.appendChild(li);
+        });
+      })
+      .catch(() => {
+        const list = document.getElementById('leaderboard-list');
+        list.innerHTML = '<li>Błąd ładowania</li>';
+      });
+  }
+
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (user) {
+    loginOpenBtn.style.display = 'none';
+    registerOpenBtn.style.display = 'none';
+
+    const userInfo = document.createElement('div');
+
+    fetch(`https://gadsino.onrender.com/player/${user.username}`)
+      .then(res => res.json())
+      .then(data => {
+        userInfo.innerHTML = `
+          <div class="dropdown">
+            <button class="dropdown-toggle">👤 ${user.username} ⏷</button>
+            <div class="dropdown-menu">
+              <div class="dropdown-item" onclick="goToProfile()">👁 Profil</div>
+              <div class="dropdown-item" onclick="openAddChipsModal()">💰 Wpłać żetony</div>
+              <div class="dropdown-item" onclick="logout()">🚪 Wyloguj</div>
+            </div>
+          </div>
+          <span style="margin-left: 10px;">💰 ${data.balance} żetonów</span>
+        `;
+        document.querySelector('header').appendChild(userInfo);
+        renderLeaderboard();
+      })
+      .catch(() => {
+        userInfo.textContent = `👤 Zalogowany jako: ${user.username} | 💰 Błąd pobierania salda`;
+        document.querySelector('header').appendChild(userInfo);
+        renderLeaderboard();
+      });
+
+    document.querySelector('a[href="blackjack.html"] button').disabled = false;
+  } else {
+    document.querySelector('a[href="blackjack.html"] button').disabled = true;
+    renderLeaderboard(); // renderuj leaderboard gdy nie ma usera
+  }
+
   function logout() {
     localStorage.removeItem('user');
     window.location.reload();
   }
-    const depositModal = document.getElementById('deposit-modal');
-    const depositBtn = document.getElementById('deposit-submit-btn');
-    const depositCloseBtn = document.getElementById('deposit-close-btn');
-    const depositError = document.getElementById('deposit-error');
-    
-    function openAddChipsModal() {
-      depositError.style.display = 'none';
-      document.getElementById('deposit-amount').value = '';
-      depositModal.classList.add('active');
-    }
-    
-    depositCloseBtn.onclick = () => depositModal.classList.remove('active');
-    
-    depositBtn.onclick = async () => {
-      depositError.style.display = 'none';
-      const amount = parseInt(document.getElementById('deposit-amount').value);
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (!amount || amount <= 0) {
-        depositError.textContent = 'Podaj poprawną kwotę.';
-        depositError.style.display = 'block';
-        return;
-      }
-    
-      try {
-        const res = await fetch(`https://gadsino.onrender.com/player/${user.username}/deposit`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Błąd wpłaty.');
-    
-        // Aktualizacja balansu na stronie
-        document.querySelector('#balance-display').textContent = `💰 ${data.balance} żetonów`;
-        document.querySelectorAll('span').forEach(el => {
-          if (el.textContent.includes('żeton')) {
-            el.textContent = `💰 ${data.balance} żetonów`;
-          }
-        });
-    
-        depositModal.classList.remove('active');
-      } catch (err) {
-        depositError.textContent = err.message || 'Błąd połączenia z serwerem.';
-        depositError.style.display = 'block';
-      }
-    };
-  </script>
+</script>
 </body>
 </html>
