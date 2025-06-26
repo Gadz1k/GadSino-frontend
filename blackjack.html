@@ -319,7 +319,6 @@
       const username = user.username;
       let selectedBetType = 'main';
       let selectedChipValue = null;
-      let joinedSlot = null; // ← TU, globalnie!
       const socket = io('https://gadsino.onrender.com');
       const defaultTableId = 'default'; // ← najpierw zdefiniuj
       socket.emit('sync_state', { tableId: defaultTableId, username }); // ← dopiero potem wyślij
