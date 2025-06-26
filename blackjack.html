@@ -67,14 +67,16 @@
 
     .table-slot b {
       position: absolute;
-      top: -30px; /* Przesunięcie do góry */
+      top: -30px;
       left: 50%;
       transform: translateX(-50%);
       font-size: 0.85em;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.9); /* mocniej widoczny */
       padding: 4px 8px;
       border-radius: 6px;
-      z-index: 15;
+      z-index: 99; /* 🧠 TO JEST KLUCZOWE */
+      pointer-events: none;
+      white-space: nowrap;
     }
 
     .slot-cards img,
