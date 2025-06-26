@@ -383,6 +383,17 @@
           }
         }
       });
+      socket.on('leave_table', ({ tableId, username }) => {
+        const table = tables[tableId];
+        if (!table) return;
+      
+        const playerIndex = table.players.findIndex(p => p && p.username === username);
+        if (playerIndex !== -1) {
+          table.players[playerIndex] = null;
+          io.emit('table_update', table);
+          console.log(`❌ ${username} opuścił stół ${tableId}`);
+        }
+      });
       socket.on('countdown_tick', secondsLeft => {
         document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
       });
