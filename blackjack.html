@@ -234,6 +234,38 @@
       top: 0;
       left: 0;
     }
+    .player-label {
+        position: absolute;
+        top: -40px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.85em;
+        font-weight: bold;
+        background: rgba(0, 0, 0, 0.85);
+        padding: 3px 10px;
+        border-radius: 12px;
+        white-space: nowrap;
+        z-index: 50;
+        pointer-events: none;
+      }
+    .bet-bubble {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: gold;
+      color: black;
+      font-weight: bold;
+      font-size: 0.75em;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 99;
+      box-shadow: 0 0 5px #000;
+    }
   </style>
 </head>
 <body>
@@ -439,19 +471,14 @@
           if (player && el) {
             el.innerHTML = '';
       
-            const name = document.createElement('b');
-            const betInfo = player.bet > 0 ? `: 💰 ${player.bet} żetonów` : '';
-            let resultText = '';
-      
-            if (player.result === 'Wygrana') resultText = ' ✅';
-            else if (player.result === 'Remis') resultText = ' ➖';
-            else if (player.result === 'Przegrana') resultText = ' ❌';
-            else if (player.status === 'bust') resultText = ' 💀';
-      
+            // 🔰 Nick + wartość kart na górze
             const handValue = calculateHandValue(player.hand || []);
-            name.textContent = `${player.username} (${handValue})${betInfo}${resultText}`;
-            el.appendChild(name);
+            const label = document.createElement('div');
+            label.className = 'player-label';
+            label.innerText = `${player.username} (${handValue})`;
+            el.appendChild(label);
       
+            // 🔰 Karty
             const cardsContainer = document.createElement('div');
             cardsContainer.className = 'slot-cards';
       
@@ -464,7 +491,7 @@
       
             el.appendChild(cardsContainer);
       
-            // 🔥 Dodajemy bet-zony
+            // 🔰 Bet-zone
             const betZones = document.createElement('div');
             betZones.className = 'bet-zones';
             betZones.innerHTML = `
@@ -475,6 +502,23 @@
             `;
             el.appendChild(betZones);
             el.style.pointerEvents = 'none';
+      
+            // 🔰 Bet bąbelek tylko jeśli main bet istnieje
+            if (player.bet > 0) {
+              const chip = document.createElement('img');
+              chip.src = `chips/${player.bet}.png`;
+              chip.className = 'placed-chip';
+      
+              const bubble = document.createElement('div');
+              bubble.className = 'bet-bubble';
+              bubble.innerText = player.bet;
+      
+              const mainBetZone = betZones.querySelector('.main-bet');
+              if (mainBetZone) {
+                mainBetZone.appendChild(chip);
+                mainBetZone.appendChild(bubble);
+              }
+            }
       
             if (player.username === username) {
               joinedSlot = i;
@@ -489,6 +533,7 @@
           }
         });
       
+        // 🔰 Dealer
         const dealerHandEl = document.getElementById('dealer-hand');
         dealerHandEl.innerHTML = '';
         const dealerSlot = document.getElementById('dealer-slot');
@@ -505,8 +550,7 @@
           dealerHandEl.appendChild(img);
         });
       
-        updateUserInfo();
-      
+        // 🔰 Aktywna tura
         table.players.forEach((player, i) => {
           const el = document.getElementById(`slot-${i}`);
           if (!el) return;
@@ -517,8 +561,11 @@
           }
         });
       
+        // 🔰 Pokazuj chipy tylko przy fazie betów
         const chipModal = document.getElementById('chip-modal');
         chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
+      
+        updateUserInfo();
       }
     
       function joinSlot(slotIndex) {
@@ -580,6 +627,11 @@
         chipImg.style.pointerEvents = 'none';
       
         zone.appendChild(chipImg);
+        
+        const betBubble = document.createElement('div');
+        betBubble.className = 'bet-bubble';
+        betBubble.innerText = amount;
+        zone.appendChild(betBubble);
       }
     
       function hit() {
