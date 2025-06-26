@@ -509,31 +509,6 @@
       
         const chipModal = document.getElementById('chip-modal');
         chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
-      
-        // 🧠 Kliknięcie w bet-zone wybiera typ zakładu
-        document.querySelectorAll('.bet-zone').forEach(zone => {
-          zone.onclick = (e) => {
-            e.stopPropagation();
-            const classes = e.target.classList;
-          
-            if (!selectedChipValue) {
-              alert("Najpierw wybierz żeton!");
-              return;
-            }
-          
-            if (classes.contains('side-21')) selectedBetType = '21+3';
-            else if (classes.contains('side-pair')) selectedBetType = 'pair';
-            else if (classes.contains('vs-bet')) selectedBetType = 'vs';
-            else selectedBetType = 'main';
-          
-            // podświetlenie
-            document.querySelectorAll('.bet-zone').forEach(z => z.style.outline = '');
-            e.target.style.outline = '2px solid #00ffcc';
-          
-            // odpalanie betowania
-            placeBet(selectedChipValue);
-          };
-        });
       }
     
       function joinSlot(slotIndex) {
@@ -664,6 +639,29 @@
     
       svgObject.addEventListener('load', () => {
         positionSlots();
+      });
+        document.getElementById('table-container').addEventListener('click', e => {
+        const target = e.target;
+        if (!target.classList.contains('bet-zone')) return;
+      
+        e.stopPropagation();
+      
+        if (!selectedChipValue) {
+          alert("Najpierw wybierz żeton!");
+          return;
+        }
+      
+        if (target.classList.contains('side-21')) selectedBetType = '21+3';
+        else if (target.classList.contains('side-pair')) selectedBetType = 'pair';
+        else if (target.classList.contains('vs-bet')) selectedBetType = 'vs';
+        else selectedBetType = 'main';
+      
+        // podświetlenie
+        document.querySelectorAll('.bet-zone').forEach(z => z.style.outline = '');
+        target.style.outline = '2px solid #00ffcc';
+      
+        // odpalanie betowania
+        placeBet(selectedChipValue);
       });
     </script>
 </body>
