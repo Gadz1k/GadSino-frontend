@@ -330,10 +330,10 @@
       
         if (me) {
           let text = '';
-          if (me.result === 'Wygrana') text = ✅ Wygrałeś ${me.bet * 2} żetonów!;
-          else if (me.result === 'Remis') text = ➖ Remis. Zachowałeś ${me.bet} żetonów.;
-          else if (me.result === 'Przegrana') text = ❌ Przegrałeś ${me.bet} żetonów!;
-          else if (me.status === 'bust') text = 💀 Przebiłeś się. Żegnamy żetony.;
+          if (me.result === 'Wygrana') text = `✅ Wygrałeś ${me.bet * 2} żetonów!`;
+          else if (me.result === 'Remis') text = `➖ Remis. Zachowałeś ${me.bet} żetonów.`;
+          else if (me.result === 'Przegrana') text = `❌ Przegrałeś ${me.bet} żetonów!`;
+          else if (me.status === 'bust') text = `💀 Przebiłeś się. Żegnamy żetony.`;
       
           if (text) {
             feedback.innerText = text;
@@ -360,7 +360,7 @@
         }
       });
       socket.on('countdown_tick', secondsLeft => {
-        document.getElementById('countdown-timer').innerText = Runda rozpocznie się za ${secondsLeft} sekund...;
+        document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
       });
       socket.on('player_updated', ({ username: updatedUser, hand }) => {
         if (updatedUser === username) {
@@ -389,17 +389,17 @@
         }
       
         if (aces > 0 && total + 10 <= 21) {
-          return ${total}/${total + 10}; // miękki as
+          return `${total}/${total + 10}`; // miękki as
         }
       
-        return ${total};
+        return `${total}`;
       }
     
       function getCardSrc(card) {
         if (!card || card.rank === '❓') return 'svg-cards/back.svg';
         const map = { 'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace' };
         const val = map[card.rank] || card.rank;
-        return svg-cards/${val}_of_${card.suit}.svg;
+        return `svg-cards/${val}_of_${card.suit}.svg`;
       }
     
       function flyCard(fromEl, toEl, cardSrc, delay = 0) {
@@ -411,14 +411,14 @@
         const fromBox = fromEl.getBoundingClientRect();
         const toBox = toEl.getBoundingClientRect();
     
-        card.style.left = ${fromBox.left + fromBox.width / 2 - 30}px;
-        card.style.top = ${fromBox.top + fromBox.height / 2 - 40}px;
+        card.style.left = `${fromBox.left + fromBox.width / 2 - 30}px`;
+        card.style.top = `${fromBox.top + fromBox.height / 2 - 40}px`;
     
         setTimeout(() => {
           const dx = toBox.left + toBox.width / 2 - 30;
           const dy = toBox.top + toBox.height / 2 - 40;
     
-          card.style.transform = translate(${dx - (fromBox.left + fromBox.width / 2 - 30)}px, ${dy - (fromBox.top + fromBox.height / 2 - 40)}px);
+          card.style.transform = `translate(${dx - (fromBox.left + fromBox.width / 2 - 30)}px, ${dy - (fromBox.top + fromBox.height / 2 - 40)}px)`;
           card.style.opacity = '0';
     
           setTimeout(() => card.remove(), 500);
@@ -430,11 +430,11 @@
         let playerIsSeated = false;
     
         table.players.forEach((player, i) => {
-          const el = document.getElementById(slot-${i});
+          const el = document.getElementById(`slot-${i}`);
           if (player && el) {
             el.innerHTML = '';
             const name = document.createElement('b');
-            const betInfo = player.bet > 0 ? : 💰 ${player.bet} żetonów : '';
+            const betInfo = player.bet > 0 ? `: 💰 ${player.bet} żetonów` : '';
             let resultText = '';
     
             if (player.result === 'Wygrana') resultText = ' ✅';
@@ -443,7 +443,7 @@
             else if (player.status === 'bust') resultText = ' 💀';
     
             const handValue = calculateHandValue(player.hand || []);
-            name.textContent = ${player.username} (${handValue})${betInfo}${resultText};
+            name.textContent = `${player.username} (${handValue})${betInfo}${resultText}`;
             el.appendChild(name);
     
             const cardsContainer = document.createElement('div');
@@ -486,7 +486,7 @@
           } else if (el) {
             el.style.pointerEvents = 'auto';
             el.innerHTML = joinedSlot === null
-              ? <button class="join-btn" onclick="joinSlot(${i})">👤</button>
+              ? `<button class="join-btn" onclick="joinSlot(${i})">👤</button>`
               : '';
           }
         });
@@ -505,7 +505,7 @@
         hitAnimationFor = null;
     
         table.players.forEach((player, i) => {
-          const el = document.getElementById(slot-${i});
+          const el = document.getElementById(`slot-${i}`);
           if (!el) return;
           if (table.phase === 'playing' && i === table.currentPlayerIndex && player?.status === 'playing') {
             el.classList.add('active-turn');
@@ -532,7 +532,7 @@
       }
     
       function updateUserInfo() {
-        fetch(https://gadsino.onrender.com/player/${username})
+        fetch(`https://gadsino.onrender.com/player/${username}`)
           .then(res => res.json())
           .then(data => document.getElementById('user-balance').innerText = data.balance)
           .catch(() => document.getElementById('user-balance').innerText = '--');
@@ -579,21 +579,21 @@
         if (dealerArea) {
           const bbox = dealerArea.getBBox();
           const dealerSlot = document.getElementById('dealer-slot');
-          dealerSlot.style.left = ${(bbox.x / viewBox.width) * 100}%;
-          dealerSlot.style.top = ${(bbox.y / viewBox.height) * 100}%;
-          dealerSlot.style.width = ${(bbox.width / viewBox.width) * 100}%;
-          dealerSlot.style.height = ${(bbox.height / viewBox.height) * 100}%;
+          dealerSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
+          dealerSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
+          dealerSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
+          dealerSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
         }
     
         for (let i = 0; i < 5; i++) {
-          const svgSlot = svgDoc.getElementById(bj-table-u-slot-${i});
-          const htmlSlot = document.getElementById(slot-${i});
+          const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
+          const htmlSlot = document.getElementById(`slot-${i}`);
           if (svgSlot && htmlSlot) {
             const bbox = svgSlot.getBBox();
-            htmlSlot.style.left = ${(bbox.x / viewBox.width) * 100}%;
-            htmlSlot.style.top = ${(bbox.y / viewBox.height) * 100}%;
-            htmlSlot.style.width = ${(bbox.width / viewBox.width) * 100}%;
-            htmlSlot.style.height = ${(bbox.height / viewBox.height) * 100}%;
+            htmlSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
+            htmlSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
+            htmlSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
+            htmlSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
           }
         }
       }
