@@ -439,22 +439,19 @@
             const cardsContainer = document.createElement('div');
             cardsContainer.className = 'slot-cards';
     
+            const existingCards = el.querySelectorAll('.slot-cards img').length;
+            
             (player.hand || []).forEach((card, index) => {
               const cardSrc = getCardSrc(card);
-              const isYourHit = hitAnimationFor === player.username && index === player.hand.length - 1;
-              const isDealingPhase = dealingAnimation;
-    
-              if (isDealingPhase || isYourHit) {
-                const from = document.getElementById('dealer-slot');
-                const to = el;
-    
-                flyCard(from, to, cardSrc, index * 300);
+            
+              if (index >= existingCards) {
+                flyCard(document.getElementById('dealer-slot'), el, cardSrc);
                 setTimeout(() => {
                   const img = document.createElement('img');
                   img.src = cardSrc;
                   img.alt = card.rank || '?';
                   cardsContainer.appendChild(img);
-                }, index * 300 + 500);
+                }, 500);
               } else {
                 const img = document.createElement('img');
                 img.src = cardSrc;
@@ -489,11 +486,25 @@
         } else {
           dealerLabel.textContent = 'Dealer';
         }
-        (table.dealerHand || []).forEach(card => {
-          const img = document.createElement('img');
-          img.src = getCardSrc(card);
-          img.alt = card.rank || '?';
-          dealerHandEl.appendChild(img);
+        const prevDealerCards = dealerHandEl.querySelectorAll('img').length;
+        
+        (table.dealerHand || []).forEach((card, index) => {
+          const cardSrc = getCardSrc(card);
+        
+          if (index >= prevDealerCards) {
+            flyCard(document.getElementById('dealer-slot'), document.getElementById('dealer-slot'), cardSrc);
+            setTimeout(() => {
+              const img = document.createElement('img');
+              img.src = cardSrc;
+              img.alt = card.rank || '?';
+              dealerHandEl.appendChild(img);
+            }, 500);
+          } else {
+            const img = document.createElement('img');
+            img.src = cardSrc;
+            img.alt = card.rank || '?';
+            dealerHandEl.appendChild(img);
+          }
         });
     
         updateUserInfo();
