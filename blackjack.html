@@ -551,12 +551,43 @@
     
       function placeBet(amount) {
         if (joinedSlot === null) return alert('Najpierw dołącz do stołu!');
+      
+        // wysyłka do backendu
         socket.emit('place_bet', {
           tableId: defaultTableId,
           username,
           amount,
-          type: selectedBetType // 🔥 lecimy z wybranym typem!
+          type: selectedBetType
         });
+      
+        // 🔎 znajdź element HTML tej strefy
+        const zoneSelector = {
+          'main': '.main-bet',
+          '21+3': '.side-21',
+          'pair': '.side-pair',
+          'vs': '.vs-bet'
+        }[selectedBetType];
+      
+        const mySlot = document.getElementById(`slot-${joinedSlot}`);
+        const zone = mySlot.querySelector(zoneSelector);
+        if (!zone) return;
+      
+        // 🧹 usuń stary żeton (jeśli istnieje)
+        const old = zone.querySelector('.placed-chip');
+        if (old) old.remove();
+      
+        // 💰 stwórz nowy obrazek żetonu
+        const chipImg = document.createElement('img');
+        chipImg.src = `chips/${amount}.png`;
+        chipImg.className = 'placed-chip';
+        chipImg.style.position = 'absolute';
+        chipImg.style.width = '36px';
+        chipImg.style.height = '36px';
+        chipImg.style.top = '0';
+        chipImg.style.left = '0';
+        chipImg.style.pointerEvents = 'none';
+      
+        zone.appendChild(chipImg);
       }
     
       function hit() {
