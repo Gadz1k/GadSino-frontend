@@ -66,12 +66,15 @@
     }
 
     .table-slot b {
-      display: block;
-      margin-bottom: 4px;
+      position: absolute;
+      top: -30px; /* Przesunięcie do góry */
+      left: 50%;
+      transform: translateX(-50%);
       font-size: 0.85em;
-      background: rgba(0, 0, 0, 0.7); /* ciemniej */
+      background: rgba(0, 0, 0, 0.7);
       padding: 4px 8px;
       border-radius: 6px;
+      z-index: 15;
     }
 
     .slot-cards img,
