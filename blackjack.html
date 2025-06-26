@@ -178,6 +178,43 @@
       left: 50%;
       transform: translate(-50%, -50%);
     }
+    .bet-zones {
+      position: relative;
+      width: 100%;
+      height: 0;
+    }
+    
+    .bet-zone {
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      border: 2px dashed #ffa502;
+      border-radius: 50%;
+      background-color: rgba(255,255,255,0.05);
+    }
+    
+    .main-bet {
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    
+    .side-bet.side-21 {
+      top: -20px;
+      left: 5%;
+    }
+    
+    .side-bet.side-pair {
+      top: -20px;
+      right: 5%;
+    }
+    
+    .vs-bet {
+      bottom: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-color: #ff6b81;
+    }
   </style>
 </head>
 <body>
@@ -271,6 +308,7 @@
       }
     
       const username = user.username;
+      let selectedBetType = 'main'; // domyślnie
       const socket = io('https://gadsino.onrender.com');
       const defaultTableId = 'default'; // ← najpierw zdefiniuj
       socket.emit('sync_state', { tableId: defaultTableId, username }); // ← dopiero potem wyślij
@@ -406,6 +444,17 @@
             });
       
             el.appendChild(cardsContainer);
+      
+            // 🔥 Dodajemy bet-zony
+            const betZones = document.createElement('div');
+            betZones.className = 'bet-zones';
+            betZones.innerHTML = `
+              <div class="bet-zone main-bet"></div>
+              <div class="bet-zone side-bet side-21"></div>
+              <div class="bet-zone side-bet side-pair"></div>
+              <div class="bet-zone vs-bet"></div>
+            `;
+            el.appendChild(betZones);
             el.style.pointerEvents = 'none';
       
             if (player.username === username) {
@@ -451,6 +500,25 @@
       
         const chipModal = document.getElementById('chip-modal');
         chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
+      
+        // 🧠 Kliknięcie w bet-zone wybiera typ zakładu
+        document.querySelectorAll('.bet-zone').forEach(zone => {
+          zone.onclick = (e) => {
+            e.stopPropagation();
+            const classes = e.target.classList;
+      
+            if (classes.contains('side-21')) selectedBetType = '21+3';
+            else if (classes.contains('side-pair')) selectedBetType = 'pair';
+            else if (classes.contains('vs-bet')) selectedBetType = 'vs';
+            else selectedBetType = 'main';
+      
+            console.log('Wybrano strefę:', selectedBetType);
+      
+            // podświetlenie zaznaczonej strefy
+            document.querySelectorAll('.bet-zone').forEach(z => z.style.outline = '');
+            e.target.style.outline = '2px solid #00ffcc';
+          };
+        });
       }
     
       function joinSlot(slotIndex) {
@@ -475,7 +543,12 @@
     
       function placeBet(amount) {
         if (joinedSlot === null) return alert('Najpierw dołącz do stołu!');
-        socket.emit('place_bet', { tableId: defaultTableId, username, amount });
+        socket.emit('place_bet', {
+          tableId: defaultTableId,
+          username,
+          amount,
+          type: selectedBetType // 🔥 lecimy z wybranym typem!
+        });
       }
     
       function hit() {
