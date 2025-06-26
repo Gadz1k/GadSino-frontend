@@ -428,36 +428,37 @@
       function updateHands(table) {
         joinedSlot = null;
         let playerIsSeated = false;
-    
+      
         table.players.forEach((player, i) => {
           const el = document.getElementById(`slot-${i}`);
           if (player && el) {
             el.innerHTML = '';
+      
             const name = document.createElement('b');
             const betInfo = player.bet > 0 ? `: 💰 ${player.bet} żetonów` : '';
             let resultText = '';
-    
+      
             if (player.result === 'Wygrana') resultText = ' ✅';
             else if (player.result === 'Remis') resultText = ' ➖';
             else if (player.result === 'Przegrana') resultText = ' ❌';
             else if (player.status === 'bust') resultText = ' 💀';
-    
+      
             const handValue = calculateHandValue(player.hand || []);
             name.textContent = `${player.username} (${handValue})${betInfo}${resultText}`;
             el.appendChild(name);
-    
+      
             const cardsContainer = document.createElement('div');
             cardsContainer.className = 'slot-cards';
-    
+      
             (player.hand || []).forEach((card, index) => {
               const cardSrc = getCardSrc(card);
               const isYourHit = hitAnimationFor === player.username && index === player.hand.length - 1;
               const isDealingPhase = dealingAnimation;
-    
+      
               if (isDealingPhase || isYourHit) {
                 const from = document.getElementById('dealer-slot');
                 const to = el;
-    
+      
                 flyCard(from, to, cardSrc, index * 300);
                 setTimeout(() => {
                   const img = document.createElement('img');
@@ -474,10 +475,39 @@
                 cardsContainer.appendChild(img);
               }
             });
-    
+      
             el.appendChild(cardsContainer);
+      
+            // Jeśli jest splitHand – pokaż drugą rękę
+            if (player.splitHand) {
+              const splitValue = calculateHandValue(player.splitHand || []);
+              const splitInfo = document.createElement('b');
+              const splitBetInfo = player.splitBet > 0 ? `: 💰 ${player.splitBet} żetonów` : '';
+              const splitResultText =
+                player.splitResult === 'Wygrana' ? ' ✅' :
+                player.splitResult === 'Remis' ? ' ➖' :
+                player.splitResult === 'Przegrana' ? ' ❌' :
+                '';
+      
+              splitInfo.textContent = `${player.username} (2) (${splitValue})${splitBetInfo}${splitResultText}`;
+              el.appendChild(splitInfo);
+      
+              const splitContainer = document.createElement('div');
+              splitContainer.className = 'slot-cards';
+      
+              (player.splitHand || []).forEach(card => {
+                const img = document.createElement('img');
+                img.src = getCardSrc(card);
+                img.alt = card.rank || '?';
+                img.classList.add('slide-in-card');
+                splitContainer.appendChild(img);
+              });
+      
+              el.appendChild(splitContainer);
+            }
+      
             el.style.pointerEvents = 'none';
-    
+      
             if (player.username === username) {
               joinedSlot = i;
               playerIsSeated = true;
@@ -490,7 +520,8 @@
               : '';
           }
         });
-    
+      
+        // Dealer
         const dealerHandEl = document.getElementById('dealer-hand');
         dealerHandEl.innerHTML = '';
         (table.dealerHand || []).forEach(card => {
@@ -499,11 +530,11 @@
           img.alt = card.rank || '?';
           dealerHandEl.appendChild(img);
         });
-    
+      
         updateUserInfo();
         dealingAnimation = false;
         hitAnimationFor = null;
-    
+      
         table.players.forEach((player, i) => {
           const el = document.getElementById(`slot-${i}`);
           if (!el) return;
@@ -513,7 +544,7 @@
             el.classList.remove('active-turn');
           }
         });
-    
+      
         const chipModal = document.getElementById('chip-modal');
         chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
       }
