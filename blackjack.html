@@ -493,6 +493,14 @@
     
         const dealerHandEl = document.getElementById('dealer-hand');
         dealerHandEl.innerHTML = '';
+        const dealerSlot = document.getElementById('dealer-slot');
+        const dealerLabel = dealerSlot.querySelector('b');
+        
+        if (table.dealerValue !== null) {
+          dealerLabel.textContent = `Dealer (${table.dealerValue})`;
+        } else {
+          dealerLabel.textContent = 'Dealer';
+        }
         (table.dealerHand || []).forEach(card => {
           const img = document.createElement('img');
           img.src = getCardSrc(card);
