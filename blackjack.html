@@ -68,8 +68,8 @@
       display: block;
       margin-bottom: 4px;
       font-size: 0.85em;
-      background: rgba(0, 0, 0, 0.4);
-      padding: 2px 6px;
+      background: rgba(0, 0, 0, 0.7); /* ciemniej */
+      padding: 4px 8px;
       border-radius: 6px;
     }
 
@@ -191,26 +191,27 @@
       border: 2px dashed #ffa502;
       border-radius: 50%;
       background-color: rgba(255,255,255,0.05);
+      transition: outline 0.2s;
     }
     
     .main-bet {
-      top: -40px;
+      top: -50px;
       left: 50%;
       transform: translateX(-50%);
     }
     
     .side-bet.side-21 {
-      top: -20px;
-      left: 5%;
+      top: -10px;
+      left: -30px;
     }
     
     .side-bet.side-pair {
-      top: -20px;
-      right: 5%;
+      top: -10px;
+      right: -30px;
     }
     
     .vs-bet {
-      bottom: -40px;
+      bottom: -50px;
       left: 50%;
       transform: translateX(-50%);
       border-color: #ff6b81;
@@ -294,11 +295,11 @@
   </div>
 
   <div id="chip-modal">
-    <img src="chips/10.png" class="chip" onclick="placeBet(10)" />
-    <img src="chips/25.png" class="chip" onclick="placeBet(25)" />
-    <img src="chips/50.png" class="chip" onclick="placeBet(50)" />
-    <img src="chips/100.png" class="chip" onclick="placeBet(100)" />
-    <img src="chips/500.png" class="chip" onclick="placeBet(500)" />
+    <img src="chips/10.png" class="chip" data-value="10" />
+    <img src="chips/25.png" class="chip" data-value="25" />
+    <img src="chips/50.png" class="chip" data-value="50" />
+    <img src="chips/100.png" class="chip" data-value="100" />
+    <img src="chips/500.png" class="chip" data-value="500" />
   </div>
     <script>
       const user = JSON.parse(localStorage.getItem('user'));
@@ -309,6 +310,7 @@
     
       const username = user.username;
       let selectedBetType = 'main'; // domyślnie
+      let selectedChipValue = null;
       const socket = io('https://gadsino.onrender.com');
       const defaultTableId = 'default'; // ← najpierw zdefiniuj
       socket.emit('sync_state', { tableId: defaultTableId, username }); // ← dopiero potem wyślij
@@ -506,17 +508,23 @@
           zone.onclick = (e) => {
             e.stopPropagation();
             const classes = e.target.classList;
-      
+          
+            if (!selectedChipValue) {
+              alert("Najpierw wybierz żeton!");
+              return;
+            }
+          
             if (classes.contains('side-21')) selectedBetType = '21+3';
             else if (classes.contains('side-pair')) selectedBetType = 'pair';
             else if (classes.contains('vs-bet')) selectedBetType = 'vs';
             else selectedBetType = 'main';
-      
-            console.log('Wybrano strefę:', selectedBetType);
-      
-            // podświetlenie zaznaczonej strefy
+          
+            // podświetlenie
             document.querySelectorAll('.bet-zone').forEach(z => z.style.outline = '');
             e.target.style.outline = '2px solid #00ffcc';
+          
+            // odpalanie betowania
+            placeBet(selectedChipValue);
           };
         });
       }
@@ -605,6 +613,16 @@
           }
         }
       }
+      document.querySelectorAll('.chip').forEach(chip => {
+        chip.onclick = () => {
+          selectedChipValue = parseInt(chip.dataset.value);
+          console.log('Wybrany chip:', selectedChipValue);
+      
+          // zaznaczenie wizualne
+          document.querySelectorAll('.chip').forEach(c => c.style.outline = '');
+          chip.style.outline = '2px solid #00ffcc';
+        };
+      });
     
       svgObject.addEventListener('load', () => {
         positionSlots();
