@@ -178,16 +178,6 @@
       left: 50%;
       transform: translate(-50%, -50%);
     }
-    @keyframes slideIn {
-    from {
-      transform: translateY(-30px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
   
   .slide-in-card {
     animation: slideIn 0.3s ease forwards;
@@ -463,14 +453,12 @@
                   const img = document.createElement('img');
                   img.src = cardSrc;
                   img.alt = card.rank || '?';
-                  img.classList.add('slide-in-card');
                   cardsContainer.appendChild(img);
                 }, index * 300 + 500);
               } else {
                 const img = document.createElement('img');
                 img.src = cardSrc;
                 img.alt = card.rank || '?';
-                img.classList.add('slide-in-card');
                 cardsContainer.appendChild(img);
               }
             });
