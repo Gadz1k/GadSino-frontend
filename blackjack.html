@@ -506,17 +506,12 @@
       
             // 🔰 Bet bąbelek tylko jeśli main bet istnieje
             if (player.bet > 0) {
-              const chip = document.createElement('img');
-              chip.src = `chips/${player.bet}.png`;
-              chip.className = 'placed-chip';
-      
               const bubble = document.createElement('div');
               bubble.className = 'bet-bubble';
               bubble.innerText = player.bet;
-      
+            
               const mainBetZone = betZones.querySelector('.main-bet');
               if (mainBetZone) {
-                mainBetZone.appendChild(chip);
                 mainBetZone.appendChild(bubble);
               }
             }
