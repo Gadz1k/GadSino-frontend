@@ -510,7 +510,10 @@
             if (player.bet > 0) {
               const bubble = document.createElement('div');
               bubble.className = 'bet-bubble';
-              bubble.innerText = player.bet;
+            
+              // Jeśli gracz wygrał, pokazujemy x2 — tylko liczbowo
+              const displayValue = player.result === 'Wygrana' ? player.bet * 2 : player.bet;
+              bubble.innerText = displayValue;
             
               const mainBetZone = betZones.querySelector('.main-bet');
               if (mainBetZone) {
