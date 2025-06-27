@@ -612,27 +612,21 @@
         const zone = mySlot.querySelector(zoneSelector);
         if (!zone) return;
       
-        // 🧹 usuń stary żeton (jeśli istnieje)
-        const old = zone.querySelector('.placed-chip');
-        if (old) old.remove();
+        // 🔎 znajdź lub stwórz bet-bubble
+        let bubble = zone.querySelector('.bet-bubble');
+        if (!bubble) {
+          bubble = document.createElement('div');
+          bubble.className = 'bet-bubble';
+          bubble.innerText = amount;
+          zone.appendChild(bubble);
+        } else {
+          // 🔄 zsumuj z istniejącą wartością
+          let current = parseInt(bubble.innerText || '0');
+          let newValue = current + amount;
+          bubble.innerText = newValue;
+        }
       
-        // 💰 stwórz nowy obrazek żetonu
-        const chipImg = document.createElement('img');
-        chipImg.src = `chips/${amount}.png`;
-        chipImg.className = 'placed-chip';
-        chipImg.style.position = 'absolute';
-        chipImg.style.width = '36px';
-        chipImg.style.height = '36px';
-        chipImg.style.top = '0';
-        chipImg.style.left = '0';
-        chipImg.style.pointerEvents = 'none';
-      
-        zone.appendChild(chipImg);
-        
-        const betBubble = document.createElement('div');
-        betBubble.className = 'bet-bubble';
-        betBubble.innerText = amount;
-        zone.appendChild(betBubble);
+        // 💥 nie dodaj żadnego chip img, bo po co – tylko zaśmieca
       }
     
       function hit() {
