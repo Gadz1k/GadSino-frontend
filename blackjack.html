@@ -615,10 +615,8 @@
           bubble.innerText = amount;
           zone.appendChild(bubble);
         } else {
-          // 🔄 zsumuj z istniejącą wartością
           let current = parseInt(bubble.innerText || '0');
-          let newValue = current + amount;
-          bubble.innerText = newValue;
+          bubble.innerText = current + amount;
         }
       
         // 💥 nie dodaj żadnego chip img, bo po co – tylko zaśmieca
