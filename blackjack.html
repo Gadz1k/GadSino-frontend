@@ -269,6 +269,17 @@
       pointer-events: none;
       user-select: none; /* 🔥 to blokuje zaznaczanie tekstu */
     }
+    .bet-zone::after {
+        content: attr(data-label);
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%) translateY(4px);
+        font-size: 0.65em;
+        color: #ffa502;
+        white-space: nowrap;
+        pointer-events: none;
+      }
   </style>
 </head>
 <body>
@@ -498,10 +509,10 @@
             const betZones = document.createElement('div');
             betZones.className = 'bet-zones';
             betZones.innerHTML = `
-              <div class="bet-zone main-bet"></div>
-              <div class="bet-zone side-bet side-21"></div>
-              <div class="bet-zone side-bet side-pair"></div>
-              <div class="bet-zone vs-bet"></div>
+              <div class="bet-zone main-bet" data-label="Main"></div>
+              <div class="bet-zone side-bet side-21" data-label="21+3"></div>
+              <div class="bet-zone side-bet side-pair" data-label="Pair"></div>
+              <div class="bet-zone vs-bet" data-label="VS"></div>
             `;
             el.appendChild(betZones);
             el.style.pointerEvents = 'none';
