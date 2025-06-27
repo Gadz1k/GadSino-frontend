@@ -589,15 +589,19 @@
       function placeBet(amount) {
         if (joinedSlot === null) return alert('Najpierw dołącz do stołu!');
       
-        // wysyłka do backendu
-        socket.emit('place_bet', {
-          tableId: defaultTableId,
-          username,
-          amount,
-          type: selectedBetType
-        });
+        // 💰 Sprawdzenie salda lokalnie
+        const balanceEl = document.getElementById('user-balance');
+        const currentBalance = parseInt(balanceEl.innerText || '0');
       
-        // 🔎 znajdź element HTML tej strefy
+        if (amount > currentBalance) {
+          alert('Nie masz tyle żetonów, biedaku.');
+          return;
+        }
+      
+        // 💸 Odjęcie salda lokalnie (opcjonalne, backend i tak nadpisze)
+        balanceEl.innerText = currentBalance - amount;
+      
+        // 🎯 Znajdź strefę betowania
         const zoneSelector = {
           'main': '.main-bet',
           '21+3': '.side-21',
@@ -609,7 +613,7 @@
         const zone = mySlot.querySelector(zoneSelector);
         if (!zone) return;
       
-        // 🔎 znajdź lub stwórz bet-bubble
+        // 💬 Zaktualizuj bąbel z wartością
         let bubble = zone.querySelector('.bet-bubble');
         if (!bubble) {
           bubble = document.createElement('div');
@@ -617,11 +621,17 @@
           bubble.innerText = amount;
           zone.appendChild(bubble);
         } else {
-          let current = parseInt(bubble.innerText || '0');
+          const current = parseInt(bubble.innerText || '0');
           bubble.innerText = current + amount;
         }
       
-        // 💥 nie dodaj żadnego chip img, bo po co – tylko zaśmieca
+        // 📡 Wyślij do backendu
+        socket.emit('place_bet', {
+          tableId: defaultTableId,
+          username,
+          amount,
+          type: selectedBetType
+        });
       }
     
       function hit() {
