@@ -280,6 +280,34 @@
         white-space: nowrap;
         pointer-events: none;
       }
+    #sidebet-guide {
+      position: fixed;
+      top: 140px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 1em;
+      border-radius: 10px;
+      font-size: 0.9em;
+      max-width: 240px;
+      z-index: 20;
+      font-family: 'Courier New', monospace;
+      line-height: 1.4em;
+      box-shadow: 0 0 10px #ffa502a0;
+    }
+    #sidebet-guide h3 {
+      margin-top: 0;
+      color: #ffa502;
+      font-size: 1.1em;
+      text-align: center;
+    }
+    #sidebet-guide ul {
+      padding-left: 1em;
+      margin: 0;
+    }
+    #sidebet-guide li {
+      margin-bottom: 0.4em;
+    }
   </style>
 </head>
 <body>
@@ -305,6 +333,19 @@
     <div><strong>Zalogowany jako:</strong> <span id="logged-user">--</span></div>
     <div><strong>Saldo:</strong> <span id="user-balance">--</span> żetonów</div>
     <button id="leave-btn" style="display:none" onclick="leaveTable()">Opuść stół</button>
+  </div>
+  <div id="sidebet-guide">
+    <h3>📜 Side Bety</h3>
+    <ul>
+      <li><strong>21+3</strong>: kolor + strit + para = <span style="color: gold">100:1</span></li>
+      <li><strong>Trójka tego samego koloru</strong>: <span style="color: gold">40:1</span></li>
+      <li><strong>Strit</strong>: <span style="color: gold">10:1</span></li>
+      <li><strong>Kolor</strong>: <span style="color: gold">5:1</span></li>
+      <li><strong>Para</strong>: <span style="color: gold">4:1</span></li>
+      <li><strong>Perfect Pair</strong>: identyczne karty = <span style="color: gold">25:1</span></li>
+      <li><strong>Kolorowa Para</strong>: <span style="color: gold">12:1</span></li>
+      <li><strong>Mieszana Para</strong>: <span style="color: gold">6:1</span></li>
+    </ul>
   </div>
     <div id="round-feedback" style="
     position: fixed;
