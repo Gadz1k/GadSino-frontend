@@ -748,31 +748,46 @@
       const svgObject = document.getElementById('svg-table');
       function positionSlots() {
         const svgDoc = svgObject.contentDocument;
+        if (!svgDoc) return;
+      
         const svgRoot = svgDoc.documentElement;
         const viewBox = svgRoot.viewBox.baseVal;
-    
+      
+        const svgWidth = svgObject.offsetWidth;
+        const svgHeight = svgObject.offsetHeight;
+      
+        const scaleX = svgWidth / viewBox.width;
+        const scaleY = svgHeight / viewBox.height;
+      
         const dealerArea = svgDoc.getElementById('bj-table-u-dealer-area');
         if (dealerArea) {
           const bbox = dealerArea.getBBox();
           const dealerSlot = document.getElementById('dealer-slot');
-          dealerSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
-          dealerSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
-          dealerSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
-          dealerSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
+          dealerSlot.style.left = `${bbox.x * scaleX}px`;
+          dealerSlot.style.top = `${bbox.y * scaleY}px`;
+          dealerSlot.style.width = `${bbox.width * scaleX}px`;
+          dealerSlot.style.height = `${bbox.height * scaleY}px`;
         }
-    
+      
         for (let i = 0; i < 5; i++) {
           const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
           const htmlSlot = document.getElementById(`slot-${i}`);
           if (svgSlot && htmlSlot) {
             const bbox = svgSlot.getBBox();
-            htmlSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
-            htmlSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
-            htmlSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
-            htmlSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
+            htmlSlot.style.left = `${bbox.x * scaleX}px`;
+            htmlSlot.style.top = `${bbox.y * scaleY}px`;
+            htmlSlot.style.width = `${bbox.width * scaleX}px`;
+            htmlSlot.style.height = `${bbox.height * scaleY}px`;
           }
         }
       }
+      svgObject.addEventListener('load', () => {
+        positionSlots();
+      });
+      
+      window.addEventListener('resize', () => {
+        positionSlots();
+      });
       document.querySelectorAll('.chip').forEach(chip => {
         chip.onclick = () => {
           selectedChipValue = parseInt(chip.dataset.value);
