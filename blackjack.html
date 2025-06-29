@@ -611,6 +611,8 @@
             el.style.pointerEvents = 'auto';
             if (joinedSlot === null) {
               el.innerHTML = `<button class="join-btn" onclick="joinSlot(${i})">👤</button>`;
+            } else {
+              el.innerHTML = '';
             }
           }
         }
