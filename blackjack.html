@@ -450,7 +450,6 @@
       const defaultTableId = 'default'; // ← najpierw zdefiniuj
       socket.emit('sync_state', { tableId: defaultTableId, username }); // ← dopiero potem wyślij
       let joinedSlot = null;
-      let isPlayerAtTable = false;
     
       document.getElementById('logged-user').innerText = username;
       document.getElementById('back-to-home').onclick = () => {
@@ -551,7 +550,13 @@
       
       function updateHands(table) {
           let playerIsSeated = false;
-          const isPlayerAtTable = table.players.some(p => p?.username === username);
+          const isPlayerSeated = table.players.some(p => p?.username === username);
+      
+          // Aktualizuj joinedSlot jeśli gracz został usunięty ze stołu
+          if (joinedSlot !== null && !isPlayerSeated) {
+              joinedSlot = null;
+              document.getElementById('leave-btn').style.display = 'none';
+          }
       
           table.players.forEach((player, i) => {
               const el = document.getElementById(`slot-${i}`);
@@ -592,14 +597,19 @@
                   el.appendChild(betZones);
                   el.style.pointerEvents = 'none';
       
-                  // Bet bąbelek
+                  // Bet bąbelek tylko jeśli main bet istnieje
                   if (player.bet > 0) {
                       const bubble = document.createElement('div');
                       bubble.className = 'bet-bubble';
+                  
+                      // Jeśli gracz wygrał, pokazujemy x2 — tylko liczbowo
                       const displayValue = player.result === 'Wygrana' ? player.bet * 2 : player.bet;
                       bubble.innerText = displayValue;
+                  
                       const mainBetZone = betZones.querySelector('.main-bet');
-                      if (mainBetZone) mainBetZone.appendChild(bubble);
+                      if (mainBetZone) {
+                          mainBetZone.appendChild(bubble);
+                      }
                   }
       
                   if (player.username === username) {
@@ -609,8 +619,9 @@
                   }
               } else {
                   el.style.pointerEvents = 'auto';
-                  el.innerHTML = !isPlayerAtTable 
-                      ? `<button class="join-btn" onclick="joinSlot(${i})">👤</button>` 
+                  // Pokazuj przycisk tylko jeśli gracz nie jest przy stole
+                  el.innerHTML = !isPlayerSeated
+                      ? `<button class="join-btn" onclick="joinSlot(${i})">👤</button>`
                       : '';
               }
           });
@@ -649,20 +660,27 @@
       
           updateUserInfo();
       }
-    
+      
       function joinSlot(slotIndex) {
-          if (isPlayerAtTable) return;
+          if (joinedSlot !== null) return; // Blokuj jeśli już jesteś przy stole
           socket.emit('join_table', { tableId: defaultTableId, username, slotIndex });
-          isPlayerAtTable = true;
       }
     
       function leaveTable() {
-          if (!isPlayerAtTable) return;
-          socket.emit('leave_table', { tableId: defaultTableId, username });
-          joinedSlot = null;
-          isPlayerAtTable = false;
-          document.getElementById('leave-btn').style.display = 'none';
-          document.getElementById('action-modal').style.display = 'none';
+          if (joinedSlot === null) return;
+          
+          socket.emit('leave_table', { tableId: defaultTableId, username }, (response) => {
+              if (response.success) {
+                  joinedSlot = null;
+                  document.getElementById('leave-btn').style.display = 'none';
+                  document.getElementById('action-modal').style.display = 'none';
+                  
+                  // Wymuś odświeżenie stanu stołu
+                  socket.emit('get_table_state', { tableId: defaultTableId });
+              } else {
+                  console.error('Błąd przy opuszczaniu stołu:', response.message);
+              }
+          });
       }
     
       function updateUserInfo() {
