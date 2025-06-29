@@ -610,9 +610,11 @@
             }
           } else if (el) {
             el.style.pointerEvents = 'auto';
-            el.innerHTML = joinedSlot === null
-              ? `<button class="join-btn" onclick="joinSlot(${i})">👤</button>`
-              : '';
+            if (joinedSlot === null) {
+              el.innerHTML = `<button class="join-btn" onclick="joinSlot(${i})">👤</button>`;
+            } else {
+              el.innerHTML = '';
+            }
           }
         });
       
