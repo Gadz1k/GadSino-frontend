@@ -552,7 +552,7 @@
         let playerIsSeated = false;
       
         for (let i = 0; i < 5; i++) {
-          const player = table.players[i];
+          const player = table.players[i] || null;
           const el = document.getElementById(`slot-${i}`);
           if (!el) continue;
       
