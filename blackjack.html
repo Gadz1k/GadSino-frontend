@@ -549,106 +549,106 @@
       }
       
       function updateHands(table) {
-        let playerIsSeated = false;
+          let playerIsSeated = false;
       
-        table.players.forEach((player, i) => {
-          const el = document.getElementById(`slot-${i}`);
-          if (player && el) {
-            el.innerHTML = '';
+          table.players.forEach((player, i) => {
+              const el = document.getElementById(`slot-${i}`);
+              if (player && el) {
+                  el.innerHTML = '';
       
-            // 🔰 Nick + wartość kart na górze
-            const handValue = calculateHandValue(player.hand || []);
-            const label = document.createElement('div');
-            label.className = 'player-label';
-            label.innerText = `${player.username} (${handValue})`;
-            el.appendChild(label);
+                  // Nick + wartość kart na górze
+                  const handValue = calculateHandValue(player.hand || []);
+                  const label = document.createElement('div');
+                  label.className = 'player-label';
+                  label.innerText = `${player.username} (${handValue})`;
+                  el.appendChild(label);
       
-            // 🔰 Karty
-            const cardsContainer = document.createElement('div');
-            cardsContainer.className = 'slot-cards';
+                  // Karty
+                  const cardsContainer = document.createElement('div');
+                  cardsContainer.className = 'slot-cards';
       
-            (player.hand || []).forEach(card => {
+                  (player.hand || []).forEach(card => {
+                      const img = document.createElement('img');
+                      img.src = getCardSrc(card);
+                      img.alt = card.rank || '?';
+                      cardsContainer.appendChild(img);
+                  });
+      
+                  el.appendChild(cardsContainer);
+      
+                  // Bet-zone
+                  const betZones = document.createElement('div');
+                  betZones.className = 'bet-zones';
+                  betZones.innerHTML = `
+                      <div class="bet-zone main-bet" data-label="Main"></div>
+                      <div class="bet-zone side-bet side-21" data-label="21+3"></div>
+                      <div class="bet-zone side-bet side-pair" data-label="Pair"></div>
+                      <div class="bet-zone vs-bet" data-label="VS"></div>
+                  `;
+                  el.appendChild(betZones);
+                  el.style.pointerEvents = 'none';
+      
+                  // Bet bąbelek tylko jeśli main bet istnieje
+                  if (player.bet > 0) {
+                      const bubble = document.createElement('div');
+                      bubble.className = 'bet-bubble';
+                  
+                      // Jeśli gracz wygrał, pokazujemy x2 — tylko liczbowo
+                      const displayValue = player.result === 'Wygrana' ? player.bet * 2 : player.bet;
+                      bubble.innerText = displayValue;
+                  
+                      const mainBetZone = betZones.querySelector('.main-bet');
+                      if (mainBetZone) {
+                          mainBetZone.appendChild(bubble);
+                      }
+                  }
+      
+                  if (player.username === username) {
+                      joinedSlot = i;
+                      playerIsSeated = true;
+                      document.getElementById('leave-btn').style.display = 'inline-block';
+                  }
+              } else if (el) {
+                  el.style.pointerEvents = 'auto';
+                  el.innerHTML = (joinedSlot === null || i < joinedSlot)
+                      ? `<button class="join-btn" onclick="joinSlot(${i})">👤</button>`
+                      : '';
+              }
+          });
+      
+          // Dealer
+          const dealerHandEl = document.getElementById('dealer-hand');
+          dealerHandEl.innerHTML = '';
+          const dealerSlot = document.getElementById('dealer-slot');
+          const dealerLabel = dealerSlot.querySelector('b');
+      
+          dealerLabel.textContent = table.dealerValue !== null
+              ? `Dealer (${table.dealerValue})`
+              : 'Dealer';
+      
+          (table.dealerHand || []).forEach(card => {
               const img = document.createElement('img');
               img.src = getCardSrc(card);
               img.alt = card.rank || '?';
-              cardsContainer.appendChild(img);
-            });
+              dealerHandEl.appendChild(img);
+          });
       
-            el.appendChild(cardsContainer);
-      
-            // 🔰 Bet-zone
-            const betZones = document.createElement('div');
-            betZones.className = 'bet-zones';
-            betZones.innerHTML = `
-              <div class="bet-zone main-bet" data-label="Main"></div>
-              <div class="bet-zone side-bet side-21" data-label="21+3"></div>
-              <div class="bet-zone side-bet side-pair" data-label="Pair"></div>
-              <div class="bet-zone vs-bet" data-label="VS"></div>
-            `;
-            el.appendChild(betZones);
-            el.style.pointerEvents = 'none';
-      
-            // 🔰 Bet bąbelek tylko jeśli main bet istnieje
-            if (player.bet > 0) {
-              const bubble = document.createElement('div');
-              bubble.className = 'bet-bubble';
-            
-              // Jeśli gracz wygrał, pokazujemy x2 — tylko liczbowo
-              const displayValue = player.result === 'Wygrana' ? player.bet * 2 : player.bet;
-              bubble.innerText = displayValue;
-            
-              const mainBetZone = betZones.querySelector('.main-bet');
-              if (mainBetZone) {
-                mainBetZone.appendChild(bubble);
+          // Aktywna tura
+          table.players.forEach((player, i) => {
+              const el = document.getElementById(`slot-${i}`);
+              if (!el) return;
+              if (table.phase === 'playing' && i === table.currentPlayerIndex && player?.status === 'playing') {
+                  el.classList.add('active-turn');
+              } else {
+                  el.classList.remove('active-turn');
               }
-            }
+          });
       
-            if (player.username === username) {
-              joinedSlot = i;
-              playerIsSeated = true;
-              document.getElementById('leave-btn').style.display = 'inline-block';
-            }
-          } else if (el) {
-            el.style.pointerEvents = 'auto';
-            el.innerHTML = joinedSlot === null
-              ? `<button class="join-btn" onclick="joinSlot(${i})">👤</button>`
-              : '';
-          }
-        });
+          // Pokazuj chipy tylko przy fazie betów
+          const chipModal = document.getElementById('chip-modal');
+          chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
       
-        // 🔰 Dealer
-        const dealerHandEl = document.getElementById('dealer-hand');
-        dealerHandEl.innerHTML = '';
-        const dealerSlot = document.getElementById('dealer-slot');
-        const dealerLabel = dealerSlot.querySelector('b');
-      
-        dealerLabel.textContent = table.dealerValue !== null
-          ? `Dealer (${table.dealerValue})`
-          : 'Dealer';
-      
-        (table.dealerHand || []).forEach(card => {
-          const img = document.createElement('img');
-          img.src = getCardSrc(card);
-          img.alt = card.rank || '?';
-          dealerHandEl.appendChild(img);
-        });
-      
-        // 🔰 Aktywna tura
-        table.players.forEach((player, i) => {
-          const el = document.getElementById(`slot-${i}`);
-          if (!el) return;
-          if (table.phase === 'playing' && i === table.currentPlayerIndex && player?.status === 'playing') {
-            el.classList.add('active-turn');
-          } else {
-            el.classList.remove('active-turn');
-          }
-        });
-      
-        // 🔰 Pokazuj chipy tylko przy fazie betów
-        const chipModal = document.getElementById('chip-modal');
-        chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
-      
-        updateUserInfo();
+          updateUserInfo();
       }
     
       function joinSlot(slotIndex) {
