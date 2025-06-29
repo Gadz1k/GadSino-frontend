@@ -335,6 +335,7 @@
           border-top: 1px dashed rgba(255, 255, 255, 0.3);
           padding-top: 10px;
           margin-top: 20px;
+          transition: box-shadow 0.3s ease;
       }
       
       .split-label {
@@ -353,6 +354,12 @@
       
       .main-hand {
           margin-bottom: 10px;
+          transition: box-shadow 0.3s ease;
+      }
+      
+      .table-slot.active-turn {
+          box-shadow: 0 0 15px 5px rgba(0, 255, 225, 0.3);
+          border-radius: 15px;
       }
   </style>
 </head>
@@ -613,7 +620,7 @@
                       const splitLabel = document.createElement('div');
                       splitLabel.className = 'player-label split-label';
                       splitLabel.innerText = `Split (${splitValue})`;
-                      splitLabel.style.top = '60px'; // Pozycja poniżej głównej ręki
+                      splitLabel.style.top = '60px';
                       el.appendChild(splitLabel);
       
                       const splitHandContainer = document.createElement('div');
@@ -626,6 +633,26 @@
                           splitHandContainer.appendChild(img);
                       });
                       el.appendChild(splitHandContainer);
+      
+                      // Podświetlenie aktywnej ręki
+                      if (table.phase === 'playing' && i === table.currentPlayerIndex && player?.status === 'playing') {
+                          if (player.activeHand === 'split') {
+                              splitHandContainer.style.boxShadow = '0 0 10px 3px #00ffe1';
+                              splitHandContainer.style.borderRadius = '5px';
+                              splitHandContainer.style.padding = '5px';
+                          } else {
+                              mainHandContainer.style.boxShadow = '0 0 10px 3px #00ffe1';
+                              mainHandContainer.style.borderRadius = '5px';
+                              mainHandContainer.style.padding = '5px';
+                          }
+                      }
+                  } else {
+                      // Podświetlenie głównej ręki gdy nie ma splita
+                      if (table.phase === 'playing' && i === table.currentPlayerIndex && player?.status === 'playing') {
+                          mainHandContainer.style.boxShadow = '0 0 10px 3px #00ffe1';
+                          mainHandContainer.style.borderRadius = '5px';
+                          mainHandContainer.style.padding = '5px';
+                      }
                   }
       
                   // Bet-zone
@@ -645,7 +672,6 @@
                       const bubble = document.createElement('div');
                       bubble.className = 'bet-bubble';
                   
-                      // Jeśli gracz wygrał, pokazujemy x2 — tylko liczbowo
                       const displayValue = player.result === 'Wygrana' ? player.bet * 2 : player.bet;
                       bubble.innerText = displayValue;
                   
@@ -662,7 +688,6 @@
                   }
               } else {
                   el.style.pointerEvents = 'auto';
-                  // Pokazuj przycisk tylko jeśli gracz nie jest przy stole
                   el.innerHTML = !isPlayerSeated
                       ? `<button class="join-btn" onclick="joinSlot(${i})">👤</button>`
                       : '';
@@ -686,7 +711,7 @@
               dealerHandEl.appendChild(img);
           });
       
-          // Aktywna tura
+          // Aktywna tura - podświetlenie całego slotu
           table.players.forEach((player, i) => {
               const el = document.getElementById(`slot-${i}`);
               if (!el) return;
@@ -702,7 +727,7 @@
           chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
       
           updateUserInfo();
-}
+      }
       
       function joinSlot(slotIndex) {
           if (joinedSlot !== null) return; // Blokuj jeśli już jesteś przy stole
