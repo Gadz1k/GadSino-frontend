@@ -330,6 +330,30 @@
         color: #ffa502;
         font-weight: bold;
       }
+      .split-hand {
+          position: relative;
+          border-top: 1px dashed rgba(255, 255, 255, 0.3);
+          padding-top: 10px;
+          margin-top: 20px;
+      }
+      
+      .split-label {
+          position: absolute;
+          top: 60px;
+          left: 50%;
+          transform: translateX(-50%);
+          color: #ffa502;
+          font-size: 0.8em;
+          background: rgba(0, 0, 0, 0.85);
+          padding: 2px 8px;
+          border-radius: 8px;
+          white-space: nowrap;
+          z-index: 50;
+      }
+      
+      .main-hand {
+          margin-bottom: 10px;
+      }
   </style>
 </head>
 <body>
@@ -565,25 +589,44 @@
               if (player) {
                   el.innerHTML = '';
       
-                  // Nick + wartość kart na górze
+                  // Nick + wartość głównej ręki
                   const handValue = calculateHandValue(player.hand || []);
                   const label = document.createElement('div');
                   label.className = 'player-label';
                   label.innerText = `${player.username} (${handValue})`;
                   el.appendChild(label);
       
-                  // Karty
-                  const cardsContainer = document.createElement('div');
-                  cardsContainer.className = 'slot-cards';
-      
+                  // Główna ręka
+                  const mainHandContainer = document.createElement('div');
+                  mainHandContainer.className = 'slot-cards main-hand';
                   (player.hand || []).forEach(card => {
                       const img = document.createElement('img');
                       img.src = getCardSrc(card);
                       img.alt = card.rank || '?';
-                      cardsContainer.appendChild(img);
+                      mainHandContainer.appendChild(img);
                   });
+                  el.appendChild(mainHandContainer);
       
-                  el.appendChild(cardsContainer);
+                  // Split ręka (jeśli istnieje)
+                  if (player.splitHand) {
+                      const splitValue = calculateHandValue(player.splitHand || []);
+                      const splitLabel = document.createElement('div');
+                      splitLabel.className = 'player-label split-label';
+                      splitLabel.innerText = `Split (${splitValue})`;
+                      splitLabel.style.top = '60px'; // Pozycja poniżej głównej ręki
+                      el.appendChild(splitLabel);
+      
+                      const splitHandContainer = document.createElement('div');
+                      splitHandContainer.className = 'slot-cards split-hand';
+                      splitHandContainer.style.marginTop = '20px';
+                      (player.splitHand || []).forEach(card => {
+                          const img = document.createElement('img');
+                          img.src = getCardSrc(card);
+                          img.alt = card.rank || '?';
+                          splitHandContainer.appendChild(img);
+                      });
+                      el.appendChild(splitHandContainer);
+                  }
       
                   // Bet-zone
                   const betZones = document.createElement('div');
@@ -659,7 +702,7 @@
           chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
       
           updateUserInfo();
-      }
+}
       
       function joinSlot(slotIndex) {
           if (joinedSlot !== null) return; // Blokuj jeśli już jesteś przy stole
