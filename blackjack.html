@@ -550,23 +550,21 @@
       
       function updateHands(table) {
         let playerIsSeated = false;
+        joinedSlot = null;
       
         for (let i = 0; i < 5; i++) {
-          const player = table.players[i] || null;
           const el = document.getElementById(`slot-${i}`);
-          if (!el) continue;
+          const player = table.players[i] || null;
       
-          el.innerHTML = '';
+          el.innerHTML = ''; // czyść całość
       
           if (player) {
-            // 🔰 Nick + wartość kart
             const handValue = calculateHandValue(player.hand || []);
             const label = document.createElement('div');
             label.className = 'player-label';
             label.innerText = `${player.username} (${handValue})`;
             el.appendChild(label);
       
-            // 🔰 Karty
             const cardsContainer = document.createElement('div');
             cardsContainer.className = 'slot-cards';
       
@@ -579,7 +577,6 @@
       
             el.appendChild(cardsContainer);
       
-            // 🔰 Bet-zony
             const betZones = document.createElement('div');
             betZones.className = 'bet-zones';
             betZones.innerHTML = `
@@ -591,7 +588,6 @@
             el.appendChild(betZones);
             el.style.pointerEvents = 'none';
       
-            // 🔰 Bąbelek z wartością betu
             if (player.bet > 0) {
               const bubble = document.createElement('div');
               bubble.className = 'bet-bubble';
@@ -607,17 +603,15 @@
             }
       
           } else {
-            // 🔓 Slot wolny
             el.style.pointerEvents = 'auto';
+            // tylko jeśli jeszcze nie siedzimy nigdzie
             if (joinedSlot === null) {
               el.innerHTML = `<button class="join-btn" onclick="joinSlot(${i})">👤</button>`;
-            } else {
-              el.innerHTML = '';
             }
           }
         }
       
-        // 🔰 Dealer
+        // Dealer
         const dealerHandEl = document.getElementById('dealer-hand');
         dealerHandEl.innerHTML = '';
         const dealerSlot = document.getElementById('dealer-slot');
@@ -633,7 +627,7 @@
           dealerHandEl.appendChild(img);
         });
       
-        // 🔥 Aktywna tura
+        // Aktywna tura
         table.players.forEach((player, i) => {
           const el = document.getElementById(`slot-${i}`);
           if (!el) return;
@@ -644,7 +638,7 @@
           }
         });
       
-        // 💰 Chipy tylko jak jest faza betowania
+        // Chipy
         const chipModal = document.getElementById('chip-modal');
         chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
       
