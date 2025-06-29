@@ -608,12 +608,12 @@
                       playerIsSeated = true;
                       document.getElementById('leave-btn').style.display = 'inline-block';
                   }
-              } else if (el) {
-                  el.style.pointerEvents = 'auto';
-                  el.innerHTML = (joinedSlot === null || i < joinedSlot)
-                      ? `<button class="join-btn" onclick="joinSlot(${i})">👤</button>`
-                      : '';
-              }
+                } else if (el) {
+                    el.style.pointerEvents = 'auto';
+                    el.innerHTML = (joinedSlot === null)
+                        ? `<button class="join-btn" onclick="joinSlot(${i})">👤</button>`
+                        : '';
+                }
           });
       
           // Dealer
