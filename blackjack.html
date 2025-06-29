@@ -450,6 +450,7 @@
       const defaultTableId = 'default'; // ← najpierw zdefiniuj
       socket.emit('sync_state', { tableId: defaultTableId, username }); // ← dopiero potem wyślij
       let joinedSlot = null;
+      let isPlayerAtTable = false;
     
       document.getElementById('logged-user').innerText = username;
       document.getElementById('back-to-home').onclick = () => {
@@ -550,10 +551,13 @@
       
       function updateHands(table) {
           let playerIsSeated = false;
+          const isPlayerAtTable = table.players.some(p => p?.username === username);
       
           table.players.forEach((player, i) => {
               const el = document.getElementById(`slot-${i}`);
-              if (player && el) {
+              if (!el) return;
+      
+              if (player) {
                   el.innerHTML = '';
       
                   // Nick + wartość kart na górze
@@ -588,19 +592,14 @@
                   el.appendChild(betZones);
                   el.style.pointerEvents = 'none';
       
-                  // Bet bąbelek tylko jeśli main bet istnieje
+                  // Bet bąbelek
                   if (player.bet > 0) {
                       const bubble = document.createElement('div');
                       bubble.className = 'bet-bubble';
-                  
-                      // Jeśli gracz wygrał, pokazujemy x2 — tylko liczbowo
                       const displayValue = player.result === 'Wygrana' ? player.bet * 2 : player.bet;
                       bubble.innerText = displayValue;
-                  
                       const mainBetZone = betZones.querySelector('.main-bet');
-                      if (mainBetZone) {
-                          mainBetZone.appendChild(bubble);
-                      }
+                      if (mainBetZone) mainBetZone.appendChild(bubble);
                   }
       
                   if (player.username === username) {
@@ -608,12 +607,12 @@
                       playerIsSeated = true;
                       document.getElementById('leave-btn').style.display = 'inline-block';
                   }
-                } else if (el) {
-                    el.style.pointerEvents = 'auto';
-                    el.innerHTML = (joinedSlot === null)
-                        ? `<button class="join-btn" onclick="joinSlot(${i})">👤</button>`
-                        : '';
-                }
+              } else {
+                  el.style.pointerEvents = 'auto';
+                  el.innerHTML = !isPlayerAtTable 
+                      ? `<button class="join-btn" onclick="joinSlot(${i})">👤</button>` 
+                      : '';
+              }
           });
       
           // Dealer
@@ -652,16 +651,18 @@
       }
     
       function joinSlot(slotIndex) {
-        if (joinedSlot !== null) return;
-        socket.emit('join_table', { tableId: defaultTableId, username, slotIndex });
+          if (isPlayerAtTable) return;
+          socket.emit('join_table', { tableId: defaultTableId, username, slotIndex });
+          isPlayerAtTable = true;
       }
     
       function leaveTable() {
-        if (joinedSlot === null) return;
-        socket.emit('leave_table', { tableId: defaultTableId, username });
-        joinedSlot = null;
-        document.getElementById('leave-btn').style.display = 'none';
-        document.getElementById('action-modal').style.display = 'none';
+          if (!isPlayerAtTable) return;
+          socket.emit('leave_table', { tableId: defaultTableId, username });
+          joinedSlot = null;
+          isPlayerAtTable = false;
+          document.getElementById('leave-btn').style.display = 'none';
+          document.getElementById('action-modal').style.display = 'none';
       }
     
       function updateUserInfo() {
