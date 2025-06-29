@@ -27,10 +27,8 @@
 
     #table-container {
       position: relative;
-      width: 1024px;
-      height: 512px;
-      margin: 0 auto;
-      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
       pointer-events: none;
     }
 
@@ -449,8 +447,8 @@
       let selectedBetType = 'main';
       let selectedChipValue = null;
       const socket = io('https://gadsino.onrender.com');
-      const defaultTableId = 'default';
-      socket.emit('sync_state', { tableId: defaultTableId, username });
+      const defaultTableId = 'default'; // ← najpierw zdefiniuj
+      socket.emit('sync_state', { tableId: defaultTableId, username }); // ← dopiero potem wyślij
       let joinedSlot = null;
     
       document.getElementById('logged-user').innerText = username;
@@ -501,6 +499,7 @@
           document.getElementById('action-modal').style.display = 'flex';
           document.getElementById('result').innerText = 'Twoja tura!';
         
+          // 🔍 znajdź siebie
           const me = table?.players?.find(p => p?.username === username);
           const splitBtn = document.getElementById('split-btn');
         
@@ -536,7 +535,7 @@
         }
       
         if (aces > 0 && total + 10 <= 21) {
-          return `${total}/${total + 10}`;
+          return `${total}/${total + 10}`; // miękki as
         }
       
         return `${total}`;
@@ -749,22 +748,29 @@
       const svgObject = document.getElementById('svg-table');
       function positionSlots() {
         const svgDoc = svgObject.contentDocument;
-      
-        const positionElement = (svgId, htmlId) => {
-          const svgEl = svgDoc.getElementById(svgId);
-          const htmlEl = document.getElementById(htmlId);
-          if (svgEl && htmlEl) {
-            const bbox = svgEl.getBBox();
-            htmlEl.style.left = `${bbox.x}px`;
-            htmlEl.style.top = `${bbox.y}px`;
-            htmlEl.style.width = `${bbox.width}px`;
-            htmlEl.style.height = `${bbox.height}px`;
-          }
-        };
-      
-        positionElement('bj-table-u-dealer-area', 'dealer-slot');
+        const svgRoot = svgDoc.documentElement;
+        const viewBox = svgRoot.viewBox.baseVal;
+    
+        const dealerArea = svgDoc.getElementById('bj-table-u-dealer-area');
+        if (dealerArea) {
+          const bbox = dealerArea.getBBox();
+          const dealerSlot = document.getElementById('dealer-slot');
+          dealerSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
+          dealerSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
+          dealerSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
+          dealerSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
+        }
+    
         for (let i = 0; i < 5; i++) {
-          positionElement(`bj-table-u-slot-${i}`, `slot-${i}`);
+          const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
+          const htmlSlot = document.getElementById(`slot-${i}`);
+          if (svgSlot && htmlSlot) {
+            const bbox = svgSlot.getBBox();
+            htmlSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
+            htmlSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
+            htmlSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
+            htmlSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
+          }
         }
       }
       document.querySelectorAll('.chip').forEach(chip => {
