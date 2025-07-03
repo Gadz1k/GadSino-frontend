@@ -1,7 +1,8 @@
 // =======================================================
 //          GADSINO - SLOTS.JS (WERSJA FINALNA)
 // =======================================================
-
+// --- STAŁA Z ADRESEM SERWERA ---
+const API_URL = 'https://gadsino.onrender.com';
 // --- USTAWIENIA GRY ---
 const WIDTH = 800;
 const HEIGHT = 600;
