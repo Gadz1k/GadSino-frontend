@@ -813,50 +813,56 @@
   
     const svgObject = document.getElementById('svg-table');
     function positionSlots() {
-          const svgDoc = svgObject.contentDocument;
-          if (!svgDoc || !svgDoc.documentElement) return; // Dodatkowe zabezpieczenie
-          const svgRoot = svgDoc.documentElement;
-          const viewBox = svgRoot.viewBox.baseVal;
-        
-          // --- Dealer (bez zmian) ---
-          const dealerArea = svgDoc.getElementById('bj-table-u-dealer-area');
-          if (dealerArea) {
-            const bbox = dealerArea.getBBox();
-            const dealerSlot = document.getElementById('dealer-slot');
-            dealerSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
-            dealerSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
-            dealerSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
-            dealerSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
-          }
+      const svgObject = document.getElementById('svg-table');
+      const svgDoc = svgObject.contentDocument;
+      if (!svgDoc || !svgDoc.documentElement) return;
+    
+      const svgRoot = svgDoc.documentElement;
+      const viewBox = svgRoot.viewBox.baseVal;
+    
+      // --- Pozycjonowanie Dealera (bez zmian) ---
+      const dealerArea = svgDoc.getElementById('bj-table-u-dealer-area');
+      if (dealerArea) {
+        const bbox = dealerArea.getBBox();
+        const dealerSlot = document.getElementById('dealer-slot');
+        dealerSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
+        dealerSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
+        dealerSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
+        dealerSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
+      }
+    
+      // --- NOWA, POPRAWIONA LOGIKA DLA SLOTÓW GRACZY ---
+    
+      // 1. Ustalamy jednolity rozmiar na podstawie slotu-wzorca (slot-0)
+      const templateSlotSvg = svgDoc.getElementById('bj-table-u-slot-0');
+      if (!templateSlotSvg) return;
+      
+      const templateBbox = templateSlotSvg.getBBox();
+      const uniformWidthPercent = (templateBbox.width / viewBox.width) * 100;
+      const uniformHeightPercent = (templateBbox.height / viewBox.height) * 100;
+    
+      // 2. Iterujemy przez wszystkie sloty, aby ustawić im pozycję i rozmiar
+      for (let i = 0; i < 5; i++) {
+        const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
+        const htmlSlot = document.getElementById(`slot-${i}`);
+    
+        if (svgSlot && htmlSlot) {
+          const bbox = svgSlot.getBBox();
           
-          // --- NOWA LOGIKA DLA SLOTÓW GRACZY ---
-    
-          // 1. Pobieramy wymiary z jednego, wzorcowego slotu (np. slot-0, który jest szeroki).
-          const templateSlotSvg = svgDoc.getElementById(`bj-table-u-slot-0`);
-          if (!templateSlotSvg) return; // Zabezpieczenie, jeśli SVG się nie załaduje
+          // ✅ KLUCZOWA ZMIANA: Obliczamy środek oryginalnego kształtu z SVG
+          const originalShapeCenterX = bbox.x + bbox.width / 2;
           
-          const templateBbox = templateSlotSvg.getBBox();
-          const uniformWidthPercent = (templateBbox.width / viewBox.width) * 100;
-          const uniformHeightPercent = (templateBbox.height / viewBox.height) * 100;
+          // ✅ Obliczamy nową pozycję 'left', aby wyśrodkować nasz kontener o jednolitej szerokości
+          const newLeftPercent = (originalShapeCenterX / viewBox.width) * 100 - (uniformWidthPercent / 2);
     
-          // 2. Ustawiamy wszystkim slotom ten sam, jednolity rozmiar.
-          for (let i = 0; i < 5; i++) {
-            const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
-            const htmlSlot = document.getElementById(`slot-${i}`);
-    
-            if (svgSlot && htmlSlot) {
-              const bbox = svgSlot.getBBox();
-              
-              // Używamy pozycji (x,y) z indywidualnego slotu...
-              htmlSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
-              htmlSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
-              
-              // ...ale szerokość i wysokość ustawiamy na stałą, jednolitą wartość.
-              htmlSlot.style.width = `${uniformWidthPercent}%`;
-              htmlSlot.style.height = `${uniformHeightPercent}%`;
-            }
-          }
+          // Ustawiamy nową, poprawną pozycję oraz jednolity rozmiar
+          htmlSlot.style.left = `${newLeftPercent}%`;
+          htmlSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
+          htmlSlot.style.width = `${uniformWidthPercent}%`;
+          htmlSlot.style.height = `${uniformHeightPercent}%`;
         }
+      }
+    }
 
     document.querySelectorAll('.chip').forEach(chip => {
       chip.onclick = () => {
