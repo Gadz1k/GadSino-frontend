@@ -67,9 +67,9 @@
     
     /* === Tematyczny wskaźnik talii (But) === */
     #shoe-visual {
-        position: absolute;  
+        position: absolute; 
         top: 15%;          
-        right: 30%;        
+        right: 30%;         
         width: 150px;
         z-index: 10;
     }
@@ -266,7 +266,7 @@
     }
     
     .main-bet { top: 10px; left: 50%; transform: translateX(-50%); }
-    .vs-bet { top: 75px; left: 50%; transform: translateX(-50%); border-color: #ff6b81; display: none; }
+    .vs-bet { top: 75px; left: 50%; transform: translateX(-50%); border-color: #ff6b81; }
     .side-bet.side-21 { top: 30px; left: 15px; }
     .side-bet.side-pair { top: 30px; right: 15px; }
     
@@ -292,9 +292,8 @@
       font-weight: bold;
       font-size: 0.9em;
       border-radius: 50%;
-      min-width: 30px;
+      width: 30px;
       height: 30px;
-      padding: 0 5px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -526,103 +525,99 @@
       alert('Musisz się najpierw zalogować!');
       window.location.href = 'index.html';
     }
-    
+  
     const username = user.username;
     let selectedBetType = 'main';
     let selectedChipValue = null;
-    const socket = io('https://gadsino.onrender.com'); // Make sure this URL is correct
+    const socket = io('https://gadsino.onrender.com');
     const defaultTableId = 'default';
-    let localTableState = null;
     socket.emit('sync_state', { tableId: defaultTableId, username });
     let joinedSlot = null;
     const INITIAL_SHOE_SIZE = 156;
-    
+  
     document.getElementById('logged-user').innerText = username;
     document.getElementById('back-to-home').onclick = () => {
       window.location.href = 'index.html';
     };
-    
+  
     socket.on('table_update', data => {
-      localTableState = data; // Store the latest table state
       updateHands(data);
       updateShoeVisual(data.shoeSize);
+    
+      if (data.shoeSize !== undefined) {
+        document.getElementById('shoe-count').textContent = data.shoeSize;
+      }
     });
-
     socket.on('round_started', table => {
-      localTableState = table;
       updateHands(table);
       document.getElementById('countdown-timer').innerText = '';
       document.getElementById('chip-modal').style.display = 'none';
       document.getElementById('action-modal').style.display = 'none';
     });
-
     socket.on('round_result', table => {
-      localTableState = table;
       updateHands(table);
       document.getElementById('chip-modal').style.display = 'none';
       document.getElementById('action-modal').style.display = 'none';
-      
+    
       const me = table.players.find(p => p?.username === username);
       const feedback = document.getElementById('round-feedback');
-      
-      if (me && me.bet > 0) { // Only show feedback if a main bet was placed
-        let text = me.result || '';
-        if (me.result.includes('Wygrana')) text = `✅ Wygrana ${me.bet * 2} żetonów!`;
-        else if (me.result.includes('Blackjack')) text = `🎉 Blackjack! Wygrałeś ${Math.floor(me.bet * 1.5)} żetonów!`;
-        else if (me.result.includes('Remis')) text = `➖ Remis. Zwrócono ${me.bet} żetonów.`;
-        else if (me.result.includes('Przegrana')) text = `❌ Przegrana ${me.bet} żetonów.`;
-        else if (me.status === 'bust') text = `💀 Przebiłeś się.`;
-        
+    
+      if (me) {
+        let text = '';
+        if (me.result === 'Wygrana') text = `✅ Wygrałeś ${me.bet * 2} żetonów!`;
+        else if (me.result === 'Remis') text = `➖ Remis. Zachowałeś ${me.bet} żetonów.`;
+        else if (me.result === 'Przegrana') text = `❌ Przegrałeś ${me.bet} żetonów!`;
+        else if (me.status === 'bust') text = `💀 Przebiłeś się. Żegnamy żetony.`;
+    
         if (text) {
-          feedback.innerText = text + (me.result.includes('Win!') ? ` ${me.result.substring(me.result.indexOf('+'))}` : '');
+          feedback.innerText = text;
           feedback.style.display = 'block';
-          setTimeout(() => feedback.style.display = 'none', 5000);
+          setTimeout(() => feedback.style.display = 'none', 4000);
         }
       }
     });
-
     socket.on('your_turn', turnUser => {
       const isYourTurn = turnUser === username;
-      if (isYourTurn && localTableState) {
+      if (isYourTurn) {
         document.getElementById('action-modal').style.display = 'flex';
         document.getElementById('result').innerText = 'Twoja tura!';
-        
-        const me = localTableState.players.find(p => p?.username === username);
+      
+        const me = table?.players?.find(p => p?.username === username);
         const splitBtn = document.getElementById('split-btn');
-
-        if (me?.hand?.length === 2 && me.hand[0].rank === me.hand[1].rank && !me.hasSplit) {
-            splitBtn.style.display = 'inline-block';
+      
+        if (me?.hand?.length === 2 && me.hand[0].rank === me.hand[1].rank) {
+          splitBtn.style.display = 'inline-block';
         } else {
-            splitBtn.style.display = 'none';
+          splitBtn.style.display = 'none';
         }
       }
     });
-
     socket.on('countdown_tick', secondsLeft => {
       document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
     });
-
     function updateShoeVisual(remainingCards) {
         if (remainingCards === undefined || remainingCards === null) return;
     
+        // Naszym celem jest teraz cała grupa kart, a nie pojedynczy prostokąt
         const cardStackGroup = document.getElementById('shoe-cards-stack');
         const countText = document.getElementById('shoe-count-text');
     
         if (!cardStackGroup || !countText) return;
     
+        // Oblicz procent pozostałych kart
         const percentage = remainingCards / INITIAL_SHOE_SIZE;
         
-        cardStackGroup.style.transform = `scale(1, ${percentage})`;
+        // ✅ Zamiast zmieniać wysokość, skalujemy grupę w osi Y
+        // To "spłaszczy" stos od góry, dając świetny efekt wizualny
+        cardStackGroup.setAttribute('transform', `scale(1, ${percentage})`);
         
+        // Zaktualizuj tekst
         countText.textContent = `${remainingCards}/${INITIAL_SHOE_SIZE}`;
     }
-
     function calculateHandValue(hand) {
       let total = 0;
       let aces = 0;
-      
-      if (!hand || hand.length === 0) return '0';
-
+    
       for (let card of hand) {
         if (!card || !card.rank) continue;
         if (card.rank === 'A') {
@@ -630,21 +625,23 @@
           total += 11;
         } else if (['K', 'Q', 'J'].includes(card.rank)) {
           total += 10;
-        } else if (card.rank === '❓') {
-          continue;
         } else {
           total += parseInt(card.rank);
         }
       }
-      
+    
       while (total > 21 && aces > 0) {
         total -= 10;
         aces--;
       }
-            
+    
+      if (aces > 0 && total + 10 <= 21) {
+        return `${total}/${total + 10}`;
+      }
+    
       return `${total}`;
     }
-    
+  
     function getCardSrc(card) {
       if (!card || card.rank === '❓') return 'svg-cards/back.svg';
       const map = { 'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace' };
@@ -666,7 +663,7 @@
             if (!el) return;
     
             if (player) {
-                el.innerHTML = ''; // Clear previous state
+                el.innerHTML = '';
     
                 const handValue = calculateHandValue(player.hand || []);
                 const label = document.createElement('div');
@@ -684,13 +681,12 @@
                 });
                 el.appendChild(mainHandContainer);
     
-                // Handle split hand display
                 if (player.splitHand) {
                     const splitValue = calculateHandValue(player.splitHand || []);
                     const splitLabel = document.createElement('div');
                     splitLabel.className = 'player-label split-label';
                     splitLabel.innerText = `Split (${splitValue})`;
-                    splitLabel.style.top = '60px'; 
+                    splitLabel.style.top = '60px';
                     el.appendChild(splitLabel);
     
                     const splitHandContainer = document.createElement('div');
@@ -704,49 +700,54 @@
                     });
                     el.appendChild(splitHandContainer);
     
-                    // Highlight active hand during play
-                    if (table.phase === 'playing' && i === table.currentPlayerIndex && player.status === 'playing') {
-                        const activeContainer = player.activeHand === 'split' ? splitHandContainer : mainHandContainer;
-                        activeContainer.style.boxShadow = '0 0 10px 3px #00ffe1';
-                        activeContainer.style.borderRadius = '5px';
-                        activeContainer.style.padding = '5px';
+                    if (table.phase === 'playing' && i === table.currentPlayerIndex && player?.status === 'playing') {
+                        if (player.activeHand === 'split') {
+                            splitHandContainer.style.boxShadow = '0 0 10px 3px #00ffe1';
+                            splitHandContainer.style.borderRadius = '5px';
+                            splitHandContainer.style.padding = '5px';
+                        } else {
+                            mainHandContainer.style.boxShadow = '0 0 10px 3px #00ffe1';
+                            mainHandContainer.style.borderRadius = '5px';
+                            mainHandContainer.style.padding = '5px';
+                        }
+                    }
+                } else {
+                    if (table.phase === 'playing' && i === table.currentPlayerIndex && player?.status === 'playing') {
+                        mainHandContainer.style.boxShadow = '0 0 10px 3px #00ffe1';
+                        mainHandContainer.style.borderRadius = '5px';
+                        mainHandContainer.style.padding = '5px';
                     }
                 }
     
-                // Betting zones and bubbles
                 const betZones = document.createElement('div');
                 betZones.className = 'bet-zones';
                 betZones.innerHTML = `
-                    <div class="bet-zone main-bet" data-label="Main Bet"></div>
+                    <div class="bet-zone main-bet" data-label="Main"></div>
                     <div class="bet-zone side-bet side-21" data-label="21+3"></div>
                     <div class="bet-zone side-bet side-pair" data-label="Pair"></div>
+                    <div class="bet-zone vs-bet" data-label="VS"></div>
                 `;
                 el.appendChild(betZones);
+                el.style.pointerEvents = 'none';
+    
+                if (player.bet > 0) {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'bet-bubble';
                 
-                // ✨ MODIFIED: Render all bet bubbles
-                const createBubble = (amount, zoneSelector) => {
-                    if (amount > 0) {
-                        const bubble = document.createElement('div');
-                        bubble.className = 'bet-bubble';
-                        bubble.innerText = amount;
-                        const zone = betZones.querySelector(zoneSelector);
-                        if (zone) zone.appendChild(bubble);
+                    const displayValue = player.result === 'Wygrana' ? player.bet * 2 : player.bet;
+                    bubble.innerText = displayValue;
+                
+                    const mainBetZone = betZones.querySelector('.main-bet');
+                    if (mainBetZone) {
+                        mainBetZone.appendChild(bubble);
                     }
-                };
-
-                createBubble(player.bet, '.main-bet');
-                if (player.sideBets) {
-                    createBubble(player.sideBets['21+3'], '.side-21');
-                    createBubble(player.sideBets['pair'], '.side-pair');
                 }
-
     
                 if (player.username === username) {
                     joinedSlot = i;
                     playerIsSeated = true;
                     document.getElementById('leave-btn').style.display = 'inline-block';
                 }
-
             } else {
                 el.style.pointerEvents = 'auto';
                 el.innerHTML = !isPlayerSeated
@@ -791,28 +792,31 @@
         if (joinedSlot !== null) return;
         socket.emit('join_table', { tableId: defaultTableId, username, slotIndex });
     }
-    
+  
     function leaveTable() {
         if (joinedSlot === null) return;
         
-        socket.emit('leave_table', { tableId: defaultTableId, username });
-        joinedSlot = null; // Assume success and update UI immediately
-        document.getElementById('leave-btn').style.display = 'none';
-        document.getElementById('action-modal').style.display = 'none';
+        socket.emit('leave_table', { tableId: defaultTableId, username }, (response) => {
+            if (response.success) {
+                joinedSlot = null;
+                document.getElementById('leave-btn').style.display = 'none';
+                document.getElementById('action-modal').style.display = 'none';
+                
+                socket.emit('get_table_state', { tableId: defaultTableId });
+            } else {
+                console.error('Błąd przy opuszczaniu stołu:', response.message);
+            }
+        });
     }
-    
+  
     function updateUserInfo() {
       fetch(`https://gadsino.onrender.com/player/${username}`)
         .then(res => res.json())
-        .then(data => {
-            if(data.balance !== undefined) {
-                document.getElementById('user-balance').innerText = data.balance
-            }
-        })
+        .then(data => document.getElementById('user-balance').innerText = data.balance)
         .catch(() => document.getElementById('user-balance').innerText = '--');
     }
-    
-    function placeBet(amount, type) {
+  
+    function placeBet(amount) {
       if (joinedSlot === null) return alert('Najpierw dołącz do stołu!');
     
       const balanceEl = document.getElementById('user-balance');
@@ -822,25 +826,42 @@
         alert('Nie masz tyle żetonów.');
         return;
       }
-          
-      socket.emit('place_bet', { tableId: defaultTableId, username, amount, type });
+    
+      balanceEl.innerText = currentBalance - amount;
+    
+      const zoneSelector = {
+        'main': '.main-bet', '21+3': '.side-21', 'pair': '.side-pair', 'vs': '.vs-bet'
+      }[selectedBetType];
+    
+      const mySlot = document.getElementById(`slot-${joinedSlot}`);
+      const zone = mySlot.querySelector(zoneSelector);
+      if (!zone) return;
+    
+      let bubble = zone.querySelector('.bet-bubble');
+      if (!bubble) {
+        bubble = document.createElement('div');
+        bubble.className = 'bet-bubble';
+        bubble.innerText = amount;
+        zone.appendChild(bubble);
+      } else {
+        const current = parseInt(bubble.innerText || '0');
+        bubble.innerText = current + amount;
+      }
+    
+      socket.emit('place_bet', { tableId: defaultTableId, username, amount, type: selectedBetType });
     }
-    
-    function hit() { document.getElementById('action-modal').style.display = 'none'; socket.emit('player_action', { tableId: defaultTableId, username, action: 'hit' }); }
-    function stand() { document.getElementById('action-modal').style.display = 'none'; socket.emit('player_action', { tableId: defaultTableId, username, action: 'stand' }); }
-    function doubleDown() { document.getElementById('action-modal').style.display = 'none'; socket.emit('player_action', { tableId: defaultTableId, username, action: 'double' }); }
-    function split() { document.getElementById('action-modal').style.display = 'none'; socket.emit('player_action', { tableId: defaultTableId, username, action: 'split' }); }  
-    
+  
+    function hit() { socket.emit('player_action', { tableId: defaultTableId, username, action: 'hit' }); }
+    function stand() { socket.emit('player_action', { tableId: defaultTableId, username, action: 'stand' }); }
+    function doubleDown() { socket.emit('player_action', { tableId: defaultTableId, username, action: 'double' }); }
+    function split() { socket.emit('player_action', { tableId: defaultTableId, username, action: 'split' }); }  
+  
     updateUserInfo();
     socket.emit('get_table_state', { tableId: defaultTableId });
-    
+  
     const svgObject = document.getElementById('svg-table');
     function positionSlots() {
         const svgObject = document.getElementById('svg-table');
-        if (!svgObject.contentDocument) {
-            setTimeout(positionSlots, 100); // Retry if SVG not loaded
-            return;
-        }
         const svgDoc = svgObject.contentDocument;
     
         if (!svgDoc || !svgDoc.documentElement) {
@@ -862,11 +883,14 @@
         }
         const templateBbox = templateSvg.getBBox();
     
-        const sizeMultiplier = 1.4;  
+        // ✅ TUTAJ JEST ZMIANA: Mnożnik rozmiaru. Zmieniaj tę wartość, aby dopasować wielkość.
+        const sizeMultiplier = 1.4; 
     
+        // Stosujemy mnożnik do obliczeń
         const uniformWidth = (templateBbox.height * scale) * sizeMultiplier;
         const uniformHeight = (templateBbox.width * scale) * sizeMultiplier;
     
+        // Reszta kodu pozostaje bez zmian
         for (let i = 0; i < 5; i++) {
             const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
             const htmlSlot = document.getElementById(`slot-${i}`);
@@ -902,14 +926,16 @@
     document.querySelectorAll('.chip').forEach(chip => {
       chip.onclick = () => {
         selectedChipValue = parseInt(chip.dataset.value);
+        console.log('Wybrany chip:', selectedChipValue);
     
+        // ZMODYFIKOWANO: Zamiast style.outline, używamy klas CSS
         document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
         chip.classList.add('selected');
       };
     });
-    
+  
     svgObject.addEventListener('load', positionSlots);
-    window.addEventListener('resize', positionSlots);
+    window.addEventListener('resize', positionSlots); // Dodane dla responsywności
 
     document.getElementById('table-container').addEventListener('click', e => {
       const target = e.target;
@@ -921,13 +947,13 @@
         alert("Najpierw wybierz żeton!");
         return;
       }
+    
+      if (target.classList.contains('side-21')) selectedBetType = '21+3';
+      else if (target.classList.contains('side-pair')) selectedBetType = 'pair';
+      else if (target.classList.contains('vs-bet')) selectedBetType = 'vs';
+      else selectedBetType = 'main';
       
-      let betType;
-      if (target.classList.contains('side-21')) betType = '21+3';
-      else if (target.classList.contains('side-pair')) betType = 'pair';
-      else betType = 'main';
-      
-      placeBet(selectedChipValue, betType);
+      placeBet(selectedChipValue);
     });
   </script>
 </body>
