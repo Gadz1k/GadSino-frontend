@@ -1,65 +1,44 @@
 // =======================================================
-//          GADSINO - 30 COINS (slots.js)
+//          GADSINO - 30 COINS (slots.js - WERSJA 2.0)
 // =======================================================
 
 const API_URL = 'https://gadsino.onrender.com';
 
-// --- USTAWIENIA GRY ---
-const WIDTH = 800;
-const HEIGHT = 600;
-const COLS = 5;
-const ROWS = 3;
-const CELL_SIZE = 120; // Rozmiar pojedynczego pola na siatce
-const PADDING = 20;   // Odstęp
+const WIDTH = 800, HEIGHT = 960;
+const COLS = 5, ROWS = 6;
+const CELL_SIZE = 120, PADDING = 10;
 
-// --- INICJALIZACJA APLIKACJI PIXI.JS ---
 const app = new PIXI.Application({ width: WIDTH, height: HEIGHT, backgroundColor: 0x1a1a1a });
 document.getElementById('game-container').appendChild(app.view);
 
-// --- REFERENCJE DO ELEMENTÓW HTML ---
 const spinButton = document.getElementById('spin-button');
-const buyBonusButton = document.getElementById('buy-bonus-button'); // Na razie nieaktywny
+const buyBonusButton = document.getElementById('buy-bonus-button');
 const balanceDisplay = document.getElementById('balance');
 
-// --- ZMIENNE GLOBALNE STANU GRY ---
-let gridCells = [];     // Tablica na wizualne reprezentacje komórek
+let gridCells = [];
 let isSpinning = false;
 let currentUser = null;
 
-// --- ŁADOWANIE GRAFIK ---
 PIXI.Loader.shared
-    .add('background', 'img/30coins/grid_background.png') // Opcjonalne tło
     .add('cash_infinity', 'img/30coins/cash_infinity.png')
+    .add('mystery', 'img/30coins/mystery.png')
+    .add('mini_jackpot', 'img/30coins/mini_jackpot.png')
+    .add('minor_jackpot', 'img/30coins/minor_jackpot.png')
     .load(onAssetsLoaded);
 
 function onAssetsLoaded() {
-    // Stworzenie tła
-    const background = new PIXI.Sprite(PIXI.Loader.shared.resources.background.texture);
-    background.width = WIDTH;
-    background.height = HEIGHT;
-    app.stage.addChild(background);
-
-    // Stworzenie siatki
     createGrid();
-
-    // Podpięcie przycisków
     spinButton.onclick = () => doSpin();
-    buyBonusButton.disabled = true; // Na razie wyłączamy ten przycisk
-
-    // Pobranie stanu użytkownika
+    buyBonusButton.disabled = true;
     updateUserState();
 }
 
-// --- Tworzy wizualną siatkę 5x3 ---
 function createGrid() {
     const gridContainer = new PIXI.Container();
     const gridWidth = COLS * (CELL_SIZE + PADDING);
     const gridHeight = ROWS * (CELL_SIZE + PADDING);
-    
-    // Centrowanie siatki
-    gridContainer.x = (WIDTH - gridWidth) / 2 + PADDING;
-    gridContainer.y = (HEIGHT - gridHeight) / 2 + PADDING;
-    
+    gridContainer.x = (WIDTH - gridWidth) / 2 + PADDING / 2;
+    gridContainer.y = (HEIGHT - gridHeight) / 2 + PADDING / 2;
     app.stage.addChild(gridContainer);
 
     for (let row = 0; row < ROWS; row++) {
@@ -68,57 +47,52 @@ function createGrid() {
             cellContainer.x = col * (CELL_SIZE + PADDING);
             cellContainer.y = row * (CELL_SIZE + PADDING);
             
-            // Dodajemy tło dla każdej komórki dla lepszej widoczności
             const cellBg = new PIXI.Graphics();
-            cellBg.beginFill(0x000000, 0.3);
+            const isActiveZone = row >= 1 && row <= 3;
+            cellBg.beginFill(0x000000, isActiveZone ? 0.5 : 0.3);
+            cellBg.lineStyle(2, isActiveZone ? 0xffa502 : 0x444444, 1);
             cellBg.drawRoundedRect(0, 0, CELL_SIZE, CELL_SIZE, 15);
             cellBg.endFill();
             cellContainer.addChild(cellBg);
 
             gridContainer.addChild(cellContainer);
-            gridCells.push(cellContainer); // Zapisujemy kontener, aby móc dodawać do niego symbole
+            gridCells.push(cellContainer);
         }
     }
 }
 
-// --- Aktualizuje siatkę na podstawie danych z serwera ---
 function updateGrid(gridData) {
     for (let i = 0; i < gridData.length; i++) {
         const cellContainer = gridCells[i];
         const symbolData = gridData[i];
+        while (cellContainer.children.length > 1) { cellContainer.removeChildAt(1); }
 
-        // Czyścimy starą zawartość komórki (oprócz tła)
-        while (cellContainer.children.length > 1) {
-            cellContainer.removeChildAt(1);
-        }
-
-        // Jeśli na tym polu jest symbol, rysujemy go
         if (symbolData) {
-            if (symbolData.type === 'CASH_INFINITY') {
-                const symbolSprite = new PIXI.Sprite(PIXI.Loader.shared.resources.cash_infinity.texture);
+            let textureName = '';
+            switch (symbolData.type) {
+                case 'CASH_INFINITY': textureName = 'cash_infinity'; break;
+                case 'MYSTERY': textureName = 'mystery'; break;
+                case 'MINI_JACKPOT': textureName = 'mini_jackpot'; break;
+                case 'MINOR_JACKPOT': textureName = 'minor_jackpot'; break;
+            }
+
+            if (textureName) {
+                const symbolSprite = new PIXI.Sprite(PIXI.Loader.shared.resources[textureName].texture);
                 symbolSprite.width = CELL_SIZE;
                 symbolSprite.height = CELL_SIZE;
+                cellContainer.addChild(symbolSprite);
 
-                // Dodajemy tekst z wartością monety
-                const valueText = new PIXI.Text(symbolData.value, {
-                    fontFamily: 'Arial',
-                    fontSize: 48,
-                    fill: 'white',
-                    stroke: 'black',
-                    strokeThickness: 5,
-                    fontWeight: 'bold'
-                });
-                valueText.anchor.set(0.5);
-                valueText.position.set(CELL_SIZE / 2, CELL_SIZE / 2);
-
-                cellContainer.addChild(symbolSprite, valueText);
+                if (symbolData.type === 'CASH_INFINITY' && symbolData.value) {
+                    const valueText = new PIXI.Text(symbolData.value, { fontFamily: 'Arial', fontSize: 48, fill: 'white', stroke: 'black', strokeThickness: 5, fontWeight: 'bold' });
+                    valueText.anchor.set(0.5);
+                    valueText.position.set(CELL_SIZE / 2, CELL_SIZE / 2);
+                    cellContainer.addChild(valueText);
+                }
             }
-            // Tutaj w przyszłości można dodać obsługę innych symboli
         }
     }
 }
 
-// --- Główna funkcja spina dla "30 Coins" ---
 async function doSpin() {
     if (isSpinning) return;
     isSpinning = true;
@@ -130,22 +104,16 @@ async function doSpin() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: currentUser.username })
         });
-
         if (!response.ok) {
             const errData = await response.json();
             throw new Error(errData.message || 'Błąd serwera!');
         }
-
         const data = await response.json();
-        
         balanceDisplay.textContent = `${data.newBalance} żetonów`;
-        updateGrid(data.grid); // Kluczowa funkcja - aktualizuje widok siatki
-
+        updateGrid(data.grid);
         if (data.bonusTriggered) {
-            // Na razie prosty alert, w przyszłości tu będzie start rundy bonusowej
-            alert("BONUS URUCHOMIONY!");
+            setTimeout(() => alert("BONUS URUCHOMIONY!"), 500);
         }
-
     } catch (error) {
         alert(error.message);
     } finally {
@@ -154,7 +122,7 @@ async function doSpin() {
     }
 }
 
-// --- Funkcje pomocnicze ---
+// Funkcje pomocnicze
 async function updateUserState() {
     const userFromStorage = JSON.parse(localStorage.getItem('user'));
     if (!userFromStorage || !userFromStorage.username) {
