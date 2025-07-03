@@ -530,6 +530,7 @@
     const defaultTableId = 'default';
     socket.emit('sync_state', { tableId: defaultTableId, username });
     let joinedSlot = null;
+    const INITIAL_SHOE_SIZE = 156;
   
     document.getElementById('logged-user').innerText = username;
     document.getElementById('back-to-home').onclick = () => {
@@ -590,6 +591,35 @@
     socket.on('countdown_tick', secondsLeft => {
       document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
     });
+    function updateShoeVisual(remainingCards) {
+        if (remainingCards === undefined || remainingCards === null) return;
+
+        const cardStack = document.getElementById('shoe-cards-stack');
+        const countText = document.getElementById('shoe-count-text');
+
+        if (!cardStack || !countText) return;
+
+        const percentage = remainingCards / INITIAL_SHOE_SIZE;
+        
+        const maxStackHeight = 40; 
+        
+        const newHeight = maxStackHeight * percentage;
+        
+        const newY = (10 + maxStackHeight) - newHeight;
+
+        cardStack.setAttribute('height', newHeight);
+        cardStack.setAttribute('y', newY);
+
+        if (percentage > 0.5) {
+            cardStack.setAttribute('fill', '#e0e0e0'); 
+        } else if (percentage > 0.25) {
+            cardStack.setAttribute('fill', '#ffc107'); 
+        } else {
+            cardStack.setAttribute('fill', '#f44336'); 
+        }
+        
+        countText.textContent = `${remainingCards}/${INITIAL_SHOE_SIZE}`;
+    }
     function calculateHandValue(hand) {
       let total = 0;
       let aces = 0;
