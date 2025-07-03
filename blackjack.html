@@ -828,20 +828,20 @@
         const marginX = (tableRect.width - (viewBox.width * scale)) / 2;
         const marginY = (tableRect.height - (viewBox.height * scale)) / 2;
     
-        // === NOWA LOGIKA - JEDNOLITE PROSTOKĄTY ===
-    
-        // 1. Pobierz rozmiar wzorcowy ze środkowego, nieobróconego slotu (slot-2)
+        // Pobierz rozmiar wzorcowy ze środkowego slotu (slot-2)
         const templateSvg = svgDoc.getElementById('bj-table-u-slot-2');
         if (!templateSvg) {
             console.error("Nie znaleziono slotu wzorcowego (bj-table-u-slot-2)");
             return;
         }
         const templateBbox = templateSvg.getBBox();
-        const uniformWidth = templateBbox.width * scale;
-        const uniformHeight = templateBbox.height * scale;
+    
+        // ✅ KLUCZOWA ZMIANA: Zamieniamy miejscami wysokość z szerokością, aby uzyskać poziomy prostokąt
+        const uniformWidth = templateBbox.height * scale;
+        const uniformHeight = templateBbox.width * scale;
     
     
-        // 2. Ustaw pozycję i JEDNOLITY rozmiar dla każdego slotu gracza
+        // Ustaw pozycję i JEDNOLITY (teraz już poziomy) rozmiar dla każdego slotu gracza
         for (let i = 0; i < 5; i++) {
             const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
             const htmlSlot = document.getElementById(`slot-${i}`);
@@ -849,26 +849,21 @@
             if (svgSlot && htmlSlot) {
                 const bbox = svgSlot.getBBox();
     
-                // Oblicz środek każdego slotu na podstawie jego grafiki w SVG
                 const centerX = marginX + ((bbox.x + bbox.width / 2) * scale);
                 const centerY = marginY + ((bbox.y + bbox.height / 2) * scale);
     
-                // Oblicz pozycję top/left, aby wycentrować nasz jednolity prostokąt
                 const finalLeft = centerX - (uniformWidth / 2);
                 const finalTop = centerY - (uniformHeight / 2);
     
-                // Zastosuj style
                 htmlSlot.style.left = `${finalLeft}px`;
                 htmlSlot.style.top = `${finalTop}px`;
                 htmlSlot.style.width = `${uniformWidth}px`;
                 htmlSlot.style.height = `${uniformHeight}px`;
-    
-                // Upewnij się, że nie ma żadnej transformacji (obrotu/skalowania)
                 htmlSlot.style.transform = '';
             }
         }
-        
-        // Logika dla dealera pozostaje taka sama jak w poprzedniej wersji
+    
+        // Logika dla dealera pozostaje bez zmian
         const dealerAreaSvg = svgDoc.getElementById('bj-table-u-dealer-area');
         if (dealerAreaSvg) {
             const bbox = dealerAreaSvg.getBBox();
