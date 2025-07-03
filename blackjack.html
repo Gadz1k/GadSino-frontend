@@ -539,6 +539,7 @@
   
     socket.on('table_update', data => {
       updateHands(data);
+      updateShoeVisual(data.shoeSize);
     
       if (data.shoeSize !== undefined) {
         document.getElementById('shoe-count').textContent = data.shoeSize;
