@@ -820,7 +820,7 @@
       const svgRoot = svgDoc.documentElement;
       const viewBox = svgRoot.viewBox.baseVal;
     
-      // Pozycjonowanie Dealera (bez zmian)
+      // --- Pozycjonowanie Dealera (bez zmian) ---
       const dealerArea = svgDoc.getElementById('bj-table-u-dealer-area');
       if (dealerArea) {
         const bbox = dealerArea.getBBox();
@@ -830,9 +830,18 @@
         dealerSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
         dealerSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
       }
+    
+      // --- NOWA, POPRAWIONA LOGIKA DLA SLOTÓW GRACZY ---
+    
+      // 1. Ustalamy jednolity rozmiar na podstawie slotu-wzorca (slot-0)
+      const templateSlotSvg = svgDoc.getElementById('bj-table-u-slot-0');
+      if (!templateSlotSvg) return;
       
-      // ✅ PROSTA I POPRAWNA LOGIKA DLA SLOTÓW GRACZY
-      // Każdy slot pobiera swój własny, unikalny rozmiar i pozycję z SVG.
+      const templateBbox = templateSlotSvg.getBBox();
+      const uniformWidthPercent = (templateBbox.width / viewBox.width) * 100;
+      const uniformHeightPercent = (templateBbox.height / viewBox.height) * 100;
+    
+      // 2. Iterujemy przez wszystkie sloty, aby ustawić im pozycję i rozmiar
       for (let i = 0; i < 5; i++) {
         const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
         const htmlSlot = document.getElementById(`slot-${i}`);
@@ -840,10 +849,17 @@
         if (svgSlot && htmlSlot) {
           const bbox = svgSlot.getBBox();
           
-          htmlSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
+          // ✅ KLUCZOWA ZMIANA: Obliczamy środek oryginalnego kształtu z SVG
+          const originalShapeCenterX = bbox.x + bbox.width / 2;
+          
+          // ✅ Obliczamy nową pozycję 'left', aby wyśrodkować nasz kontener o jednolitej szerokości
+          const newLeftPercent = (originalShapeCenterX / viewBox.width) * 100 - (uniformWidthPercent / 2);
+    
+          // Ustawiamy nową, poprawną pozycję oraz jednolity rozmiar
+          htmlSlot.style.left = `${newLeftPercent}%`;
           htmlSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
-          htmlSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
-          htmlSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
+          htmlSlot.style.width = `${uniformWidthPercent}%`;
+          htmlSlot.style.height = `${uniformHeightPercent}%`;
         }
       }
     }
