@@ -13,13 +13,34 @@
         #info-display { position: absolute; top: 20px; color: white; font-size: 1.5em; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; }
     </style>
 </head>
-<body>
-    <div id="info-display">Saldo: <span id="balance">Ładowanie...</span></div>
-    <div id="game-container"></div>
-    <div id="controls">
-        <button id="spin-button">SPIN</button>
-        <button id="buy-bonus-button">Kup Bonus (80x)</button>
-    </div>
-    <script src="slots.js"></script>
-</body>
+    <body>
+        <div id="ui-container">
+            <div id="balance-display">Saldo: <span id="balance">Ładowanie...</span></div>
+            <div id="jackpot-container">
+                <div class="jackpot-box grand">GRAND <span id="grand-jackpot">25000</span></div>
+                <div class="jackpot-box major">MAJOR <span id="major-jackpot">1000</span></div>
+                <div class="jackpot-box minor">MINOR <span id="minor-jackpot">500</span></div>
+                <div class="jackpot-box mini">MINI <span id="mini-jackpot">200</span></div>
+            </div>
+        </div>
+    
+        <div id="game-container"></div>
+        
+        <div id="controls">
+            <button id="spin-button">SPIN</button>
+            <button id="buy-bonus-button">Kup Bonus (80x)</button>
+        </div>
+    
+        <style>
+            body { display: flex; flex-direction: column; justify-content: center; align-items: center; }
+            #ui-container { display: flex; justify-content: space-between; width: 900px; margin-bottom: 10px; }
+            #jackpot-container { display: flex; gap: 10px; }
+            .jackpot-box { color: white; padding: 10px; border-radius: 8px; font-weight: bold; text-align: center; }
+            .jackpot-box.grand { background: #ffbf00; }
+            .jackpot-box.major { background: #ff4757; }
+            .jackpot-box.minor { background: #5352ed; }
+            .jackpot-box.mini { background: #2ed573; }
+            #balance-display { color: white; font-size: 1.5em; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; }
+        </style>
+    </body>
 </html>
