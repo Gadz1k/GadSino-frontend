@@ -814,41 +814,48 @@
     const svgObject = document.getElementById('svg-table');
     function positionSlots() {
         const svgObject = document.getElementById('svg-table');
-        // Upewnij się, że dokument SVG jest załadowany
         const svgDoc = svgObject.contentDocument;
+    
+        // Poczekaj na pełne załadowanie SVG
         if (!svgDoc || !svgDoc.documentElement) {
-            console.warn("SVG document not ready yet.");
+            console.warn("SVG document not fully ready.");
             return;
         }
     
         const svgRoot = svgDoc.documentElement;
         const viewBox = svgRoot.viewBox.baseVal;
     
-        // --- Pozycjonowanie Dealera (bez zmian) ---
-        const dealerArea = svgDoc.getElementById('bj-table-u-dealer-area');
-        if (dealerArea) {
-            const bbox = dealerArea.getBBox();
-            const dealerSlot = document.getElementById('dealer-slot');
-            dealerSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
-            dealerSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
-            dealerSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
-            dealerSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
+        // Pobierz rzeczywiste wymiary i pozycję SVG na ekranie (w pikselach)
+        const tableRect = svgObject.getBoundingClientRect();
+    
+        // === NOWA, OSTATECZNA LOGIKA POZYCJONOWANIA ===
+    
+        // 1. Oblicz współczynnik skalowania i puste marginesy (tzw. letterboxing)
+        // Sprawdź, czy skalowanie jest ograniczone przez szerokość czy wysokość
+        const scale = Math.min(tableRect.width / viewBox.width, tableRect.height / viewBox.height);
+    
+        // Oblicz rzeczywisty rozmiar renderowanego obrazu SVG wewnątrz <object>
+        const renderedSvgWidth = viewBox.width * scale;
+        const renderedSvgHeight = viewBox.height * scale;
+    
+        // Oblicz puste marginesy po bokach i na górze/dole
+        const marginX = (tableRect.width - renderedSvgWidth) / 2;
+        const marginY = (tableRect.height - renderedSvgHeight) / 2;
+    
+    
+        // 2. Ustaw pozycję dla dealera, uwzględniając skalowanie i marginesy
+        const dealerAreaSvg = svgDoc.getElementById('bj-table-u-dealer-area');
+        if (dealerAreaSvg) {
+            const bbox = dealerAreaSvg.getBBox();
+            const dealerSlotHtml = document.getElementById('dealer-slot');
+    
+            dealerSlotHtml.style.left = `${marginX + (bbox.x * scale)}px`;
+            dealerSlotHtml.style.top = `${marginY + (bbox.y * scale)}px`;
+            dealerSlotHtml.style.width = `${bbox.width * scale}px`;
+            dealerSlotHtml.style.height = `${bbox.height * scale}px`;
         }
     
-        // === NOWA, POPRAWIONA LOGIKA DLA SLOTÓW GRACZY ===
-    
-        // ✅ 1. Użyj jednego slotu (np. slot-0) jako wzorca dla JEDNOLITEGO rozmiaru
-        const templateSlotSvg = svgDoc.getElementById('bj-table-u-slot-0');
-        if (!templateSlotSvg) {
-            console.error("Template slot 'bj-table-u-slot-0' not found in SVG.");
-            return;
-        }
-        
-        const templateBbox = templateSlotSvg.getBBox();
-        const uniformWidthPercent = (templateBbox.width / viewBox.width) * 100;
-        const uniformHeightPercent = (templateBbox.height / viewBox.height) * 100;
-    
-        // ✅ 2. Przejdź przez wszystkie 5 slotów, aby ustawić im pozycję i jednolity rozmiar
+        // 3. Ustaw pozycję dla każdego slotu gracza w ten sam, precyzyjny sposób
         for (let i = 0; i < 5; i++) {
             const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
             const htmlSlot = document.getElementById(`slot-${i}`);
@@ -856,17 +863,10 @@
             if (svgSlot && htmlSlot) {
                 const bbox = svgSlot.getBBox();
                 
-                // ✅ Oblicz środek oryginalnego kształtu z pliku SVG
-                const originalShapeCenterX = bbox.x + bbox.width / 2;
-                
-                // ✅ Oblicz nową pozycję 'left', aby wyśrodkować kontener o jednolitej szerokości
-                const newLeftPercent = (originalShapeCenterX / viewBox.width) * 100 - (uniformWidthPercent / 2);
-    
-                // Ustaw nową, poprawną pozycję oraz JEDNOLITY rozmiar dla każdego slotu
-                htmlSlot.style.left = `${newLeftPercent}%`;
-                htmlSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
-                htmlSlot.style.width = `${uniformWidthPercent}%`;
-                htmlSlot.style.height = `${uniformHeightPercent}%`;
+                htmlSlot.style.left = `${marginX + (bbox.x * scale)}px`;
+                htmlSlot.style.top = `${marginY + (bbox.y * scale)}px`;
+                htmlSlot.style.width = `${bbox.width * scale}px`;
+                htmlSlot.style.height = `${bbox.height * scale}px`;
             }
         }
     }
