@@ -470,7 +470,7 @@
   </div>
   
   <div id="round-feedback"></div>
-  
+    
   <div id="shoe-visual">
       <svg id="shoe-svg" viewBox="0 0 100 60">
           <defs>
@@ -478,9 +478,16 @@
                   <stop offset="0%" style="stop-color:#4a4a4a; stop-opacity:1" />
                   <stop offset="100%" style="stop-color:#2a2a2a; stop-opacity:1" />
               </linearGradient>
+  
+              <pattern id="card-stack-pattern" width="1" height="0.1" patternContentUnits="objectBoundingBox">
+                  <rect x="0" y="0" width="1" height="0.08" fill="#f0f0f0"/>
+                  <rect x="0" y="0.08" width="1" height="0.02" fill="#c5c5c5"/>
+              </pattern>
+  
           </defs>
           <path d="M 5 5 H 80 L 95 30 V 55 H 5 Z" fill="url(#shoe-gradient)" stroke="#1a1a1a" stroke-width="2"/>
-          <rect id="shoe-cards-stack" x="10" y="10" width="65" height="40" fill="#dcdcdc" rx="2"/>
+          
+          <rect id="shoe-cards-stack" x="10" y="10" width="65" height="40" fill="url(#card-stack-pattern)" rx="2"/>
       </svg>
       <div id="shoe-count-text">.../... kart</div>
   </div>
@@ -594,31 +601,28 @@
     });
     function updateShoeVisual(remainingCards) {
         if (remainingCards === undefined || remainingCards === null) return;
-
+    
         const cardStack = document.getElementById('shoe-cards-stack');
         const countText = document.getElementById('shoe-count-text');
-
+    
         if (!cardStack || !countText) return;
-
+    
         const percentage = remainingCards / INITIAL_SHOE_SIZE;
         
+        // Maksymalna wysokość stosu kart w naszym SVG
         const maxStackHeight = 40; 
         
+        // Oblicz nową, widoczną wysokość stosu kart
         const newHeight = maxStackHeight * percentage;
         
+        // Oblicz nową pozycję Y, aby stos kurczył się "w dół"
         const newY = (10 + maxStackHeight) - newHeight;
-
+    
+        // Zastosuj nowe atrybuty do elementu SVG
         cardStack.setAttribute('height', newHeight);
         cardStack.setAttribute('y', newY);
-
-        if (percentage > 0.5) {
-            cardStack.setAttribute('fill', '#e0e0e0'); 
-        } else if (percentage > 0.25) {
-            cardStack.setAttribute('fill', '#ffc107'); 
-        } else {
-            cardStack.setAttribute('fill', '#f44336'); 
-        }
         
+        // Zaktualizuj tekst
         countText.textContent = `${remainingCards}/${INITIAL_SHOE_SIZE}`;
     }
     function calculateHandValue(hand) {
