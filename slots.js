@@ -112,7 +112,7 @@ async function doSpin() {
     toggleControls(false);
 
     try {
-        const response = await fetch('/slots/spin', {
+        const response = await fetch(`${API_URL}/slots/spin`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: currentUser.username, bet: BET_AMOUNT })
@@ -141,7 +141,7 @@ async function doBuyBonus() {
     toggleControls(false);
 
     try {
-        const response = await fetch('/slots/buy-bonus', {
+        const response = await fetch(`${API_URL}/slots/buy-bonus`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: currentUser.username, bet: BET_AMOUNT })
