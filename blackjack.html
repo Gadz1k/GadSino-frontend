@@ -133,25 +133,26 @@
     }
 
     .slot-cards img, #dealer-hand img {
-      height: 80px;
-      border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      /* Można dodać tę animację przez JS przy rozdawaniu kart */
-      /* animation: deal-card 0.4s ease-out; */
+        /* ZMIANA: Używamy procentów zamiast pikseli, aby karty skalowały się z kontenerem */
+        height: 60%; 
+        width: auto; /* Zachowaj proporcje kart */
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
     
     .player-label {
-      position: absolute;
-      top: -60px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 0.9em;
-      font-weight: bold;
-      background: rgba(0, 0, 0, 0.85);
-      padding: 4px 12px;
-      border-radius: 12px;
-      white-space: nowrap;
-      z-index: 50;
+        position: absolute;
+        /* ZMIANA: Pozycja etykiety jest teraz względna, co zapobiega jej "odjeżdżaniu" */
+        top: -3.5em; 
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.9em;
+        font-weight: bold;
+        background: rgba(0, 0, 0, 0.85);
+        padding: 4px 12px;
+        border-radius: 12px;
+        white-space: nowrap;
+        z-index: 50;
     }
 
     /* --- Modale Akcji i Żetonów --- */
@@ -230,66 +231,87 @@
     
     /* --- Strefy Zakładów (Bet Zones) --- */
     .bet-zones {
-      position: relative;
-      width: 100%;
-      height: 0;
-      z-index: 55;
+        position: absolute;
+        /* ZMIANA: Rozciągnij kontener stref na cały slot */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 55;
     }
-      
+        
     .bet-zone {
-      position: absolute;
-      width: 48px;
-      height: 48px;
-      border: 2px dashed rgba(255, 165, 2, 0.5);
-      border-radius: 50%;
-      background-color: rgba(255, 255, 255, 0.05);
-      transition: all 0.2s ease;
-      z-index: 100;
-      cursor: pointer;
-      pointer-events: auto;
+        position: absolute;
+        /* ZMIANA: Rozmiar strefy jest teraz procentowy */
+        width: 33%; 
+        height: 33%;
+        border: 2px dashed rgba(255, 165, 2, 0.5);
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.05);
+        transition: all 0.2s ease;
+        z-index: 100;
+        cursor: pointer;
+        pointer-events: auto;
     }
     .bet-zone:hover {
-      border-style: solid;
-      border-color: var(--color-primary-accent);
-      background-color: rgba(255, 165, 2, 0.2);
+        border-style: solid;
+        border-color: var(--color-primary-accent);
+        background-color: rgba(255, 165, 2, 0.2);
     }
     
-    .main-bet { top: 10px; left: 50%; transform: translateX(-50%); }
-    .vs-bet { top: 75px; left: 50%; transform: translateX(-50%); border-color: #ff6b81; }
-    .side-bet.side-21 { top: 30px; left: 25px; }
-    .side-bet.side-pair { top: 30px; right: 25px; }
+    /* ZMIANA: Pozycje stref zakładów są teraz procentowe, co zapewnia ich poprawne umiejscowienie */
+    .main-bet { 
+        top: 25%; 
+        left: 50%; 
+        transform: translateX(-50%); 
+    }
+    .vs-bet { 
+        top: 65%; 
+        left: 50%; 
+        transform: translateX(-50%); 
+        border-color: #ff6b81; 
+    }
+    .side-bet.side-21 { 
+        top: 35%; 
+        left: 5%; 
+    }
+    .side-bet.side-pair { 
+        top: 35%; 
+        right: 5%; 
+    }
     
     .bet-zone::after {
-      content: attr(data-label);
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      transform: translateX(-50%) translateY(4px);
-      font-size: 0.65em;
-      color: var(--color-primary-accent);
-      white-space: nowrap;
-      pointer-events: none;
+        content: attr(data-label);
+        position: absolute;
+        top: 105%; /* Lekko pod strefą */
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.8em; /* Używamy 'em' dla skalowalnego tekstu */
+        color: var(--color-primary-accent);
+        white-space: nowrap;
+        pointer-events: none;
     }
-    
+        
     .bet-bubble {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: gold;
-      color: black;
-      font-weight: bold;
-      font-size: 0.9em;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 99;
-      box-shadow: 0 0 5px #000;
-      pointer-events: none;
-      user-select: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: gold;
+        color: black;
+        font-weight: bold;
+        /* ZMIANA: Rozmiar bąbelka z zakładem jest teraz względny */
+        font-size: 1.2em;
+        width: 1.8em;
+        height: 1.8em;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99;
+        box-shadow: 0 0 5px #000;
+        pointer-events: none;
+        user-select: none;
     }
 
     /* --- Panel Boczny z Zasadami --- */
