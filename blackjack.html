@@ -254,31 +254,11 @@
       background-color: rgba(255, 165, 2, 0.2);
     }
     
-    .main-bet {
-      top: 65px; /* Najbardziej wysunięty na dół, najważniejszy */
-      left: 50%;
-      transform: translateX(-50%);
-    }
-      
-    .vs-bet {
-      top: 110px; /* Zakład "VS" pod zakładem głównym */
-      left: 50%;
-      transform: translateX(-50%);
-      border-color: #ff6b81; /* Utrzymujemy różowy kolor */
-    }
-      
-    .side-bet.side-21 {
-      top: 20px; /* Wyżej i po lewej */
-      left: 25%;
-      transform: translateX(-50%);
-    }
-      
-    .side-bet.side-pair {
-      top: 20px; /* Wyżej i po prawej */
-      left: 75%;
-      transform: translateX(-50%);
-    }
-
+    .main-bet { top: 10px; left: 50%; transform: translateX(-50%); }
+    .vs-bet { top: 75px; left: 50%; transform: translateX(-50%); border-color: #ff6b81; }
+    .side-bet.side-21 { top: 30px; left: 25px; }
+    .side-bet.side-pair { top: 30px; right: 25px; }
+    
     .bet-zone::after {
       content: attr(data-label);
       position: absolute;
