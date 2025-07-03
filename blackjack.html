@@ -67,10 +67,10 @@
     
     /* === Tematyczny wskaźnik talii (But) === */
     #shoe-visual {
-        position: fixed;
-        top: 100px;
-        right: 20px;
-        width: 150px; /* Dopasuj szerokość do swoich potrzeb */
+        position: absolute; /* ZMIANA z 'fixed' na 'absolute' */
+        top: 15%;          /* Ustawienie względem stołu, a nie okna */
+        right: 15%;         /* Możesz dostosować te wartości */
+        width: 150px;      /* Szerokość pozostaje, ale możesz ją zmienić na % */
         z-index: 10;
     }
     
@@ -470,8 +470,10 @@
   </div>
   
   <div id="round-feedback"></div>
-    
-  <div id="shoe-visual">
+  
+  <div id="table-container">
+    <object id="svg-table" type="image/svg+xml" data="img/bj-table.svg"></object>
+    <div id="shoe-visual">
       <svg id="shoe-svg" viewBox="0 0 100 60">
           <defs>
               <linearGradient id="shoe-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -491,9 +493,6 @@
       </svg>
       <div id="shoe-count-text">.../... kart</div>
   </div>
-  
-  <div id="table-container">
-    <object id="svg-table" type="image/svg+xml" data="img/bj-table.svg"></object>
     <div id="dealer-slot" class="table-slot">
       <b>Dealer</b>
       <div class="slot-cards" id="dealer-hand"></div>
