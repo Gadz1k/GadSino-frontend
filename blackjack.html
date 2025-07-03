@@ -67,28 +67,25 @@
     
     /* === Tematyczny wskaźnik talii (But) === */
     #shoe-visual {
-        position: absolute; /* ZMIANA z 'fixed' na 'absolute' */
-        top: 15%;          /* Ustawienie względem stołu, a nie okna */
-        right: 30%;         /* Możesz dostosować te wartości */
-        width: 150px;      /* Szerokość pozostaje, ale możesz ją zmienić na % */
+        position: absolute; 
+        top: 15%;          
+        right: 15%;         
+        width: 150px;
         z-index: 10;
     }
     
     #shoe-svg {
         width: 100%;
-        /* Filtr dodający subtelny cień, dla wrażenia głębi */
         filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
     }
     
-    /* Tekst z liczbą kart */
     #shoe-count-text {
         font-family: var(--font-mono);
         font-size: 0.9em;
         text-align: center;
-        margin-top: -5px; /* Lekkie przesunięcie w górę */
+        margin-top: -5px;
         font-weight: bold;
         color: #fff;
-        /* Dodajemy cień do tekstu dla lepszej czytelności */
         text-shadow: 0 1px 3px rgba(0,0,0,0.6);
     }
     
@@ -474,25 +471,24 @@
   <div id="table-container">
     <object id="svg-table" type="image/svg+xml" data="img/bj-table.svg"></object>
     <div id="shoe-visual">
-      <svg id="shoe-svg" viewBox="0 0 100 60">
-          <defs>
-              <linearGradient id="shoe-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style="stop-color:#4a4a4a; stop-opacity:1" />
-                  <stop offset="100%" style="stop-color:#2a2a2a; stop-opacity:1" />
-              </linearGradient>
-  
-              <pattern id="card-stack-pattern" width="1" height="0.1" patternContentUnits="objectBoundingBox">
-                  <rect x="0" y="0" width="1" height="0.08" fill="#f0f0f0"/>
-                  <rect x="0" y="0.08" width="1" height="0.02" fill="#c5c5c5"/>
-              </pattern>
-  
-          </defs>
-          <path d="M 5 5 H 80 L 95 30 V 55 H 5 Z" fill="url(#shoe-gradient)" stroke="#1a1a1a" stroke-width="2"/>
-          
-          <rect id="shoe-cards-stack" x="10" y="10" width="65" height="40" fill="url(#card-stack-pattern)" rx="2"/>
-      </svg>
-      <div id="shoe-count-text">.../... kart</div>
-  </div>
+        <svg id="shoe-svg" viewBox="0 0 100 60">
+            <defs>
+                <linearGradient id="shoe-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#4a4a4a; stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#2a2a2a; stop-opacity:1" />
+                </linearGradient>
+            </defs>
+            <path d="M 5 5 H 80 L 95 30 V 55 H 5 Z" fill="url(#shoe-gradient)" stroke="#1a1a1a" stroke-width="2"/>
+    
+            <g id="shoe-cards-stack" style="transform-origin: 50% 100%;">
+                <image href="svg-cards/back.svg" x="-15" y="-10" height="100" width="70" transform="rotate(90 35 50) translate(0, 2)"/>
+                <image href="svg-cards/back.svg" x="-15" y="-10" height="100" width="70" transform="rotate(90 35 50) translate(0, 0)"/>
+                <image href="svg-cards/back.svg" x="-15" y="-10" height="100" width="70" transform="rotate(90 35 50) translate(0, -2)"/>
+            </g>
+        </svg>
+        
+        <div id="shoe-count-text">.../... kart</div>
+    </div>
     <div id="dealer-slot" class="table-slot">
       <b>Dealer</b>
       <div class="slot-cards" id="dealer-hand"></div>
@@ -601,25 +597,18 @@
     function updateShoeVisual(remainingCards) {
         if (remainingCards === undefined || remainingCards === null) return;
     
-        const cardStack = document.getElementById('shoe-cards-stack');
+        // Naszym celem jest teraz cała grupa kart, a nie pojedynczy prostokąt
+        const cardStackGroup = document.getElementById('shoe-cards-stack');
         const countText = document.getElementById('shoe-count-text');
     
-        if (!cardStack || !countText) return;
+        if (!cardStackGroup || !countText) return;
     
+        // Oblicz procent pozostałych kart
         const percentage = remainingCards / INITIAL_SHOE_SIZE;
         
-        // Maksymalna wysokość stosu kart w naszym SVG
-        const maxStackHeight = 40; 
-        
-        // Oblicz nową, widoczną wysokość stosu kart
-        const newHeight = maxStackHeight * percentage;
-        
-        // Oblicz nową pozycję Y, aby stos kurczył się "w dół"
-        const newY = (10 + maxStackHeight) - newHeight;
-    
-        // Zastosuj nowe atrybuty do elementu SVG
-        cardStack.setAttribute('height', newHeight);
-        cardStack.setAttribute('y', newY);
+        // ✅ Zamiast zmieniać wysokość, skalujemy grupę w osi Y
+        // To "spłaszczy" stos od góry, dając świetny efekt wizualny
+        cardStackGroup.setAttribute('transform', `scale(1, ${percentage})`);
         
         // Zaktualizuj tekst
         countText.textContent = `${remainingCards}/${INITIAL_SHOE_SIZE}`;
