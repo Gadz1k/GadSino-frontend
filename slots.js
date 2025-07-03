@@ -87,14 +87,15 @@ async function updateUserState() {
     
     if (!userFromStorage || !userFromStorage.username) {
         balanceDisplay.textContent = "Niezalogowany";
-        toggleControls(false); // Blokuj grę, jeśli nikt nie jest zalogowany
+        toggleControls(false);
         return;
     }
     
     currentUser = userFromStorage;
 
     try {
-        const response = await fetch(`/player/${currentUser.username}`);
+        // POPRAWKA TUTAJ: Dodano API_URL
+        const response = await fetch(`${API_URL}/player/${currentUser.username}`);
         if (!response.ok) throw new Error('Błąd serwera przy pobieraniu salda.');
         const data = await response.json();
         balanceDisplay.textContent = `${data.balance} żetonów`;
