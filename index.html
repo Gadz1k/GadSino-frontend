@@ -18,7 +18,6 @@
     body.landing {
       font-family: var(--font-main);
       background-color: var(--color-background);
-      /* Nowe, dynamiczne tło */
       background-image: 
         radial-gradient(circle at 15% 50%, rgba(255, 165, 2, 0.1), transparent 30%),
         radial-gradient(circle at 85% 30%, rgba(255, 71, 87, 0.1), transparent 30%);
@@ -154,19 +153,17 @@
       margin-top: 2rem;
     }
 
+    /* === POCZĄTEK ZMIAN W CSS === */
     #logo {
-      font-family: 'Courier New', monospace;
-      font-size: 3em;
-      text-align: center;
-      margin-bottom: 0.1em;
+        margin-bottom: 1rem; /* Zwiększony margines dla lepszego odstępu */
     }
-    #logo .text {
-      font-weight: bold;
-      color: var(--color-primary-accent);
-      animation: neonGlow 1.5s infinite alternate;
+
+    #logo-image {
+        height: 180px; /* Ustawiamy stałą wysokość logo */
+        max-width: 90%; /* Zapewnia, że logo nie będzie szersze niż ekran na małych urządzeniach */
+        object-fit: contain; /* Zachowuje proporcje obrazka */
     }
-    #logo .emoji { font-size: 0.9em; display: inline-block; }
-    .flicker { animation: flicker 2s infinite steps(2, start); }
+    /* === KONIEC ZMIAN W CSS === */
     
     p.tagline {
       font-size: 1.2em;
@@ -205,7 +202,7 @@
       transform: translateY(-3px);
       box-shadow: 0 6px 20px rgba(255, 165, 2, 0.5);
     }
-     .game-card .play-button:disabled {
+      .game-card .play-button:disabled {
       background-color: #555;
       color: #999;
       cursor: not-allowed;
@@ -266,15 +263,8 @@
       font-weight: bold; display: none;
     }
 
-    /* === Animacje === */
-    @keyframes neonGlow {
-      from { text-shadow: 0 0 5px #ffa502, 0 0 10px #fffa65, 0 0 20px #ff6f00; }
-      to { text-shadow: 0 0 10px #ff9f1a, 0 0 20px #ff6f00, 0 0 30px #ff3f00; }
-    }
-    @keyframes flicker {
-      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
-      20%, 22%, 24%, 55% { opacity: 0.1; }
-    }
+    /* === Usunięto zbędne animacje tekstowe === */
+
   </style>
 </head>
 <body class="landing">
@@ -300,10 +290,9 @@
 
   <main>
     <h1 id="logo">
-      <span class="emoji flicker">🎰</span>
-      <span class="text">GadSino</span>
-      <span class="emoji flicker">🎰</span>
+      <img src="img/logo.png" alt="Gadsino Logo" id="logo-image">
     </h1>
+    
     <p class="tagline">Witamy w miejscu, gdzie marzenia umierają szybciej niż twoje saldo.</p>
 
     <div class="game-card">
