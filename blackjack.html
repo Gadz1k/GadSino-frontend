@@ -65,17 +65,31 @@
       z-index: 1000;
     }
     
+    /* === Tematyczny wskaźnik talii (But) === */
     #shoe-visual {
-      position: fixed;
-      top: 100px; /* Przesunięte pod info o graczu */
-      right: 20px;
-      background: var(--color-table-bg);
-      color: white;
-      padding: 0.8em 1em;
-      border-radius: 10px;
-      font-family: var(--font-mono);
-      font-size: 0.9em;
-      z-index: 10;
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        width: 150px; /* Dopasuj szerokość do swoich potrzeb */
+        z-index: 10;
+    }
+    
+    #shoe-svg {
+        width: 100%;
+        /* Filtr dodający subtelny cień, dla wrażenia głębi */
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+    }
+    
+    /* Tekst z liczbą kart */
+    #shoe-count-text {
+        font-family: var(--font-mono);
+        font-size: 0.9em;
+        text-align: center;
+        margin-top: -5px; /* Lekkie przesunięcie w górę */
+        font-weight: bold;
+        color: #fff;
+        /* Dodajemy cień do tekstu dla lepszej czytelności */
+        text-shadow: 0 1px 3px rgba(0,0,0,0.6);
     }
     
     #round-feedback {
@@ -458,7 +472,17 @@
   <div id="round-feedback"></div>
   
   <div id="shoe-visual">
-    <div>🃏 Talia: <span id="shoe-count">...</span> kart</div>
+      <svg id="shoe-svg" viewBox="0 0 100 60">
+          <defs>
+              <linearGradient id="shoe-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#4a4a4a; stop-opacity:1" />
+                  <stop offset="100%" style="stop-color:#2a2a2a; stop-opacity:1" />
+              </linearGradient>
+          </defs>
+          <path d="M 5 5 H 80 L 95 30 V 55 H 5 Z" fill="url(#shoe-gradient)" stroke="#1a1a1a" stroke-width="2"/>
+          <rect id="shoe-cards-stack" x="10" y="10" width="65" height="40" fill="#dcdcdc" rx="2"/>
+      </svg>
+      <div id="shoe-count-text">.../... kart</div>
   </div>
   
   <div id="table-container">
