@@ -6,25 +6,96 @@
   <title>GadSino Blackjack</title>
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <style>
+    /* === KROK 1: Zmienne CSS i Globalne Style === */
+    :root {
+      --color-background: #1a1a1a;
+      --color-table-bg: #2f3542;
+      --color-primary-accent: #ffa502; /* Główny akcent - złoty/pomarańczowy */
+      --color-secondary-accent: #00ffcc; /* Akcent do podświetleń - turkusowy */
+      --color-danger: #ff4757;
+      --color-text: #ffffff;
+      --font-main: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      --font-mono: 'Courier New', Courier, monospace;
+    }
+
     body {
-      background: #1c1c1c;
-      color: #fff;
-      font-family: 'Courier New', Courier, monospace;
+      background-color: var(--color-background);
+      background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 15px 15px;
+      color: var(--color-text);
+      font-family: var(--font-main);
       margin: 0;
       overflow: hidden;
     }
 
-    #user-info {
-      position: absolute;
+    /* === KROK 2: Ulepszone Style Komponentów === */
+
+    /* --- Przyciski i Panele Główne --- */
+    #back-to-home {
+      position: fixed;
       top: 20px;
-      right: 20px;
-      background: #2f3542;
-      padding: 1em;
+      left: 20px;
+      z-index: 1001; /* Najwyższy z-index dla nawigacji */
+      background: var(--color-danger);
+      border: none;
+      padding: 0.5em 1.2em;
+      color: white;
+      font-weight: bold;
       border-radius: 10px;
-      text-align: left;
-      z-index: 10;
+      cursor: pointer;
+      font-size: 1em;
+      box-shadow: 0 0 10px rgba(255, 71, 87, 0.6);
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+    #back-to-home:hover {
+      background: #e03b4a;
+      transform: scale(1.05);
     }
 
+    #user-info {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(20, 20, 20, 0.7);
+      backdrop-filter: blur(5px);
+      padding: 1em;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: left;
+      z-index: 1000;
+    }
+    
+    #shoe-visual {
+      position: fixed;
+      top: 100px; /* Przesunięte pod info o graczu */
+      right: 20px;
+      background: var(--color-table-bg);
+      color: white;
+      padding: 0.8em 1em;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+      z-index: 10;
+    }
+    
+    #round-feedback {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.85);
+      padding: 1em 2em;
+      color: white;
+      border-radius: 10px;
+      font-size: 1.2em;
+      font-weight: bold;
+      display: none;
+      z-index: 999;
+      box-shadow: 0 0 20px var(--color-primary-accent);
+      border: 1px solid var(--color-primary-accent);
+    }
+    
+    /* --- Stół i Sloty --- */
     #table-container {
       position: relative;
       width: 100vw;
@@ -32,133 +103,71 @@
       pointer-events: none;
     }
 
-    #table-container object {
+    #svg-table {
       width: 100%;
       height: 100%;
       display: block;
+      z-index: 1;
+      pointer-events: none;
+      filter: drop-shadow(0 0 30px rgba(0,0,0,0.5));
     }
 
     .table-slot {
       position: absolute;
-      background: transparent;
-      border: none;
-      padding: 0;
-      min-width: 0;
-      min-height: 0;
       text-align: center;
       color: white;
       font-weight: bold;
       pointer-events: none;
+      transition: box-shadow 0.5s ease-in-out;
     }
 
     .table-slot.active-turn {
-      box-shadow: 0 0 15px 5px #00ffe1;
+      box-shadow: 0 0 25px 8px rgba(0, 255, 204, 0.4); /* Łagodniejszy blask */
       border-radius: 15px;
-      transition: box-shadow 0.3s ease;
+    }
+    
+    /* --- Karty i Etykiety Graczy --- */
+    @keyframes deal-card {
+      from { opacity: 0; transform: translateY(-100px) rotateX(90deg); }
+      to { opacity: 1; transform: translateY(0) rotateX(0); }
     }
 
-    .slot-cards {
-      display: flex;
-      justify-content: center;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-top: 2px;
-    }
-
-    .table-slot b {
-      position: absolute;
-      top: -30px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 0.85em;
-      background: rgba(0, 0, 0, 0.9); /* mocniej widoczny */
-      padding: 4px 8px;
-      border-radius: 6px;
-      z-index: 99; /* 🧠 TO JEST KLUCZOWE */
-      pointer-events: none;
-      white-space: nowrap;
-    }
-
-    .slot-cards img,
-    #dealer-hand img {
+    .slot-cards img, #dealer-hand img {
       height: 80px;
       border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      /* Można dodać tę animację przez JS przy rozdawaniu kart */
+      /* animation: deal-card 0.4s ease-out; */
     }
-
-    .join-btn {
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-      border: 2px solid #ffa502;
-      border-radius: 50%;
-      font-size: 1.5em;
-      width: 50px;
-      height: 50px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto;
-      transition: background 0.2s, transform 0.2s;
-      pointer-events: auto;
-    }
-
-    .join-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: scale(1.1);
-    }
-
-    #countdown-timer {
-      font-size: 1.5em;
-      color: #00ffcc;
-      text-align: center;
-      margin-top: 1em;
-    }
-
-    #result {
-      font-size: 1.5em;
-      font-weight: bold;
-      margin-top: 1em;
-    }
-
-    #svg-table {
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    #chip-modal {
-      position: fixed;
-      bottom: 0;
+    
+    .player-label {
+      position: absolute;
+      top: -60px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8);
-      padding: 1em;
-      border-radius: 15px 15px 0 0;
-      display: flex;
-      gap: 15px;
-      z-index: 999;
+      font-size: 0.9em;
+      font-weight: bold;
+      background: rgba(0, 0, 0, 0.85);
+      padding: 4px 12px;
+      border-radius: 12px;
+      white-space: nowrap;
+      z-index: 50;
     }
 
-    .chip {
-      height: 50px;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-
-    .chip:hover {
-      transform: scale(1.2);
-    }
-
+    /* --- Modale Akcji i Żetonów --- */
     #action-modal {
       position: fixed;
       top: 60%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.7);
-      padding: 2em;
+      background: rgba(20, 20, 20, 0.7);
+      backdrop-filter: blur(8px);
+      padding: 1.5em;
       border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
       display: none;
       flex-direction: row;
-      gap: 2em;
+      gap: 1.5em;
       z-index: 999;
     }
 
@@ -168,87 +177,101 @@
       font-size: 2em;
       border-radius: 50%;
       border: none;
-      background: #ffa502;
-      color: #1c1c1c;
+      border-bottom: 4px solid #c07a00;
+      background: var(--color-primary-accent);
+      color: var(--color-background);
       font-weight: bold;
       cursor: pointer;
-      transition: transform 0.2s;
+      transition: all 0.15s ease;
     }
 
     #action-modal button:hover {
-      transform: scale(1.1);
+      background-color: #ffb732;
+      box-shadow: 0 0 15px var(--color-primary-accent);
+      transform: translateY(-2px);
     }
-    .table-slot .join-btn {
-      position: absolute;
-      top: 50%;
+    #action-modal button:active {
+      transform: translateY(2px);
+      border-bottom-width: 2px;
+      box-shadow: none;
+    }
+
+    #chip-modal {
+      position: fixed;
+      bottom: 0;
       left: 50%;
-      transform: translate(-50%, -50%);
+      transform: translateX(-50%);
+      padding: 1em 1.5em;
+      display: flex;
+      gap: 15px;
+      z-index: 999;
+      background: rgba(20, 20, 20, 0.7);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -5px 25px rgba(0,0,0,0.3);
     }
+
+    .chip {
+      height: 50px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .chip:hover {
+      transform: scale(1.15) translateY(-5px);
+    }
+    
+    .chip.selected {
+      transform: scale(1.2) translateY(-8px);
+      box-shadow: 0 0 20px 5px var(--color-secondary-accent);
+      border-radius: 50%;
+    }
+    
+    /* --- Strefy Zakładów (Bet Zones) --- */
     .bet-zones {
       position: relative;
       width: 100%;
       height: 0;
       z-index: 55;
     }
-    
+      
     .bet-zone {
       position: absolute;
       width: 48px;
       height: 48px;
-      border: 3px dashed #ffa502;
+      border: 2px dashed rgba(255, 165, 2, 0.5);
       border-radius: 50%;
-      background-color: rgba(255,255,255,0.05);
-      transition: outline 0.2s;
+      background-color: rgba(255, 255, 255, 0.05);
+      transition: all 0.2s ease;
       z-index: 100;
       cursor: pointer;
       pointer-events: auto;
     }
-        
-    .main-bet {
-      top: 10px; /* było -50px */
-      left: 50%;
-      transform: translateX(-50%);
+    .bet-zone:hover {
+      transform: scale(1.1);
+      border-style: solid;
+      border-color: var(--color-primary-accent);
+      background-color: rgba(255, 165, 2, 0.2);
     }
     
-    .vs-bet {
-      top: 75px;
-      left: 50%;
-      transform: translateX(-50%);
-      border-color: #ff6b81;
-    }
-    
-    .side-bet.side-21 {
-      top: 30px;
-      left: 25px;
-    }
-    
-    .side-bet.side-pair {
-      top: 30px;
-      right: 25px;
-    }
-    .placed-chip {
+    .main-bet { top: 10px; left: 50%; transform: translateX(-50%); }
+    .vs-bet { top: 75px; left: 50%; transform: translateX(-50%); border-color: #ff6b81; }
+    .side-bet.side-21 { top: 30px; left: 25px; }
+    .side-bet.side-pair { top: 30px; right: 25px; }
+
+    .bet-zone::after {
+      content: attr(data-label);
       position: absolute;
-      width: 36px;
-      height: 36px;
-      pointer-events: none;
-      top: 0;
-      left: 0;
-      z-index: 99;
-    }
-    .player-label {
-      position: absolute;
-      top: -60px; /* było -40px */
+      top: 100%;
       left: 50%;
-      transform: translateX(-50%);
-      font-size: 0.85em;
-      font-weight: bold;
-      background: rgba(0, 0, 0, 0.85);
-      padding: 3px 10px;
-      border-radius: 12px;
+      transform: translateX(-50%) translateY(4px);
+      font-size: 0.65em;
+      color: var(--color-primary-accent);
       white-space: nowrap;
-      z-index: 50;
       pointer-events: none;
     }
+    
     .bet-bubble {
       position: absolute;
       top: 50%;
@@ -267,176 +290,178 @@
       z-index: 99;
       box-shadow: 0 0 5px #000;
       pointer-events: none;
-      user-select: none; /* 🔥 to blokuje zaznaczanie tekstu */
+      user-select: none;
     }
-    .bet-zone::after {
-        content: attr(data-label);
+
+    /* --- Panel Boczny z Zasadami --- */
+    #sidebet-guide {
+      position: fixed;
+      top: 140px; /* Domyślnie, może być dostosowane */
+      left: 20px;
+      background: rgba(20, 20, 20, 0.8);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: var(--color-text);
+      padding: 1em;
+      font-size: 0.85em;
+      max-width: 260px;
+      z-index: 20;
+      box-shadow: 0 0 12px rgba(0,0,0,0.5);
+    }
+      
+    #sidebet-guide .guide-title {
+      font-size: 1.1em;
+      color: var(--color-primary-accent);
+      margin-bottom: 0.6em;
+      font-weight: bold;
+      text-align: center;
+    }
+      
+    #sidebet-guide .guide-section {
+      margin-bottom: 1em;
+    }
+      
+    #sidebet-guide b {
+      color: var(--color-text);
+      font-weight: bold;
+      display: block;
+      margin-bottom: 0.4em;
+    }
+      
+    #sidebet-guide ul {
+      list-style: none; /* Usuwamy kropki */
+      padding-left: 0;
+      margin: 0;
+    }
+      
+    #sidebet-guide li {
+      margin-bottom: 0.4em;
+      padding-left: 15px;
+      position: relative;
+    }
+    #sidebet-guide li::before {
+        content: '•';
         position: absolute;
-        top: 100%;
-        left: 50%;
-        transform: translateX(-50%) translateY(4px);
-        font-size: 0.65em;
-        color: #ffa502;
-        white-space: nowrap;
-        pointer-events: none;
-      }
-      #sidebet-guide {
-        position: fixed;
-        top: 140px;
-        left: 20px;
-        background: rgba(0, 0, 0, 0.85);
-        border: 2px solid #ffa502;
-        border-radius: 10px;
-        color: #fff;
-        padding: 1em;
-        font-family: 'Courier New', monospace;
-        font-size: 0.85em;
-        max-width: 260px;
-        z-index: 20;
-        box-shadow: 0 0 12px #ffa50280;
-      }
+        left: 0;
+        color: var(--color-primary-accent);
+    }
       
-      #sidebet-guide .guide-title {
-        font-size: 1.1em;
-        color: #ffa502;
-        margin-bottom: 0.6em;
-        font-weight: bold;
-        text-align: center;
-      }
+    #sidebet-guide .odds {
+      color: var(--color-primary-accent);
+      font-weight: bold;
+    }
+    
+    /* --- Style dla Splita --- */
+    .split-hand {
+      position: relative;
+      border-top: 1px dashed rgba(255, 255, 255, 0.3);
+      padding-top: 10px;
+      margin-top: 20px;
+      transition: box-shadow 0.3s ease;
+    }
       
-      #sidebet-guide .guide-section {
-        margin-bottom: 1em;
-      }
+    .split-label {
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--color-primary-accent);
+      font-size: 0.8em;
+      background: rgba(0, 0, 0, 0.85);
+      padding: 2px 8px;
+      border-radius: 8px;
+      white-space: nowrap;
+      z-index: 50;
+    }
       
-      #sidebet-guide b {
-        color: #ffffff;
-        font-weight: bold;
-        display: block;
-        margin-bottom: 0.4em;
-      }
+    .main-hand {
+      margin-bottom: 10px;
+      transition: box-shadow 0.3s ease;
+    }
+
+    /* --- Inne --- */
+    #countdown-timer {
+      font-size: 1.5em;
+      color: var(--color-secondary-accent);
+      text-align: center;
+      margin-top: 1em;
+    }
+
+    #result {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-top: 1em;
+    }
       
-      #sidebet-guide ul {
-        list-style: disc;
-        padding-left: 20px;
-        margin: 0;
-      }
+    .join-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--color-text);
+      border: 2px solid var(--color-primary-accent);
+      border-radius: 50%;
+      font-size: 1.5em;
+      width: 50px;
+      height: 50px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      transition: background 0.2s, transform 0.2s;
+      pointer-events: auto;
+    }
+
+    .join-btn:hover {
+      background: rgba(255, 165, 2, 0.3);
+      transform: scale(1.1);
+    }
       
-      #sidebet-guide li {
-        margin-bottom: 0.3em;
-        color: #fff;
-      }
-      
-      #sidebet-guide .odds {
-        color: #ffa502;
-        font-weight: bold;
-      }
-      .split-hand {
-          position: relative;
-          border-top: 1px dashed rgba(255, 255, 255, 0.3);
-          padding-top: 10px;
-          margin-top: 20px;
-          transition: box-shadow 0.3s ease;
-      }
-      
-      .split-label {
-          position: absolute;
-          top: 60px;
-          left: 50%;
-          transform: translateX(-50%);
-          color: #ffa502;
-          font-size: 0.8em;
-          background: rgba(0, 0, 0, 0.85);
-          padding: 2px 8px;
-          border-radius: 8px;
-          white-space: nowrap;
-          z-index: 50;
-      }
-      
-      .main-hand {
-          margin-bottom: 10px;
-          transition: box-shadow 0.3s ease;
-      }
-      
-      .table-slot.active-turn {
-          box-shadow: 0 0 15px 5px rgba(0, 255, 225, 0.3);
-          border-radius: 15px;
-      }
+    .table-slot .join-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
   </style>
 </head>
 <body>
-  <button id="back-to-home" style="
-  position: fixed;
-  top: 20px;
-  z-index: 5;
-  left: 20px;
-  background: #ff4757;
-  border: none;
-  padding: 0.5em 1.2em;
-  color: white;
-  font-weight: bold;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 1em;
-  box-shadow: 0 0 10px #ff4757a0;
-  transition: background 0.2s ease, transform 0.2s ease;
-">
-  ← Lobby
-</button>
+  <button id="back-to-home">← Lobby</button>
+
   <div id="user-info">
     <div><strong>Zalogowany jako:</strong> <span id="logged-user">--</span></div>
     <div><strong>Saldo:</strong> <span id="user-balance">--</span> żetonów</div>
     <button id="leave-btn" style="display:none" onclick="leaveTable()">Opuść stół</button>
   </div>
-    <div id="sidebet-guide">
-      <div class="guide-title">🎴 Side Bety</div>
-      <div class="guide-section">
-        <b>21+3</b>
-        <ul>
-          <li>Trójka w kolorze: <span class="odds">100:1</span></li>
-          <li>Strit w kolorze: <span class="odds">40:1</span></li>
-          <li>Trójka: <span class="odds">30:1</span></li>
-          <li>Strit: <span class="odds">10:1</span></li>
-          <li>Kolor: <span class="odds">5:1</span></li>
-        </ul>
-      </div>
-      <div class="guide-section">
-        <b>Perfect Pair</b>
-        <ul>
-          <li>Identyczne karty: <span class="odds">25:1</span></li>
-          <li>Kolorowa para: <span class="odds">12:1</span></li>
-          <li>Mieszana para: <span class="odds">6:1</span></li>
-        </ul>
-      </div>
+  
+  <div id="sidebet-guide">
+    <div class="guide-title">🎴 Side Bety</div>
+    <div class="guide-section">
+      <b>21+3</b>
+      <ul>
+        <li>Trójka w kolorze: <span class="odds">100:1</span></li>
+        <li>Strit w kolorze: <span class="odds">40:1</span></li>
+        <li>Trójka: <span class="odds">30:1</span></li>
+        <li>Strit: <span class="odds">10:1</span></li>
+        <li>Kolor: <span class="odds">5:1</span></li>
+      </ul>
     </div>
-    <div id="round-feedback" style="
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.85);
-    padding: 1em 2em;
-    color: white;
-    border-radius: 10px;
-    font-size: 1.2em;
-    font-weight: bold;
-    display: none;
-    z-index: 999;
-    box-shadow: 0 0 20px #ffa502;
-  "></div>
-  <div id="shoe-visual" style="
-    position: absolute;
-    top: 20%;
-    right: 10%;
-    background: #2f3542;
-    color: white;
-    padding: 1em;
-    border-radius: 10px;
-    font-family: 'Courier New', monospace;
-    font-size: 0.9em;
-    z-index: 10;
-  ">
+    <div class="guide-section">
+      <b>Perfect Pair</b>
+      <ul>
+        <li>Identyczne karty: <span class="odds">25:1</span></li>
+        <li>Kolorowa para: <span class="odds">12:1</span></li>
+        <li>Mieszana para: <span class="odds">6:1</span></li>
+      </ul>
+    </div>
+  </div>
+  
+  <div id="round-feedback"></div>
+  
+  <div id="shoe-visual">
     <div>🃏 Talia: <span id="shoe-count">...</span> kart</div>
   </div>
+  
   <div id="table-container">
     <object id="svg-table" type="image/svg+xml" data="img/bj-table.svg"></object>
     <div id="dealer-slot" class="table-slot">
@@ -467,436 +492,388 @@
     <img src="chips/100.png" class="chip" data-value="100" />
     <img src="chips/500.png" class="chip" data-value="500" />
   </div>
-    <script>
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (!user || !user.username) {
-        alert('Musisz się najpierw zalogować!');
-        window.location.href = 'index.html';
-      }
-    
-      const username = user.username;
-      let selectedBetType = 'main';
-      let selectedChipValue = null;
-      const socket = io('https://gadsino.onrender.com');
-      const defaultTableId = 'default'; // ← najpierw zdefiniuj
-      socket.emit('sync_state', { tableId: defaultTableId, username }); // ← dopiero potem wyślij
-      let joinedSlot = null;
-    
-      document.getElementById('logged-user').innerText = username;
-      document.getElementById('back-to-home').onclick = () => {
-        window.location.href = 'index.html';
-      };
-    
-      socket.on('table_update', data => {
-        updateHands(data);
-      
-        if (data.shoeSize !== undefined) {
-          document.getElementById('shoe-count').textContent = data.shoeSize;
-        }
-      });
-      socket.on('round_started', table => {
-        dealingAnimation = true;
-        hitAnimationFor = null;
-        updateHands(table);
-        document.getElementById('countdown-timer').innerText = '';
-        document.getElementById('chip-modal').style.display = 'none';
-        document.getElementById('action-modal').style.display = 'none';
-      });
-      socket.on('round_result', table => {
-        updateHands(table);
-        document.getElementById('chip-modal').style.display = 'none';
-        document.getElementById('action-modal').style.display = 'none';
-      
-        const me = table.players.find(p => p?.username === username);
-        const feedback = document.getElementById('round-feedback');
-      
-        if (me) {
-          let text = '';
-          if (me.result === 'Wygrana') text = `✅ Wygrałeś ${me.bet * 2} żetonów!`;
-          else if (me.result === 'Remis') text = `➖ Remis. Zachowałeś ${me.bet} żetonów.`;
-          else if (me.result === 'Przegrana') text = `❌ Przegrałeś ${me.bet} żetonów!`;
-          else if (me.status === 'bust') text = `💀 Przebiłeś się. Żegnamy żetony.`;
-      
-          if (text) {
-            feedback.innerText = text;
-            feedback.style.display = 'block';
-            setTimeout(() => feedback.style.display = 'none', 4000);
-          }
-        }
-      });
-      socket.on('your_turn', turnUser => {
-        const isYourTurn = turnUser === username;
-        if (isYourTurn) {
-          document.getElementById('action-modal').style.display = 'flex';
-          document.getElementById('result').innerText = 'Twoja tura!';
-        
-          // 🔍 znajdź siebie
-          const me = table?.players?.find(p => p?.username === username);
-          const splitBtn = document.getElementById('split-btn');
-        
-          if (me?.hand?.length === 2 && me.hand[0].rank === me.hand[1].rank) {
-            splitBtn.style.display = 'inline-block';
-          } else {
-            splitBtn.style.display = 'none';
-          }
-        }
-      });
-      socket.on('countdown_tick', secondsLeft => {
-        document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
-      });
-      function calculateHandValue(hand) {
-        let total = 0;
-        let aces = 0;
-      
-        for (let card of hand) {
-          if (!card || !card.rank) continue;
-          if (card.rank === 'A') {
-            aces++;
-            total += 11;
-          } else if (['K', 'Q', 'J'].includes(card.rank)) {
-            total += 10;
-          } else {
-            total += parseInt(card.rank);
-          }
-        }
-      
-        while (total > 21 && aces > 0) {
-          total -= 10;
-          aces--;
-        }
-      
-        if (aces > 0 && total + 10 <= 21) {
-          return `${total}/${total + 10}`; // miękki as
-        }
-      
-        return `${total}`;
-      }
-    
-      function getCardSrc(card) {
-        if (!card || card.rank === '❓') return 'svg-cards/back.svg';
-        const map = { 'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace' };
-        const val = map[card.rank] || card.rank;
-        return `svg-cards/${val}_of_${card.suit}.svg`;
-      }
-      
-      function updateHands(table) {
-          let playerIsSeated = false;
-          const isPlayerSeated = table.players.some(p => p?.username === username);
-      
-          // Aktualizuj joinedSlot jeśli gracz został usunięty ze stołu
-          if (joinedSlot !== null && !isPlayerSeated) {
-              joinedSlot = null;
-              document.getElementById('leave-btn').style.display = 'none';
-          }
-      
-          table.players.forEach((player, i) => {
-              const el = document.getElementById(`slot-${i}`);
-              if (!el) return;
-      
-              if (player) {
-                  el.innerHTML = '';
-      
-                  // Nick + wartość głównej ręki
-                  const handValue = calculateHandValue(player.hand || []);
-                  const label = document.createElement('div');
-                  label.className = 'player-label';
-                  label.innerText = `${player.username} (${handValue})`;
-                  el.appendChild(label);
-      
-                  // Główna ręka
-                  const mainHandContainer = document.createElement('div');
-                  mainHandContainer.className = 'slot-cards main-hand';
-                  (player.hand || []).forEach(card => {
-                      const img = document.createElement('img');
-                      img.src = getCardSrc(card);
-                      img.alt = card.rank || '?';
-                      mainHandContainer.appendChild(img);
-                  });
-                  el.appendChild(mainHandContainer);
-      
-                  // Split ręka (jeśli istnieje)
-                  if (player.splitHand) {
-                      const splitValue = calculateHandValue(player.splitHand || []);
-                      const splitLabel = document.createElement('div');
-                      splitLabel.className = 'player-label split-label';
-                      splitLabel.innerText = `Split (${splitValue})`;
-                      splitLabel.style.top = '60px';
-                      el.appendChild(splitLabel);
-      
-                      const splitHandContainer = document.createElement('div');
-                      splitHandContainer.className = 'slot-cards split-hand';
-                      splitHandContainer.style.marginTop = '20px';
-                      (player.splitHand || []).forEach(card => {
-                          const img = document.createElement('img');
-                          img.src = getCardSrc(card);
-                          img.alt = card.rank || '?';
-                          splitHandContainer.appendChild(img);
-                      });
-                      el.appendChild(splitHandContainer);
-      
-                      // Podświetlenie aktywnej ręki
-                      if (table.phase === 'playing' && i === table.currentPlayerIndex && player?.status === 'playing') {
-                          if (player.activeHand === 'split') {
-                              splitHandContainer.style.boxShadow = '0 0 10px 3px #00ffe1';
-                              splitHandContainer.style.borderRadius = '5px';
-                              splitHandContainer.style.padding = '5px';
-                          } else {
-                              mainHandContainer.style.boxShadow = '0 0 10px 3px #00ffe1';
-                              mainHandContainer.style.borderRadius = '5px';
-                              mainHandContainer.style.padding = '5px';
-                          }
-                      }
-                  } else {
-                      // Podświetlenie głównej ręki gdy nie ma splita
-                      if (table.phase === 'playing' && i === table.currentPlayerIndex && player?.status === 'playing') {
-                          mainHandContainer.style.boxShadow = '0 0 10px 3px #00ffe1';
-                          mainHandContainer.style.borderRadius = '5px';
-                          mainHandContainer.style.padding = '5px';
-                      }
-                  }
-      
-                  // Bet-zone
-                  const betZones = document.createElement('div');
-                  betZones.className = 'bet-zones';
-                  betZones.innerHTML = `
-                      <div class="bet-zone main-bet" data-label="Main"></div>
-                      <div class="bet-zone side-bet side-21" data-label="21+3"></div>
-                      <div class="bet-zone side-bet side-pair" data-label="Pair"></div>
-                      <div class="bet-zone vs-bet" data-label="VS"></div>
-                  `;
-                  el.appendChild(betZones);
-                  el.style.pointerEvents = 'none';
-      
-                  // Bet bąbelek tylko jeśli main bet istnieje
-                  if (player.bet > 0) {
-                      const bubble = document.createElement('div');
-                      bubble.className = 'bet-bubble';
-                  
-                      const displayValue = player.result === 'Wygrana' ? player.bet * 2 : player.bet;
-                      bubble.innerText = displayValue;
-                  
-                      const mainBetZone = betZones.querySelector('.main-bet');
-                      if (mainBetZone) {
-                          mainBetZone.appendChild(bubble);
-                      }
-                  }
-      
-                  if (player.username === username) {
-                      joinedSlot = i;
-                      playerIsSeated = true;
-                      document.getElementById('leave-btn').style.display = 'inline-block';
-                  }
-              } else {
-                  el.style.pointerEvents = 'auto';
-                  el.innerHTML = !isPlayerSeated
-                      ? `<button class="join-btn" onclick="joinSlot(${i})">👤</button>`
-                      : '';
-              }
-          });
-      
-          // Dealer
-          const dealerHandEl = document.getElementById('dealer-hand');
-          dealerHandEl.innerHTML = '';
-          const dealerSlot = document.getElementById('dealer-slot');
-          const dealerLabel = dealerSlot.querySelector('b');
-      
-          dealerLabel.textContent = table.dealerValue !== null
-              ? `Dealer (${table.dealerValue})`
-              : 'Dealer';
-      
-          (table.dealerHand || []).forEach(card => {
-              const img = document.createElement('img');
-              img.src = getCardSrc(card);
-              img.alt = card.rank || '?';
-              dealerHandEl.appendChild(img);
-          });
-      
-          // Aktywna tura - podświetlenie całego slotu
-          table.players.forEach((player, i) => {
-              const el = document.getElementById(`slot-${i}`);
-              if (!el) return;
-              if (table.phase === 'playing' && i === table.currentPlayerIndex && player?.status === 'playing') {
-                  el.classList.add('active-turn');
-              } else {
-                  el.classList.remove('active-turn');
-              }
-          });
-      
-          // Pokazuj chipy tylko przy fazie betów
-          const chipModal = document.getElementById('chip-modal');
-          chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
-      
-          updateUserInfo();
-      }
-      
-      function joinSlot(slotIndex) {
-          if (joinedSlot !== null) return; // Blokuj jeśli już jesteś przy stole
-          socket.emit('join_table', { tableId: defaultTableId, username, slotIndex });
-      }
-    
-      function leaveTable() {
-          if (joinedSlot === null) return;
-          
-          socket.emit('leave_table', { tableId: defaultTableId, username }, (response) => {
-              if (response.success) {
-                  joinedSlot = null;
-                  document.getElementById('leave-btn').style.display = 'none';
-                  document.getElementById('action-modal').style.display = 'none';
-                  
-                  // Wymuś odświeżenie stanu stołu
-                  socket.emit('get_table_state', { tableId: defaultTableId });
-              } else {
-                  console.error('Błąd przy opuszczaniu stołu:', response.message);
-              }
-          });
-      }
-    
-      function updateUserInfo() {
-        fetch(`https://gadsino.onrender.com/player/${username}`)
-          .then(res => res.json())
-          .then(data => document.getElementById('user-balance').innerText = data.balance)
-          .catch(() => document.getElementById('user-balance').innerText = '--');
-      }
-    
-      function placeBet(amount) {
-        if (joinedSlot === null) return alert('Najpierw dołącz do stołu!');
-      
-        // 💰 Sprawdzenie salda lokalnie
-        const balanceEl = document.getElementById('user-balance');
-        const currentBalance = parseInt(balanceEl.innerText || '0');
-      
-        if (amount > currentBalance) {
-          alert('Nie masz tyle żetonów, biedaku.');
-          return;
-        }
-      
-        // 💸 Odjęcie salda lokalnie (opcjonalne, backend i tak nadpisze)
-        balanceEl.innerText = currentBalance - amount;
-      
-        // 🎯 Znajdź strefę betowania
-        const zoneSelector = {
-          'main': '.main-bet',
-          '21+3': '.side-21',
-          'pair': '.side-pair',
-          'vs': '.vs-bet'
-        }[selectedBetType];
-      
-        const mySlot = document.getElementById(`slot-${joinedSlot}`);
-        const zone = mySlot.querySelector(zoneSelector);
-        if (!zone) return;
-      
-        // 💬 Zaktualizuj bąbel z wartością
-        let bubble = zone.querySelector('.bet-bubble');
-        if (!bubble) {
-          bubble = document.createElement('div');
-          bubble.className = 'bet-bubble';
-          bubble.innerText = amount;
-          zone.appendChild(bubble);
-        } else {
-          const current = parseInt(bubble.innerText || '0');
-          bubble.innerText = current + amount;
-        }
-      
-        // 📡 Wyślij do backendu
-        socket.emit('place_bet', {
-          tableId: defaultTableId,
-          username,
-          amount,
-          type: selectedBetType
-        });
-      }
-    
-      function hit() {
-        socket.emit('player_action', { tableId: defaultTableId, username, action: 'hit' });
-      }
-    
-      function stand() {
-        socket.emit('player_action', { tableId: defaultTableId, username, action: 'stand' });
-      }
 
-      function doubleDown() {
-        socket.emit('player_action', {
-          tableId: defaultTableId,
-          username,
-          action: 'double'
-        });
+  <script>
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || !user.username) {
+      alert('Musisz się najpierw zalogować!');
+      window.location.href = 'index.html';
+    }
+  
+    const username = user.username;
+    let selectedBetType = 'main';
+    let selectedChipValue = null;
+    const socket = io('https://gadsino.onrender.com');
+    const defaultTableId = 'default';
+    socket.emit('sync_state', { tableId: defaultTableId, username });
+    let joinedSlot = null;
+  
+    document.getElementById('logged-user').innerText = username;
+    document.getElementById('back-to-home').onclick = () => {
+      window.location.href = 'index.html';
+    };
+  
+    socket.on('table_update', data => {
+      updateHands(data);
+    
+      if (data.shoeSize !== undefined) {
+        document.getElementById('shoe-count').textContent = data.shoeSize;
       }
-      function split() {
-        socket.emit('player_action', {
-          tableId: defaultTableId,
-          username,
-          action: 'split'
-        });
-      }  
+    });
+    socket.on('round_started', table => {
+      updateHands(table);
+      document.getElementById('countdown-timer').innerText = '';
+      document.getElementById('chip-modal').style.display = 'none';
+      document.getElementById('action-modal').style.display = 'none';
+    });
+    socket.on('round_result', table => {
+      updateHands(table);
+      document.getElementById('chip-modal').style.display = 'none';
+      document.getElementById('action-modal').style.display = 'none';
     
-      updateUserInfo();
-      socket.emit('get_table_state', { tableId: defaultTableId });
+      const me = table.players.find(p => p?.username === username);
+      const feedback = document.getElementById('round-feedback');
     
-      const svgObject = document.getElementById('svg-table');
-      function positionSlots() {
-        const svgDoc = svgObject.contentDocument;
-        const svgRoot = svgDoc.documentElement;
-        const viewBox = svgRoot.viewBox.baseVal;
+      if (me) {
+        let text = '';
+        if (me.result === 'Wygrana') text = `✅ Wygrałeś ${me.bet * 2} żetonów!`;
+        else if (me.result === 'Remis') text = `➖ Remis. Zachowałeś ${me.bet} żetonów.`;
+        else if (me.result === 'Przegrana') text = `❌ Przegrałeś ${me.bet} żetonów!`;
+        else if (me.status === 'bust') text = `💀 Przebiłeś się. Żegnamy żetony.`;
     
-        const dealerArea = svgDoc.getElementById('bj-table-u-dealer-area');
-        if (dealerArea) {
-          const bbox = dealerArea.getBBox();
-          const dealerSlot = document.getElementById('dealer-slot');
-          dealerSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
-          dealerSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
-          dealerSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
-          dealerSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
-        }
-    
-        for (let i = 0; i < 5; i++) {
-          const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
-          const htmlSlot = document.getElementById(`slot-${i}`);
-          if (svgSlot && htmlSlot) {
-            const bbox = svgSlot.getBBox();
-            htmlSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
-            htmlSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
-            htmlSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
-            htmlSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
-          }
+        if (text) {
+          feedback.innerText = text;
+          feedback.style.display = 'block';
+          setTimeout(() => feedback.style.display = 'none', 4000);
         }
       }
-      document.querySelectorAll('.chip').forEach(chip => {
-        chip.onclick = () => {
-          selectedChipValue = parseInt(chip.dataset.value);
-          console.log('Wybrany chip:', selectedChipValue);
+    });
+    socket.on('your_turn', turnUser => {
+      const isYourTurn = turnUser === username;
+      if (isYourTurn) {
+        document.getElementById('action-modal').style.display = 'flex';
+        document.getElementById('result').innerText = 'Twoja tura!';
       
-          // zaznaczenie wizualne
-          document.querySelectorAll('.chip').forEach(c => c.style.outline = '');
-          chip.style.outline = '2px solid #00ffcc';
-        };
-      });
-    
-      svgObject.addEventListener('load', () => {
-        positionSlots();
-      });
-        document.getElementById('table-container').addEventListener('click', e => {
-        const target = e.target;
-        if (!target.classList.contains('bet-zone')) return;
+        const me = table?.players?.find(p => p?.username === username);
+        const splitBtn = document.getElementById('split-btn');
       
-        e.stopPropagation();
-      
-        if (!selectedChipValue) {
-          alert("Najpierw wybierz żeton!");
-          return;
+        if (me?.hand?.length === 2 && me.hand[0].rank === me.hand[1].rank) {
+          splitBtn.style.display = 'inline-block';
+        } else {
+          splitBtn.style.display = 'none';
         }
+      }
+    });
+    socket.on('countdown_tick', secondsLeft => {
+      document.getElementById('countdown-timer').innerText = `Runda rozpocznie się za ${secondsLeft} sekund...`;
+    });
+    function calculateHandValue(hand) {
+      let total = 0;
+      let aces = 0;
+    
+      for (let card of hand) {
+        if (!card || !card.rank) continue;
+        if (card.rank === 'A') {
+          aces++;
+          total += 11;
+        } else if (['K', 'Q', 'J'].includes(card.rank)) {
+          total += 10;
+        } else {
+          total += parseInt(card.rank);
+        }
+      }
+    
+      while (total > 21 && aces > 0) {
+        total -= 10;
+        aces--;
+      }
+    
+      if (aces > 0 && total + 10 <= 21) {
+        return `${total}/${total + 10}`;
+      }
+    
+      return `${total}`;
+    }
+  
+    function getCardSrc(card) {
+      if (!card || card.rank === '❓') return 'svg-cards/back.svg';
+      const map = { 'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace' };
+      const val = map[card.rank] || card.rank;
+      return `svg-cards/${val}_of_${card.suit}.svg`;
+    }
+    
+    function updateHands(table) {
+        let playerIsSeated = false;
+        const isPlayerSeated = table.players.some(p => p?.username === username);
+    
+        if (joinedSlot !== null && !isPlayerSeated) {
+            joinedSlot = null;
+            document.getElementById('leave-btn').style.display = 'none';
+        }
+    
+        table.players.forEach((player, i) => {
+            const el = document.getElementById(`slot-${i}`);
+            if (!el) return;
+    
+            if (player) {
+                el.innerHTML = '';
+    
+                const handValue = calculateHandValue(player.hand || []);
+                const label = document.createElement('div');
+                label.className = 'player-label';
+                label.innerText = `${player.username} (${handValue})`;
+                el.appendChild(label);
+    
+                const mainHandContainer = document.createElement('div');
+                mainHandContainer.className = 'slot-cards main-hand';
+                (player.hand || []).forEach(card => {
+                    const img = document.createElement('img');
+                    img.src = getCardSrc(card);
+                    img.alt = card.rank || '?';
+                    mainHandContainer.appendChild(img);
+                });
+                el.appendChild(mainHandContainer);
+    
+                if (player.splitHand) {
+                    const splitValue = calculateHandValue(player.splitHand || []);
+                    const splitLabel = document.createElement('div');
+                    splitLabel.className = 'player-label split-label';
+                    splitLabel.innerText = `Split (${splitValue})`;
+                    splitLabel.style.top = '60px';
+                    el.appendChild(splitLabel);
+    
+                    const splitHandContainer = document.createElement('div');
+                    splitHandContainer.className = 'slot-cards split-hand';
+                    splitHandContainer.style.marginTop = '20px';
+                    (player.splitHand || []).forEach(card => {
+                        const img = document.createElement('img');
+                        img.src = getCardSrc(card);
+                        img.alt = card.rank || '?';
+                        splitHandContainer.appendChild(img);
+                    });
+                    el.appendChild(splitHandContainer);
+    
+                    if (table.phase === 'playing' && i === table.currentPlayerIndex && player?.status === 'playing') {
+                        if (player.activeHand === 'split') {
+                            splitHandContainer.style.boxShadow = '0 0 10px 3px #00ffe1';
+                            splitHandContainer.style.borderRadius = '5px';
+                            splitHandContainer.style.padding = '5px';
+                        } else {
+                            mainHandContainer.style.boxShadow = '0 0 10px 3px #00ffe1';
+                            mainHandContainer.style.borderRadius = '5px';
+                            mainHandContainer.style.padding = '5px';
+                        }
+                    }
+                } else {
+                    if (table.phase === 'playing' && i === table.currentPlayerIndex && player?.status === 'playing') {
+                        mainHandContainer.style.boxShadow = '0 0 10px 3px #00ffe1';
+                        mainHandContainer.style.borderRadius = '5px';
+                        mainHandContainer.style.padding = '5px';
+                    }
+                }
+    
+                const betZones = document.createElement('div');
+                betZones.className = 'bet-zones';
+                betZones.innerHTML = `
+                    <div class="bet-zone main-bet" data-label="Main"></div>
+                    <div class="bet-zone side-bet side-21" data-label="21+3"></div>
+                    <div class="bet-zone side-bet side-pair" data-label="Pair"></div>
+                    <div class="bet-zone vs-bet" data-label="VS"></div>
+                `;
+                el.appendChild(betZones);
+                el.style.pointerEvents = 'none';
+    
+                if (player.bet > 0) {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'bet-bubble';
+                
+                    const displayValue = player.result === 'Wygrana' ? player.bet * 2 : player.bet;
+                    bubble.innerText = displayValue;
+                
+                    const mainBetZone = betZones.querySelector('.main-bet');
+                    if (mainBetZone) {
+                        mainBetZone.appendChild(bubble);
+                    }
+                }
+    
+                if (player.username === username) {
+                    joinedSlot = i;
+                    playerIsSeated = true;
+                    document.getElementById('leave-btn').style.display = 'inline-block';
+                }
+            } else {
+                el.style.pointerEvents = 'auto';
+                el.innerHTML = !isPlayerSeated
+                    ? `<button class="join-btn" onclick="joinSlot(${i})">👤</button>`
+                    : '';
+            }
+        });
+    
+        const dealerHandEl = document.getElementById('dealer-hand');
+        dealerHandEl.innerHTML = '';
+        const dealerSlot = document.getElementById('dealer-slot');
+        const dealerLabel = dealerSlot.querySelector('b');
+    
+        dealerLabel.textContent = table.dealerValue !== null
+            ? `Dealer (${table.dealerValue})`
+            : 'Dealer';
+    
+        (table.dealerHand || []).forEach(card => {
+            const img = document.createElement('img');
+            img.src = getCardSrc(card);
+            img.alt = card.rank || '?';
+            dealerHandEl.appendChild(img);
+        });
+    
+        table.players.forEach((player, i) => {
+            const el = document.getElementById(`slot-${i}`);
+            if (!el) return;
+            if (table.phase === 'playing' && i === table.currentPlayerIndex && player?.status === 'playing') {
+                el.classList.add('active-turn');
+            } else {
+                el.classList.remove('active-turn');
+            }
+        });
+    
+        const chipModal = document.getElementById('chip-modal');
+        chipModal.style.display = (table.phase === 'waiting_for_bets' && playerIsSeated) ? 'flex' : 'none';
+    
+        updateUserInfo();
+    }
+    
+    function joinSlot(slotIndex) {
+        if (joinedSlot !== null) return;
+        socket.emit('join_table', { tableId: defaultTableId, username, slotIndex });
+    }
+  
+    function leaveTable() {
+        if (joinedSlot === null) return;
+        
+        socket.emit('leave_table', { tableId: defaultTableId, username }, (response) => {
+            if (response.success) {
+                joinedSlot = null;
+                document.getElementById('leave-btn').style.display = 'none';
+                document.getElementById('action-modal').style.display = 'none';
+                
+                socket.emit('get_table_state', { tableId: defaultTableId });
+            } else {
+                console.error('Błąd przy opuszczaniu stołu:', response.message);
+            }
+        });
+    }
+  
+    function updateUserInfo() {
+      fetch(`https://gadsino.onrender.com/player/${username}`)
+        .then(res => res.json())
+        .then(data => document.getElementById('user-balance').innerText = data.balance)
+        .catch(() => document.getElementById('user-balance').innerText = '--');
+    }
+  
+    function placeBet(amount) {
+      if (joinedSlot === null) return alert('Najpierw dołącz do stołu!');
+    
+      const balanceEl = document.getElementById('user-balance');
+      const currentBalance = parseInt(balanceEl.innerText || '0');
+    
+      if (amount > currentBalance) {
+        alert('Nie masz tyle żetonów.');
+        return;
+      }
+    
+      balanceEl.innerText = currentBalance - amount;
+    
+      const zoneSelector = {
+        'main': '.main-bet', '21+3': '.side-21', 'pair': '.side-pair', 'vs': '.vs-bet'
+      }[selectedBetType];
+    
+      const mySlot = document.getElementById(`slot-${joinedSlot}`);
+      const zone = mySlot.querySelector(zoneSelector);
+      if (!zone) return;
+    
+      let bubble = zone.querySelector('.bet-bubble');
+      if (!bubble) {
+        bubble = document.createElement('div');
+        bubble.className = 'bet-bubble';
+        bubble.innerText = amount;
+        zone.appendChild(bubble);
+      } else {
+        const current = parseInt(bubble.innerText || '0');
+        bubble.innerText = current + amount;
+      }
+    
+      socket.emit('place_bet', { tableId: defaultTableId, username, amount, type: selectedBetType });
+    }
+  
+    function hit() { socket.emit('player_action', { tableId: defaultTableId, username, action: 'hit' }); }
+    function stand() { socket.emit('player_action', { tableId: defaultTableId, username, action: 'stand' }); }
+    function doubleDown() { socket.emit('player_action', { tableId: defaultTableId, username, action: 'double' }); }
+    function split() { socket.emit('player_action', { tableId: defaultTableId, username, action: 'split' }); }  
+  
+    updateUserInfo();
+    socket.emit('get_table_state', { tableId: defaultTableId });
+  
+    const svgObject = document.getElementById('svg-table');
+    function positionSlots() {
+      const svgDoc = svgObject.contentDocument;
+      if (!svgDoc) return;
+      const svgRoot = svgDoc.documentElement;
+      const viewBox = svgRoot.viewBox.baseVal;
+    
+      const dealerArea = svgDoc.getElementById('bj-table-u-dealer-area');
+      if (dealerArea) {
+        const bbox = dealerArea.getBBox();
+        const dealerSlot = document.getElementById('dealer-slot');
+        dealerSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
+        dealerSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
+        dealerSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
+        dealerSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
+      }
+    
+      for (let i = 0; i < 5; i++) {
+        const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
+        const htmlSlot = document.getElementById(`slot-${i}`);
+        if (svgSlot && htmlSlot) {
+          const bbox = svgSlot.getBBox();
+          htmlSlot.style.left = `${(bbox.x / viewBox.width) * 100}%`;
+          htmlSlot.style.top = `${(bbox.y / viewBox.height) * 100}%`;
+          htmlSlot.style.width = `${(bbox.width / viewBox.width) * 100}%`;
+          htmlSlot.style.height = `${(bbox.height / viewBox.height) * 100}%`;
+        }
+      }
+    }
+
+    document.querySelectorAll('.chip').forEach(chip => {
+      chip.onclick = () => {
+        selectedChipValue = parseInt(chip.dataset.value);
+        console.log('Wybrany chip:', selectedChipValue);
+    
+        // ZMODYFIKOWANO: Zamiast style.outline, używamy klas CSS
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+        chip.classList.add('selected');
+      };
+    });
+  
+    svgObject.addEventListener('load', positionSlots);
+    window.addEventListener('resize', positionSlots); // Dodane dla responsywności
+
+    document.getElementById('table-container').addEventListener('click', e => {
+      const target = e.target;
+      if (!target.classList.contains('bet-zone')) return;
+    
+      e.stopPropagation();
+    
+      if (!selectedChipValue) {
+        alert("Najpierw wybierz żeton!");
+        return;
+      }
+    
+      if (target.classList.contains('side-21')) selectedBetType = '21+3';
+      else if (target.classList.contains('side-pair')) selectedBetType = 'pair';
+      else if (target.classList.contains('vs-bet')) selectedBetType = 'vs';
+      else selectedBetType = 'main';
       
-        if (target.classList.contains('side-21')) selectedBetType = '21+3';
-        else if (target.classList.contains('side-pair')) selectedBetType = 'pair';
-        else if (target.classList.contains('vs-bet')) selectedBetType = 'vs';
-        else selectedBetType = 'main';
-      
-        // podświetlenie
-        document.querySelectorAll('.bet-zone').forEach(z => z.style.outline = '');
-        target.style.outline = '2px solid #00ffcc';
-      
-        // odpalanie betowania
-        placeBet(selectedChipValue);
-      });
-    </script>
+      placeBet(selectedChipValue);
+    });
+  </script>
 </body>
 </html>
