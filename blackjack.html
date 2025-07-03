@@ -816,58 +816,68 @@
         const svgObject = document.getElementById('svg-table');
         const svgDoc = svgObject.contentDocument;
     
-        // Poczekaj na pełne załadowanie SVG
         if (!svgDoc || !svgDoc.documentElement) {
-            console.warn("SVG document not fully ready.");
             return;
         }
     
         const svgRoot = svgDoc.documentElement;
         const viewBox = svgRoot.viewBox.baseVal;
-    
-        // Pobierz rzeczywiste wymiary i pozycję SVG na ekranie (w pikselach)
         const tableRect = svgObject.getBoundingClientRect();
     
-        // === NOWA, OSTATECZNA LOGIKA POZYCJONOWANIA ===
-    
-        // 1. Oblicz współczynnik skalowania i puste marginesy (tzw. letterboxing)
-        // Sprawdź, czy skalowanie jest ograniczone przez szerokość czy wysokość
         const scale = Math.min(tableRect.width / viewBox.width, tableRect.height / viewBox.height);
+        const marginX = (tableRect.width - (viewBox.width * scale)) / 2;
+        const marginY = (tableRect.height - (viewBox.height * scale)) / 2;
     
-        // Oblicz rzeczywisty rozmiar renderowanego obrazu SVG wewnątrz <object>
-        const renderedSvgWidth = viewBox.width * scale;
-        const renderedSvgHeight = viewBox.height * scale;
+        // === NOWA LOGIKA - JEDNOLITE PROSTOKĄTY ===
     
-        // Oblicz puste marginesy po bokach i na górze/dole
-        const marginX = (tableRect.width - renderedSvgWidth) / 2;
-        const marginY = (tableRect.height - renderedSvgHeight) / 2;
-    
-    
-        // 2. Ustaw pozycję dla dealera, uwzględniając skalowanie i marginesy
-        const dealerAreaSvg = svgDoc.getElementById('bj-table-u-dealer-area');
-        if (dealerAreaSvg) {
-            const bbox = dealerAreaSvg.getBBox();
-            const dealerSlotHtml = document.getElementById('dealer-slot');
-    
-            dealerSlotHtml.style.left = `${marginX + (bbox.x * scale)}px`;
-            dealerSlotHtml.style.top = `${marginY + (bbox.y * scale)}px`;
-            dealerSlotHtml.style.width = `${bbox.width * scale}px`;
-            dealerSlotHtml.style.height = `${bbox.height * scale}px`;
+        // 1. Pobierz rozmiar wzorcowy ze środkowego, nieobróconego slotu (slot-2)
+        const templateSvg = svgDoc.getElementById('bj-table-u-slot-2');
+        if (!templateSvg) {
+            console.error("Nie znaleziono slotu wzorcowego (bj-table-u-slot-2)");
+            return;
         }
+        const templateBbox = templateSvg.getBBox();
+        const uniformWidth = templateBbox.width * scale;
+        const uniformHeight = templateBbox.height * scale;
     
-        // 3. Ustaw pozycję dla każdego slotu gracza w ten sam, precyzyjny sposób
+    
+        // 2. Ustaw pozycję i JEDNOLITY rozmiar dla każdego slotu gracza
         for (let i = 0; i < 5; i++) {
             const svgSlot = svgDoc.getElementById(`bj-table-u-slot-${i}`);
             const htmlSlot = document.getElementById(`slot-${i}`);
     
             if (svgSlot && htmlSlot) {
                 const bbox = svgSlot.getBBox();
-                
-                htmlSlot.style.left = `${marginX + (bbox.x * scale)}px`;
-                htmlSlot.style.top = `${marginY + (bbox.y * scale)}px`;
-                htmlSlot.style.width = `${bbox.width * scale}px`;
-                htmlSlot.style.height = `${bbox.height * scale}px`;
+    
+                // Oblicz środek każdego slotu na podstawie jego grafiki w SVG
+                const centerX = marginX + ((bbox.x + bbox.width / 2) * scale);
+                const centerY = marginY + ((bbox.y + bbox.height / 2) * scale);
+    
+                // Oblicz pozycję top/left, aby wycentrować nasz jednolity prostokąt
+                const finalLeft = centerX - (uniformWidth / 2);
+                const finalTop = centerY - (uniformHeight / 2);
+    
+                // Zastosuj style
+                htmlSlot.style.left = `${finalLeft}px`;
+                htmlSlot.style.top = `${finalTop}px`;
+                htmlSlot.style.width = `${uniformWidth}px`;
+                htmlSlot.style.height = `${uniformHeight}px`;
+    
+                // Upewnij się, że nie ma żadnej transformacji (obrotu/skalowania)
+                htmlSlot.style.transform = '';
             }
+        }
+        
+        // Logika dla dealera pozostaje taka sama jak w poprzedniej wersji
+        const dealerAreaSvg = svgDoc.getElementById('bj-table-u-dealer-area');
+        if (dealerAreaSvg) {
+            const bbox = dealerAreaSvg.getBBox();
+            const dealerSlotHtml = document.getElementById('dealer-slot');
+            dealerSlotHtml.style.left = `${marginX + (bbox.x * scale)}px`;
+            dealerSlotHtml.style.top = `${marginY + (bbox.y * scale)}px`;
+            dealerSlotHtml.style.width = `${bbox.width * scale}px`;
+            dealerSlotHtml.style.height = `${bbox.height * scale}px`;
+            dealerSlotHtml.style.transform = '';
         }
     }
     document.querySelectorAll('.chip').forEach(chip => {
