@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Gadsino - Automat</title>
+    <script src="https://pixijs.download/v6.5.10/pixi.min.js"></script>
+    <style>
+        body { background-color: #121212; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; }
+        #game-container { border: 2px solid #ffa502; border-radius: 10px; box-shadow: 0 0 20px rgba(255, 165, 2, 0.5); }
+        #controls { position: absolute; bottom: 20px; text-align: center; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px; }
+        button { background: #ffa502; color: #121212; border: none; padding: 15px 30px; font-size: 1.2em; border-radius: 8px; cursor: pointer; margin: 0 10px; font-weight: bold; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        #info-display { position: absolute; top: 20px; color: white; font-size: 1.5em; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div id="info-display">Saldo: <span id="balance">Ładowanie...</span></div>
+    <div id="game-container"></div>
+    <div id="controls">
+        <button id="spin-button">SPIN</button>
+        <button id="buy-bonus-button">Kup Bonus (80x)</button>
+    </div>
+    <script src="slots.js"></script>
+</body>
+</html>
