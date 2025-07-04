@@ -47,6 +47,58 @@ PIXI.Loader.shared.onError.add((error, loader, resource) => {
     alert(`Nie udało się załadować pliku: ${resource.url}. Sprawdź, czy plik na pewno istnieje w tej lokalizacji i czy nazwa jest poprawna.`);
 });
 
+// =======================================================
+//          FUNKCJE POMOCNICZE DO ANIMACJI (TWEENING)
+// =======================================================
+const tweening = [];
+
+function tweenTo(object, property, target, time, easing, onchange, oncomplete) {
+    const tween = {
+        object,
+        property,
+        target,
+        time,
+        easing,
+        onchange,
+        oncomplete,
+        start: Date.now()
+    };
+    tweening.push(tween);
+    return tween;
+}
+
+// Ten ticker przetwarza wszystkie aktywne animacje w każdej klatce
+app.ticker.add(() => {
+    const now = Date.now();
+    const remove = [];
+    for (let i = 0; i < tweening.length; i++) {
+        const t = tweening[i];
+        const phase = Math.min(1, (now - t.start) / t.time);
+
+        // Używamy prostszej interpolacji liniowej
+        t.object[t.property] = t.object[t.property] + (t.target - t.object[t.property]) * t.easing(phase);
+
+        if (t.onchange) {
+            t.onchange(t);
+        }
+        if (phase === 1) {
+            t.object[t.property] = t.target;
+            if (t.oncomplete) {
+                t.oncomplete(t);
+            }
+            remove.push(t);
+        }
+    }
+    for (let i = 0; i < remove.length; i++) {
+        tweening.splice(tweening.indexOf(remove[i]), 1);
+    }
+});
+
+// Funkcja "easingu" dla ładnego efektu odbicia
+function backout(amount) {
+    return (t) => (--t * t * ((amount + 1) * t + amount) + 1);
+}
+
 
 // --- GŁÓWNA FUNKCJA URUCHAMIANA PO ZAŁADOWANIU GRAFIK ---
 function onAssetsLoaded() {
