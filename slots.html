@@ -13,35 +13,53 @@
         #info-display { position: absolute; top: 20px; color: white; font-size: 1.5em; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; }
     </style>
 </head>
-    <body>
-        <div id="ui-container">
-            <div id="balance-display">Saldo: <span id="balance">Ładowanie...</span></div>
-            <div id="jackpot-container">
-                <div class="jackpot-box grand">GRAND <span id="grand-jackpot">25000</span></div>
-                <div class="jackpot-box major">MAJOR <span id="major-jackpot">1000</span></div>
-                <div class="jackpot-box minor">MINOR <span id="minor-jackpot">500</span></div>
-                <div class="jackpot-box mini">MINI <span id="mini-jackpot">200</span></div>
-            </div>
+   <body>
+    <div id="ui-container">
+        <div id="balance-display">Saldo: <span id="balance">Ładowanie...</span></div>
+        <div id="jackpot-container">
+            <div class="jackpot-box grand">GRAND <span>25000</span></div>
+            <div class="jackpot-box major">MAJOR <span>1000</span></div>
+            <div class="jackpot-box minor">MINOR <span>500</span></div>
+            <div class="jackpot-box mini">MINI <span>200</span></div>
         </div>
-    
-        <div id="game-container"></div>
-        
-        <div id="controls">
-            <button id="spin-button">SPIN</button>
-            <button id="buy-bonus-button">Kup Bonus (80x)</button>
+    </div>
+
+    <div id="game-container"></div>
+
+    <div class="control-bar">
+        <div class="bet-controls">
+            <button id="bet-down-btn">-</button>
+            <span class="bet-label">STAWKA</span>
+            <span id="bet-display">10</span>
+            <button id="bet-up-btn">+</button>
         </div>
-    
-        <style>
-            body { display: flex; flex-direction: column; justify-content: center; align-items: center; }
-            #ui-container { display: flex; justify-content: space-between; width: 900px; margin-bottom: 10px; }
-            #jackpot-container { display: flex; gap: 10px; }
-            .jackpot-box { color: white; padding: 10px; border-radius: 8px; font-weight: bold; text-align: center; }
-            .jackpot-box.grand { background: #ffbf00; }
-            .jackpot-box.major { background: #ff4757; }
-            .jackpot-box.minor { background: #5352ed; }
-            .jackpot-box.mini { background: #2ed573; }
-            #balance-display { color: white; font-size: 1.5em; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; }
-        </style>
-    </body>
+        <button id="spin-button" class="spin-main-btn"></button>
+        <div class="feature-controls">
+            <button id="buy-bonus-button">KUP BONUS</button>
+            <button id="speed-btn">⚡</button>
+        </div>
+    </div>
+
+    <div id="buy-bonus-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Wybierz Bonus</h2>
+            <div class="bonus-options">
+                <div class="bonus-option" data-bonus-type="low">
+                    <h3>LOW</h3>
+                    <p>Start z 2 monetami</p>
+                    <div class="bonus-price">200 żetonów</div>
+                    <button>KUP</button>
+                </div>
+                <div class="bonus-option" data-bonus-type="standard">
+                    <h3>STANDARD</h3>
+                    <p>Start z 3 monetami i 1 Mystery</p>
+                    <div class="bonus-price">400 żetonów</div>
+                    <button>KUP</button>
+                </div>
+                </div>
+            <button id="close-modal-btn">X</button>
+        </div>
+    </div>
+</body>
     <script src="slots.js"></script>
 </html>
