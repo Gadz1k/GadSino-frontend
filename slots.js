@@ -93,7 +93,7 @@ function createGrid() {
             cellContainer.y = row * (CELL_SIZE + PADDING);
             
             const cellBg = new PIXI.Graphics();
-            const isActiveZone = row >= 1 && row <= 3;
+            const isActiveZone = (row >= 1 && row <= 3) && (col >= 1 && col <= 3);
             cellBg.beginFill(0x000000, isActiveZone ? 0.5 : 0.3);
             cellBg.lineStyle(2, isActiveZone ? 0xffa502 : 0x444444, 1);
             cellBg.drawRoundedRect(0, 0, CELL_SIZE, CELL_SIZE, 15);
