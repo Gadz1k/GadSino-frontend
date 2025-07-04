@@ -38,6 +38,7 @@ let currentUser = null;
 PIXI.Loader.shared
     .add('background', 'img/30coins/grid_background.png') // POPRAWIONA ŚCIEŻKA
     .add('cash_infinity', 'img/30coins/cash_infinity.png')
+    .add('cash', '/img/30coins/cash.png')
     .add('mystery', 'img/30coins/mystery.png')
     .add('mini_jackpot', 'img/30coins/mini_jackpot.png')
     .add('minor_jackpot', 'img/30coins/minor_jackpot.png')
@@ -125,6 +126,7 @@ function updateGrid(gridData) {
 
             let textureName = '';
             switch (newSymbolData.type) {
+                case 'CASH': textureName = 'cash'; break;
                 case 'CASH_INFINITY': textureName = 'cash_infinity'; break;
                 case 'MYSTERY': textureName = 'mystery'; break;
                 case 'MINI_JACKPOT': textureName = 'mini_jackpot'; break;
@@ -144,7 +146,7 @@ function updateGrid(gridData) {
                     tweenTo(symbolSprite, 'y', targetY, 500, backout(0.5));
                 }, delay);
 
-                if (newSymbolData.type === 'CASH_INFINITY' && newSymbolData.value) {
+            if ((newSymbolData.type === 'CASH' || newSymbolData.type === 'CASH_INFINITY') && newSymbolData.value){
                     const valueText = new PIXI.Text(newSymbolData.value, { fontFamily: 'Arial', fontSize: 48, fill: 'white', stroke: 'black', strokeThickness: 5, fontWeight: 'bold' });
                     valueText.anchor.set(0.5);
                     valueText.position.set(CELL_SIZE / 2, CELL_SIZE / 2);
