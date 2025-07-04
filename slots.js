@@ -38,7 +38,7 @@ let currentUser = null;
 PIXI.Loader.shared
     .add('background', 'img/30coins/grid_background.png') // POPRAWIONA ŚCIEŻKA
     .add('cash_infinity', 'img/30coins/cash_infinity.png')
-    .add('cash', '/img/30coins/cash.png')
+    .add('cash', 'img/30coins/cash.png')
     .add('mystery', 'img/30coins/mystery.png')
     .add('mini_jackpot', 'img/30coins/mini_jackpot.png')
     .add('minor_jackpot', 'img/30coins/minor_jackpot.png')
