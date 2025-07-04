@@ -1,5 +1,5 @@
 // =======================================================
-//          GADSINO - 30 COINS (slots.js - WERSJA 3.0 FINALNA)
+//          GADSINO - 30 COINS (slots.js - WERSJA 3.1)
 // =======================================================
 
 const API_URL = 'https://gadsino.onrender.com';
@@ -8,8 +8,8 @@ const API_URL = 'https://gadsino.onrender.com';
 const WIDTH = 800, HEIGHT = 960;
 const COLS = 5, ROWS = 6;
 const CELL_SIZE = 120, PADDING = 10;
-const BET_LEVELS = [10, 20, 40, 80, 160]; // Dostępne poziomy stawek
-let currentBetIndex = 0; // Indeks aktualnie wybranej stawki
+const BET_LEVELS = [10, 20, 40, 80, 160];
+let currentBetIndex = 0;
 let isInBonusMode = false;
 let reSpinsLeft = 3;
 
@@ -27,6 +27,7 @@ const betDisplay = document.getElementById('bet-display');
 const buyBonusModal = document.getElementById('buy-bonus-modal');
 const closeModalBtn = document.getElementById('close-modal-btn');
 const bonusOptionsContainer = document.querySelector('.bonus-options');
+const reSpinCounterElement = document.getElementById('respin-counter'); // Upewnij się, że masz to w HTML
 
 // --- ZMIENNE GLOBALNE STANU GRY ---
 let gridCells = [];
@@ -35,69 +36,17 @@ let currentUser = null;
 
 // --- ŁADOWANIE GRAFIK ---
 PIXI.Loader.shared
-    .add('background', 'img/slots/grid_background.png')
-    .add('cash_infinity', 'img/slots/cash_infinity.png')
-    .add('mystery', 'img/slots/mystery.png')
-    .add('mini_jackpot', 'img/slots/mini_jackpot.png')
-    .add('minor_jackpot', 'img/slots/minor_jackpot.png')
+    .add('background', 'img/30coins/grid_background.png') // POPRAWIONA ŚCIEŻKA
+    .add('cash_infinity', 'img/30coins/cash_infinity.png')
+    .add('mystery', 'img/30coins/mystery.png')
+    .add('mini_jackpot', 'img/30coins/mini_jackpot.png')
+    .add('minor_jackpot', 'img/30coins/minor_jackpot.png')
     .load(onAssetsLoaded);
 
 PIXI.Loader.shared.onError.add((error, loader, resource) => {
     console.error("BŁĄD ŁADOWANIA GRAFIKI:", resource.url, error);
     alert(`Nie udało się załadować pliku: ${resource.url}. Sprawdź, czy plik na pewno istnieje w tej lokalizacji i czy nazwa jest poprawna.`);
 });
-
-// =======================================================
-//          FUNKCJE POMOCNICZE DO ANIMACJI (TWEENING)
-// =======================================================
-const tweening = [];
-
-function tweenTo(object, property, target, time, easing, onchange, oncomplete) {
-    const tween = {
-        object,
-        property,
-        target,
-        time,
-        easing,
-        onchange,
-        oncomplete,
-        start: Date.now()
-    };
-    tweening.push(tween);
-    return tween;
-}
-
-// Ten ticker przetwarza wszystkie aktywne animacje w każdej klatce
-app.ticker.add(() => {
-    const now = Date.now();
-    const remove = [];
-    for (let i = 0; i < tweening.length; i++) {
-        const t = tweening[i];
-        const phase = Math.min(1, (now - t.start) / t.time);
-
-        // Używamy prostszej interpolacji liniowej
-        t.object[t.property] = t.object[t.property] + (t.target - t.object[t.property]) * t.easing(phase);
-
-        if (t.onchange) {
-            t.onchange(t);
-        }
-        if (phase === 1) {
-            t.object[t.property] = t.target;
-            if (t.oncomplete) {
-                t.oncomplete(t);
-            }
-            remove.push(t);
-        }
-    }
-    for (let i = 0; i < remove.length; i++) {
-        tweening.splice(tweening.indexOf(remove[i]), 1);
-    }
-});
-
-// Funkcja "easingu" dla ładnego efektu odbicia
-function backout(amount) {
-    return (t) => (--t * t * ((amount + 1) * t + amount) + 1);
-}
 
 
 // --- GŁÓWNA FUNKCJA URUCHAMIANA PO ZAŁADOWANIU GRAFIK ---
@@ -111,7 +60,6 @@ function onAssetsLoaded() {
     
     createGrid();
     
-    // Podpięcie wszystkich przycisków
     spinButton.onclick = () => doSpin();
     buyBonusButton.onclick = () => showBuyBonusModal();
     closeModalBtn.onclick = () => hideBuyBonusModal();
@@ -125,8 +73,8 @@ function onAssetsLoaded() {
         }
     };
     
-    updateBet(0); // Ustawienie początkowej stawki na wyświetlaczu
-    updateUserState(); // Pobranie danych gracza
+    updateBet(0);
+    updateUserState();
 }
 
 // --- FUNKCJE TWORZENIA I AKTUALIZACJI SIATKI ---
@@ -158,27 +106,25 @@ function createGrid() {
     }
 }
 
+// POPRAWIONA LOGIKA AKTUALIZACJI SIATKI
 function updateGrid(gridData) {
     for (let i = 0; i < gridData.length; i++) {
         const cellContainer = gridCells[i];
-        const symbolData = gridData[i];
-        cellContainer.symbolData = symbolData;
+        const newSymbolData = gridData[i];
 
-        // Czyścimy stare symbole, ale tylko te, które nie są lepkie (sticky)
-        if (cellContainer.isSticky !== true) {
-            while (cellContainer.children.length > 1) {
-                cellContainer.removeChildAt(1);
-            }
+        // 1. Czyść tylko jeśli pole nie jest lepkie
+        if (!cellContainer.isSticky) {
+            while (cellContainer.children.length > 1) { cellContainer.removeChildAt(1); }
             cellContainer.symbolData = null;
         }
 
-        // Jeśli na tym polu jest NOWY symbol, rysujemy go i animujemy
-        if (symbolData && !cellContainer.symbolData) {
-            cellContainer.symbolData = symbolData; // Zapisujemy nowe dane
-            cellContainer.isSticky = symbolData.sticky; // Oznaczamy, czy symbol jest lepki
+        // 2. Rysuj nowy symbol, jeśli go nie ma
+        if (newSymbolData && !cellContainer.symbolData) {
+            cellContainer.symbolData = newSymbolData;
+            cellContainer.isSticky = newSymbolData.sticky;
 
             let textureName = '';
-            switch (symbolData.type) {
+            switch (newSymbolData.type) {
                 case 'CASH_INFINITY': textureName = 'cash_infinity'; break;
                 case 'MYSTERY': textureName = 'mystery'; break;
                 case 'MINI_JACKPOT': textureName = 'mini_jackpot'; break;
@@ -189,31 +135,23 @@ function updateGrid(gridData) {
                 const symbolSprite = new PIXI.Sprite(PIXI.Loader.shared.resources[textureName].texture);
                 symbolSprite.width = CELL_SIZE;
                 symbolSprite.height = CELL_SIZE;
-                
-                // Pozycja startowa animacji (nad komórką)
                 symbolSprite.y = -CELL_SIZE;
-                // Docelowa pozycja
                 const targetY = 0;
-
                 cellContainer.addChild(symbolSprite);
 
-                // Używamy naszej funkcji tweenTo do animacji opadania
-                const delay = i * 25; // Małe opóźnienie dla każdej kolejnej komórki
+                const delay = i * 25;
                 setTimeout(() => {
                     tweenTo(symbolSprite, 'y', targetY, 500, backout(0.5));
                 }, delay);
 
-                // Dodajemy tekst z wartością, jeśli to moneta
-                if (symbolData.type === 'CASH_INFINITY' && symbolData.value) {
-                    const valueText = new PIXI.Text(symbolData.value, { fontFamily: 'Arial', fontSize: 48, fill: 'white', stroke: 'black', strokeThickness: 5, fontWeight: 'bold' });
+                if (newSymbolData.type === 'CASH_INFINITY' && newSymbolData.value) {
+                    const valueText = new PIXI.Text(newSymbolData.value, { fontFamily: 'Arial', fontSize: 48, fill: 'white', stroke: 'black', strokeThickness: 5, fontWeight: 'bold' });
                     valueText.anchor.set(0.5);
                     valueText.position.set(CELL_SIZE / 2, CELL_SIZE / 2);
-                    valueText.alpha = 0; // Na początku niewidoczny
+                    valueText.alpha = 0;
                     cellContainer.addChild(valueText);
-                    
-                    // Tekst pojawia się płynnie po opadnięciu monety
                     setTimeout(() => {
-                        tweenTo(valueText, 'alpha', 1, 300, (t) => t);
+                        tweenTo(valueText, 'alpha', 1, 300, t => t);
                     }, delay + 400);
                 }
             }
@@ -221,22 +159,19 @@ function updateGrid(gridData) {
     }
 }
 
+
 // --- GŁÓWNE FUNKCJE GRY ---
 function doSpin() {
     if (isSpinning) return;
-
-    if (isInBonusMode) {
-        doBonusSpin();
-    } else {
-        doBaseGameSpin();
-    }
+    if (isInBonusMode) { doBonusSpin(); } 
+    else { doBaseGameSpin(); }
 }
 
 async function doBaseGameSpin() {
     isSpinning = true;
     toggleControls(false);
     try {
-        const currentBet = BET_LEVELS[currentBetIndex];
+        const currentBet = BET_LEVELS[currentBetIndex]; // POPRAWKA: wysyłanie stawki
         const response = await fetch(`${API_URL}/30coins/spin`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -249,29 +184,24 @@ async function doBaseGameSpin() {
         const data = await response.json();
         balanceDisplay.textContent = `${data.newBalance} żetonów`;
         updateGrid(data.grid);
+
         if (data.bonusTriggered) {
-            // Zamiast alertu, uruchamiamy tryb bonusowy!
             const bonusSymbols = [];
-            for(let i=0; i<data.grid.length; i++) {
-                if(data.grid[i]) {
-                    // gridCells[i].children[1] to sprite symbolu
+            for (let i = 0; i < data.grid.length; i++) {
+                if (data.grid[i] && gridCells[i].children[1]) {
                     bonusSymbols.push(gridCells[i].children[1]);
                 }
             }
-            
-            // Prosta animacja pulsowania dla każdego symbolu bonusowego
-            bonusSymbols.forEach((sprite, index) => {
+            bonusSymbols.forEach((sprite) => {
                 const originalScale = sprite.scale.x;
-                // Powiększ
                 tweenTo(sprite.scale, 'x', originalScale * 1.15, 200, backout(0.5), null, () => {
-                    // Zmniejsz
                     tweenTo(sprite.scale, 'x', originalScale, 400, backout(0.5));
                 });
                 tweenTo(sprite.scale, 'y', originalScale * 1.15, 200, backout(0.5), null, () => {
                     tweenTo(sprite.scale, 'y', originalScale, 400, backout(0.5));
                 });
             });
-            startBonusMode(data.grid);
+            setTimeout(() => startBonusMode(data.grid), 1500); // POPRAWKA: opóźnienie startu bonusu
         } else {
             isSpinning = false;
             toggleControls(true);
@@ -287,20 +217,15 @@ function startBonusMode(initialGrid) {
     console.log("URUCHAMIAM TRYB BONUSOWY!");
     isInBonusMode = true;
     reSpinsLeft = 3;
-    
-    // Pokaż licznik re-spinów i zmień wygląd przycisków
-    document.getElementById('respin-counter').classList.remove('hidden');
-    document.getElementById('respin-counter').querySelector('span').textContent = reSpinsLeft;
-    buyBonusButton.disabled = true; // Wyłącz kupowanie bonusu w trakcie bonusu
-    
-    // Automatycznie uruchom pierwszy re-spin po chwili
+    reSpinCounterElement.classList.remove('hidden');
+    reSpinCounterElement.querySelector('span').textContent = reSpinsLeft;
+    buyBonusButton.disabled = true;
     setTimeout(() => doBonusSpin(), 1000);
 }
 
 async function doBonusSpin() {
     isSpinning = true;
-    toggleControls(false); // Blokujemy przycisk na czas animacji
-
+    toggleControls(false, true); // Blokuj wszystko oprócz licznika
     try {
         const currentGridState = gridCells.map(cell => cell.symbolData || null);
         const response = await fetch(`${API_URL}/30coins/bonus-spin`, {
@@ -309,21 +234,16 @@ async function doBonusSpin() {
             body: JSON.stringify({ username: currentUser.username, grid: currentGridState })
         });
         const data = await response.json();
-
         updateGrid(data.grid);
-
         if (data.hasLandedNewSymbol) {
-            reSpinsLeft = 3; // Resetuj licznik
+            reSpinsLeft = 3;
         } else {
-            reSpinsLeft--; // Zmniejsz licznik
+            reSpinsLeft--;
         }
-        
-        document.getElementById('respin-counter').querySelector('span').textContent = reSpinsLeft;
-
+        reSpinCounterElement.querySelector('span').textContent = reSpinsLeft;
         if (reSpinsLeft <= 0 || data.bonusEnded) {
             endBonusMode(data.grid);
         } else {
-            // Uruchom kolejny re-spin po chwili
             setTimeout(() => doBonusSpin(), 1000);
         }
     } catch (error) {
@@ -335,33 +255,24 @@ async function doBonusSpin() {
 function endBonusMode(finalGrid) {
     isInBonusMode = false;
     isSpinning = false;
-    
-    document.getElementById('respin-counter').classList.add('hidden');
+    reSpinCounterElement.classList.add('hidden');
     toggleControls(true);
-
-    // Oblicz i wypłać wygraną
     let totalWin = 0;
     finalGrid.forEach(symbol => {
         if (symbol && symbol.type === 'CASH_INFINITY') {
             totalWin += symbol.value;
         }
-        // W przyszłości dodaj logikę jackpotów
     });
-
     alert(`Koniec bonusu! Wygrałeś: ${totalWin} żetonów!`);
-    // Tutaj powinna być komunikacja z serwerem, aby dodać wygraną do salda gracza
-    updateUserState(); 
+    updateUserState();
 }
 
 async function doBuyBonus(bonusType) {
     hideBuyBonusModal();
     console.log(`Próba zakupu bonusu typu: ${bonusType} za stawkę ${BET_LEVELS[currentBetIndex]}`);
     alert(`Logika zakupu bonusu '${bonusType}' nie została jeszcze zaimplementowana na backendzie.`);
-    // W przyszłości:
-    // isSpinning = true;
-    // toggleControls(false);
-    // fetch do nowego endpointu /30coins/buy-bonus
 }
+
 
 // --- FUNKCJE POMOCNICZE I UI ---
 async function updateUserState() {
@@ -387,12 +298,8 @@ async function updateUserState() {
 
 function updateBet(direction) {
     currentBetIndex += direction;
-    if (currentBetIndex < 0) {
-        currentBetIndex = 0;
-    }
-    if (currentBetIndex >= BET_LEVELS.length) {
-        currentBetIndex = BET_LEVELS.length - 1;
-    }
+    if (currentBetIndex < 0) currentBetIndex = 0;
+    if (currentBetIndex >= BET_LEVELS.length) currentBetIndex = BET_LEVELS.length - 1;
     betDisplay.textContent = BET_LEVELS[currentBetIndex];
 }
 
@@ -404,9 +311,41 @@ function hideBuyBonusModal() {
     buyBonusModal.classList.add('hidden');
 }
 
-function toggleControls(enabled) {
+function toggleControls(enabled, isBonusSpin = false) {
     spinButton.disabled = !enabled;
-    buyBonusButton.disabled = !enabled;
-    betUpBtn.disabled = !enabled;
-    betDownBtn.disabled = !enabled;
+    betUpBtn.disabled = !enabled || isBonusSpin;
+    betDownBtn.disabled = !enabled || isBonusSpin;
+    buyBonusButton.disabled = !enabled || isInBonusMode;
+}
+
+
+// =======================================================
+//          FUNKCJE POMOCNICZE DO ANIMACJI (TWEENING)
+// =======================================================
+const tweening = [];
+function tweenTo(object, property, target, time, easing, onchange, oncomplete) {
+    const tween = { object, property, target, easing, oncomplete, time, start: Date.now() };
+    tweening.push(tween);
+    return tween;
+}
+app.ticker.add(() => {
+    const now = Date.now();
+    const remove = [];
+    for (let i = 0; i < tweening.length; i++) {
+        const t = tweening[i];
+        const phase = Math.min(1, (now - t.start) / t.time);
+        t.object[t.property] = t.object[t.property] + (t.target - t.object[t.property]) * t.easing(phase);
+        if (t.onchange) { t.onchange(t); }
+        if (phase === 1) {
+            t.object[t.property] = t.target;
+            if (t.oncomplete) { t.oncomplete(t); }
+            remove.push(t);
+        }
+    }
+    for (let i = 0; i < remove.length; i++) {
+        tweening.splice(tweening.indexOf(remove[i]), 1);
+    }
+});
+function backout(amount) {
+    return (t) => (--t * t * ((amount + 1) * t + amount) + 1);
 }
