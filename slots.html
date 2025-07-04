@@ -117,6 +117,48 @@
     font-weight: bold;
     cursor: pointer;
 }
+        /* === POPRAWIONY STYL INTERFEJSU UŻYTKOWNIKA === */
+#ui-container {
+    position: absolute;
+    top: 20px; /* Ustawiamy na górze strony */
+    left: 50%;
+    transform: translateX(-50%); /* Centrujemy w poziomie */
+    width: 900px; /* Szerokość dopasowana do kontenera gry */
+    display: flex;
+    justify-content: space-between; /* Rozkłada elementy na boki */
+    align-items: center;
+    z-index: 10; /* Upewniamy się, że jest nad tłem gry */
+}
+#jackpot-container {
+    display: flex;
+    gap: 10px;
+}
+.jackpot-box {
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+.jackpot-box span {
+    display: block; /* Powoduje, że wartość jest pod napisem */
+    font-size: 1.2em;
+}
+.jackpot-box.grand { background: #ffbf00; }
+.jackpot-box.major { background: #ff4757; }
+.jackpot-box.minor { background: #5352ed; }
+.jackpot-box.mini { background: #2ed573; }
+
+#balance-display {
+    color: white;
+    font-size: 1.8em;
+    background: rgba(0,0,0,0.7);
+    padding: 15px 25px;
+    border-radius: 10px;
+    font-weight: bold;
+    border: 1px solid rgba(255,255,255,0.2);
+}
     </style>
 </head>
    <body>
