@@ -10,6 +10,8 @@ const COLS = 5, ROWS = 6;
 const CELL_SIZE = 120, PADDING = 10;
 const BET_LEVELS = [10, 20, 40, 80, 160]; // Dostępne poziomy stawek
 let currentBetIndex = 0; // Indeks aktualnie wybranej stawki
+let isInBonusMode = false;
+let reSpinsLeft = 3;
 
 // --- INICJALIZACJA APLIKACJI PIXI.JS ---
 const app = new PIXI.Application({ width: WIDTH, height: HEIGHT, backgroundColor: 0x1a1a1a });
@@ -108,9 +110,21 @@ function updateGrid(gridData) {
     for (let i = 0; i < gridData.length; i++) {
         const cellContainer = gridCells[i];
         const symbolData = gridData[i];
-        while (cellContainer.children.length > 1) { cellContainer.removeChildAt(1); }
+        cellContainer.symbolData = symbolData;
 
-        if (symbolData) {
+        // Czyścimy stare symbole, ale tylko te, które nie są lepkie (sticky)
+        if (cellContainer.isSticky !== true) {
+            while (cellContainer.children.length > 1) {
+                cellContainer.removeChildAt(1);
+            }
+            cellContainer.symbolData = null;
+        }
+
+        // Jeśli na tym polu jest NOWY symbol, rysujemy go i animujemy
+        if (symbolData && !cellContainer.symbolData) {
+            cellContainer.symbolData = symbolData; // Zapisujemy nowe dane
+            cellContainer.isSticky = symbolData.sticky; // Oznaczamy, czy symbol jest lepki
+
             let textureName = '';
             switch (symbolData.type) {
                 case 'CASH_INFINITY': textureName = 'cash_infinity'; break;
@@ -123,13 +137,32 @@ function updateGrid(gridData) {
                 const symbolSprite = new PIXI.Sprite(PIXI.Loader.shared.resources[textureName].texture);
                 symbolSprite.width = CELL_SIZE;
                 symbolSprite.height = CELL_SIZE;
+                
+                // Pozycja startowa animacji (nad komórką)
+                symbolSprite.y = -CELL_SIZE;
+                // Docelowa pozycja
+                const targetY = 0;
+
                 cellContainer.addChild(symbolSprite);
 
+                // Używamy naszej funkcji tweenTo do animacji opadania
+                const delay = i * 25; // Małe opóźnienie dla każdej kolejnej komórki
+                setTimeout(() => {
+                    tweenTo(symbolSprite, 'y', targetY, 500, backout(0.5));
+                }, delay);
+
+                // Dodajemy tekst z wartością, jeśli to moneta
                 if (symbolData.type === 'CASH_INFINITY' && symbolData.value) {
                     const valueText = new PIXI.Text(symbolData.value, { fontFamily: 'Arial', fontSize: 48, fill: 'white', stroke: 'black', strokeThickness: 5, fontWeight: 'bold' });
                     valueText.anchor.set(0.5);
                     valueText.position.set(CELL_SIZE / 2, CELL_SIZE / 2);
+                    valueText.alpha = 0; // Na początku niewidoczny
                     cellContainer.addChild(valueText);
+                    
+                    // Tekst pojawia się płynnie po opadnięciu monety
+                    setTimeout(() => {
+                        tweenTo(valueText, 'alpha', 1, 300, (t) => t);
+                    }, delay + 400);
                 }
             }
         }
@@ -137,17 +170,25 @@ function updateGrid(gridData) {
 }
 
 // --- GŁÓWNE FUNKCJE GRY ---
-async function doSpin() {
+function doSpin() {
     if (isSpinning) return;
+
+    if (isInBonusMode) {
+        doBonusSpin();
+    } else {
+        doBaseGameSpin();
+    }
+}
+
+async function doBaseGameSpin() {
     isSpinning = true;
     toggleControls(false);
-
     try {
-        const currentBet = BET_LEVELS[currentBetIndex]; // Pobranie aktualnej stawki
+        const currentBet = BET_LEVELS[currentBetIndex];
         const response = await fetch(`${API_URL}/30coins/spin`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: currentUser.username, bet: currentBet }) // Wysłanie stawki
+            body: JSON.stringify({ username: currentUser.username, bet: currentBet })
         });
         if (!response.ok) {
             const errData = await response.json();
@@ -157,14 +198,107 @@ async function doSpin() {
         balanceDisplay.textContent = `${data.newBalance} żetonów`;
         updateGrid(data.grid);
         if (data.bonusTriggered) {
-            setTimeout(() => alert("BONUS URUCHOMIONY!"), 500);
+            // Zamiast alertu, uruchamiamy tryb bonusowy!
+            const bonusSymbols = [];
+            for(let i=0; i<data.grid.length; i++) {
+                if(data.grid[i]) {
+                    // gridCells[i].children[1] to sprite symbolu
+                    bonusSymbols.push(gridCells[i].children[1]);
+                }
+            }
+            
+            // Prosta animacja pulsowania dla każdego symbolu bonusowego
+            bonusSymbols.forEach((sprite, index) => {
+                const originalScale = sprite.scale.x;
+                // Powiększ
+                tweenTo(sprite.scale, 'x', originalScale * 1.15, 200, backout(0.5), null, () => {
+                    // Zmniejsz
+                    tweenTo(sprite.scale, 'x', originalScale, 400, backout(0.5));
+                });
+                tweenTo(sprite.scale, 'y', originalScale * 1.15, 200, backout(0.5), null, () => {
+                    tweenTo(sprite.scale, 'y', originalScale, 400, backout(0.5));
+                });
+            });
+            startBonusMode(data.grid);
+        } else {
+            isSpinning = false;
+            toggleControls(true);
         }
     } catch (error) {
         alert(error.message);
-    } finally {
         isSpinning = false;
         toggleControls(true);
     }
+}
+
+function startBonusMode(initialGrid) {
+    console.log("URUCHAMIAM TRYB BONUSOWY!");
+    isInBonusMode = true;
+    reSpinsLeft = 3;
+    
+    // Pokaż licznik re-spinów i zmień wygląd przycisków
+    document.getElementById('respin-counter').classList.remove('hidden');
+    document.getElementById('respin-counter').querySelector('span').textContent = reSpinsLeft;
+    buyBonusButton.disabled = true; // Wyłącz kupowanie bonusu w trakcie bonusu
+    
+    // Automatycznie uruchom pierwszy re-spin po chwili
+    setTimeout(() => doBonusSpin(), 1000);
+}
+
+async function doBonusSpin() {
+    isSpinning = true;
+    toggleControls(false); // Blokujemy przycisk na czas animacji
+
+    try {
+        const currentGridState = gridCells.map(cell => cell.symbolData || null);
+        const response = await fetch(`${API_URL}/30coins/bonus-spin`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: currentUser.username, grid: currentGridState })
+        });
+        const data = await response.json();
+
+        updateGrid(data.grid);
+
+        if (data.hasLandedNewSymbol) {
+            reSpinsLeft = 3; // Resetuj licznik
+        } else {
+            reSpinsLeft--; // Zmniejsz licznik
+        }
+        
+        document.getElementById('respin-counter').querySelector('span').textContent = reSpinsLeft;
+
+        if (reSpinsLeft <= 0 || data.bonusEnded) {
+            endBonusMode(data.grid);
+        } else {
+            // Uruchom kolejny re-spin po chwili
+            setTimeout(() => doBonusSpin(), 1000);
+        }
+    } catch (error) {
+        alert(error.message);
+        endBonusMode(gridCells.map(cell => cell.symbolData || null));
+    }
+}
+
+function endBonusMode(finalGrid) {
+    isInBonusMode = false;
+    isSpinning = false;
+    
+    document.getElementById('respin-counter').classList.add('hidden');
+    toggleControls(true);
+
+    // Oblicz i wypłać wygraną
+    let totalWin = 0;
+    finalGrid.forEach(symbol => {
+        if (symbol && symbol.type === 'CASH_INFINITY') {
+            totalWin += symbol.value;
+        }
+        // W przyszłości dodaj logikę jackpotów
+    });
+
+    alert(`Koniec bonusu! Wygrałeś: ${totalWin} żetonów!`);
+    // Tutaj powinna być komunikacja z serwerem, aby dodać wygraną do salda gracza
+    updateUserState(); 
 }
 
 async function doBuyBonus(bonusType) {
