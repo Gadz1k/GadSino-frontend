@@ -33,11 +33,11 @@ let currentUser = null;
 
 // --- ŁADOWANIE GRAFIK ---
 PIXI.Loader.shared
-    .add('background', 'img/grid_background.png')
-    .add('cash_infinity', 'img/cash_infinity.png')
-    .add('mystery', 'img/mystery.png')
-    .add('mini_jackpot', 'img/mini_jackpot.png')
-    .add('minor_jackpot', 'img/minor_jackpot.png')
+    .add('background', '/img/grid_background.png')
+    .add('cash_infinity', '/img/cash_infinity.png')
+    .add('mystery', '/img/mystery.png')
+    .add('mini_jackpot', '/img/mini_jackpot.png')
+    .add('minor_jackpot', '/img/minor_jackpot.png')
     .load(onAssetsLoaded);
 
 PIXI.Loader.shared.onError.add((error, loader, resource) => {
