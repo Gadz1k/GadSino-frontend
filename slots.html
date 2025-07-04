@@ -159,10 +159,13 @@
     font-weight: bold;
     border: 1px solid rgba(255,255,255,0.2);
 }
+#respin-counter { color: white; font-size: 1.8em; font-weight: bold; text-shadow: 2px 2px 4px black; }
+#respin-counter.hidden { display: none; }
     </style>
 </head>
    <body>
     <div id="ui-container">
+        <div id="respin-counter" class="hidden">Re-spiny: <span>3</span></div>
         <div id="balance-display">Saldo: <span id="balance">Ładowanie...</span></div>
         <div id="jackpot-container">
             <div class="jackpot-box grand">GRAND <span>25000</span></div>
