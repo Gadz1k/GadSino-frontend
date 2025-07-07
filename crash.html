@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Crash Game - Gadsino</title>
+  <link rel="icon" type="image/png" href="img/icon.png">
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&family=Poppins:wght@400;600&display=swap');
+    
+    :root {
+      --bg-color: #121212;
+      --surface-color: #1e1e1e;
+      --primary-color: #fbc531;
+      --text-color: #f1f2f6;
+      --green: #2ecc71;
+      --red: #e74c3c;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* Nagłówek (możesz wstawić tu swój) */
+    header {
+      width: 100%;
+      padding: 1em 2em;
+      background: rgba(0,0,0,0.2);
+      text-align: center;
+      border-bottom: 1px solid #333;
+    }
+    
+    .game-container {
+      display: flex;
+      gap: 2em;
+      padding: 2em;
+      width: 100%;
+      max-width: 1400px;
+    }
+    
+    .left-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5em;
+      background: var(--surface-color);
+      padding: 2em;
+      border-radius: 12px;
+    }
+
+    .right-panel {
+      flex: 3;
+      position: relative;
+      background: var(--surface-color);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      min-height: 500px;
+    }
+    
+    .multiplier-display {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 6rem;
+      font-weight: 700;
+      z-index: 2;
+      transition: color 0.5s ease;
+      text-shadow: 0 0 20px rgba(255,255,255,0.2);
+    }
+    
+    .game-phase-info {
+      position: absolute;
+      top: 2em;
+      font-size: 1.5rem;
+      font-weight: 600;
+      opacity: 0.8;
+    }
+
+    .bet-controls h3 {
+      margin-top: 0;
+      color: var(--primary-color);
+    }
+    
+    .bet-input {
+      width: 100%;
+      padding: 0.8em;
+      background: #333;
+      border: 1px solid #444;
+      border-radius: 8px;
+      color: var(--text-color);
+      font-size: 1.2rem;
+      margin-bottom: 1em;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 1em;
+      font-size: 1.2rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-bet { background: var(--primary-color); color: #121212; }
+    .btn-bet:hover { background: #fdd835; }
+    .btn-bet:disabled { background: #555; cursor: not-allowed; }
+    
+    .btn-cashout { background: var(--green); color: white; }
+    .btn-cashout:hover { background: #34d399; }
+    .btn-cashout:disabled { display: none; }
+
+    .players-list {
+      flex-grow: 1;
+    }
+    .players-list h3 { color: var(--primary-color); }
+    
+    #player-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    #player-table th, #player-table td { padding: 0.5em; }
+    #player-table thead { border-bottom: 1px solid var(--primary-color); }
+    
+    .status-playing { color: var(--primary-color); }
+    .status-cashed { color: var(--green); }
+
+    .history-bar {
+      display: flex;
+      gap: 0.5em;
+      padding: 1em;
+      background: var(--surface-color);
+      width: 100%;
+      justify-content: center;
+    }
+    .history-item {
+      padding: 0.5em 1em;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CRASH</h1>
+  </header>
+
+  <div class="history-bar" id="history-bar">
+    </div>
+
+  <div class="game-container">
+    <div class="left-panel">
+      <div class="bet-controls">
+        <h3>Postaw Zakład</h3>
+        <input type="number" id="bet-amount" class="bet-input" placeholder="Kwota...">
+        <button id="bet-button" class="btn btn-bet">Postaw zakład</button>
+        <button id="cashout-button" class="btn btn-cashout" disabled>Wypłać</button>
+      </div>
+      <div class="players-list">
+        <h3>Gracze w tej rundzie</h3>
+        <table id="player-table">
+          <thead>
+            <tr>
+              <th>Gracz</th>
+              <th>Zakład</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="player-table-body">
+            </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="right-panel">
+      <div id="game-phase-info" class="game-phase-info"></div>
+      <div id="multiplier-display" class="multiplier-display">1.00x</div>
+    </div>
+  </div>
+
+<script>
+  const socket = io("ws://localhost:3000"); // ZMIEŃ NA ADRES SWOJEGO SERWERA
+  const username = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).username : `Guest${Math.floor(Math.random()*1000)}`;
+
+  const betBtn = document.getElementById('bet-button');
+  const cashoutBtn = document.getElementById('cashout-button');
+  const betAmountInput = document.getElementById('bet-amount');
+  const multiplierDisplay = document.getElementById('multiplier-display');
+  const phaseInfo = document.getElementById('game-phase-info');
+  const playerTableBody = document.getElementById('player-table-body');
+  const historyBar = document.getElementById('history-bar');
+  
+  let myBet = null;
+  
+  // --- Obsługa zdarzeń z serwera ---
+
+  socket.on('connect', () => {
+    console.log('Połączono z serwerem gry Crash!');
+    socket.emit('get_crash_state');
+  });
+
+  socket.on('crash_state', (data) => {
+    updatePlayers(data.players || {});
+    updateHistory(data.history || []);
+
+    switch(data.phase) {
+      case 'betting':
+        setBettingPhase();
+        break;
+      case 'running':
+        setRunningPhase(data.players);
+        break;
+      case 'crashed':
+        setCrashedPhase(data.crashPoint);
+        break;
+      default:
+        setWaitingPhase();
+    }
+  });
+
+  socket.on('crash_tick', (multiplier) => {
+    multiplierDisplay.textContent = `${multiplier}x`;
+    updateMultiplierColor(multiplier);
+  });
+  
+  socket.on('crash_players_update', (players) => {
+    updatePlayers(players);
+  });
+
+  // --- Funkcje pomocnicze UI ---
+  
+  function setWaitingPhase() {
+    phaseInfo.textContent = 'Oczekiwanie na następną rundę...';
+    betBtn.disabled = true;
+    cashoutBtn.style.display = 'none';
+    betBtn.style.display = 'block';
+  }
+
+  function setBettingPhase() {
+    myBet = null;
+    phaseInfo.textContent = 'Obstawiaj zakłady! (10s)';
+    multiplierDisplay.textContent = '1.00x';
+    multiplierDisplay.style.color = 'var(--text-color)';
+    betBtn.disabled = false;
+    betBtn.textContent = 'Postaw zakład';
+    cashoutBtn.style.display = 'none';
+    betBtn.style.display = 'block';
+  }
+
+  function setRunningPhase(players) {
+    phaseInfo.textContent = 'GRA TRWA!';
+    betBtn.disabled = true;
+
+    if (players[username]) { // Jeśli postawiliśmy zakład
+      cashoutBtn.style.display = 'block';
+      cashoutBtn.disabled = false;
+      betBtn.style.display = 'none';
+    }
+  }
+
+  function setCrashedPhase(crashPoint) {
+    phaseInfo.textContent = `CRASH @ ${crashPoint}x`;
+    multiplierDisplay.textContent = `${crashPoint}x`;
+    multiplierDisplay.style.color = 'var(--red)';
+    cashoutBtn.disabled = true;
+    cashoutBtn.style.display = 'none';
+    betBtn.style.display = 'block';
+    betBtn.disabled = true;
+    betBtn.textContent = 'Oczekiwanie...';
+  }
+
+  function updatePlayers(players) {
+    playerTableBody.innerHTML = '';
+    for (const name in players) {
+      const p = players[name];
+      const row = document.createElement('tr');
+      let statusHtml = '';
+      if(p.status === 'playing') {
+        statusHtml = `<span class="status-playing">W grze</span>`;
+      } else if (p.status === 'cashed_out') {
+        statusHtml = `<span class="status-cashed">Wypłacono @ ${p.cashoutAt}x</span>`;
+      }
+      row.innerHTML = `<td>${name}</td><td>${p.bet}</td><td>${statusHtml}</td>`;
+      playerTableBody.appendChild(row);
+    }
+  }
+  
+  function updateHistory(history) {
+    historyBar.innerHTML = '';
+    history.forEach(point => {
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      item.textContent = `${point}x`;
+      item.style.backgroundColor = point < 2 ? '#444' : point < 5 ? 'var(--primary-color)' : 'var(--green)';
+      item.style.color = point < 2 ? 'white' : 'black';
+      historyBar.appendChild(item);
+    });
+  }
+  
+  function updateMultiplierColor(multiplier) {
+    if (multiplier < 2) multiplierDisplay.style.color = 'var(--text-color)';
+    else if (multiplier < 5) multiplierDisplay.style.color = '#68d391'; // Lepszy zielony
+    else if (multiplier < 10) multiplierDisplay.style.color = '#fdd835'; // Żółty
+    else multiplierDisplay.style.color = '#e53e3e'; // Czerwony
+  }
+
+  // --- Obsługa akcji gracza ---
+
+  betBtn.addEventListener('click', () => {
+    const amount = parseInt(betAmountInput.value);
+    if (amount > 0) {
+      socket.emit('crash_bet', { username, amount });
+      betBtn.disabled = true;
+      betBtn.textContent = 'Zakład postawiony';
+      myBet = amount;
+    }
+  });
+
+  cashoutBtn.addEventListener('click', () => {
+    socket.emit('crash_cashout', { username });
+    cashoutBtn.disabled = true;
+    cashoutBtn.textContent = 'Wypłacono';
+  });
+
+</script>
+</body>
+</html>
