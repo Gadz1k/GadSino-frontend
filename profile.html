@@ -4,135 +4,168 @@
   <link rel="icon" type="image/png" href="img/icon.png">
   <meta charset="UTF-8" />
   <title>Profil – Gadsino</title>
-  <link rel="stylesheet" href="style.css" />
   <style>
+    /* --- Podstawowe ustawienia i tło dopasowane do reszty strony --- */
     body {
-      font-family: Arial, sans-serif;
-      background: #1c1c1c;
-      color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: radial-gradient(circle at 50% 0%, #3a3a3a 0%, #121212 50%);
+      color: #f1f2f6;
       margin: 0;
       padding: 0;
     }
 
+    /* --- Nagłówek (warto go zrobić komponentem i wstawiać na każdej podstronie) --- */
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1em 2em;
+      padding: 1.5em 3em;
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid #333;
     }
-
-    .content {
-      max-width: 900px;
+    
+    /* --- Główny kontener na treść --- */
+    .content-wrapper {
+      max-width: 1200px;
       margin: 3em auto;
-      background: #2f3542;
-      padding: 2em;
-      border-radius: 15px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.4);
-    }
-
-    h1 {
-      color: #ffa502;
-      text-align: center;
-      margin-bottom: 1em;
-    }
-
-    .info {
-      font-size: 1.2em;
-      margin-bottom: 1em;
-    }
-
-    .info span {
-      color: #fbc531;
-      font-weight: bold;
-    }
-
-    .btn {
-      display: inline-block;
-      padding: 0.7em 1.5em;
-      background: #ff4757;
-      color: white;
-      font-weight: bold;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      text-decoration: none;
-      margin-top: 1em;
-    }
-
-    .btn:hover {
-      background: #e84118;
-    }
-
-    .emoji {
-      font-size: 1.3em;
-      margin-right: 5px;
+      padding: 0 2em;
     }
 
     .flexbox {
       display: flex;
       flex-wrap: wrap;
-      gap: 2em;
+      gap: 3em;
+      align-items: flex-start;
     }
 
     .profile-box, .history-box {
       flex: 1;
-      min-width: 300px;
+      min-width: 350px;
+      background: #1e1e1e;
+      padding: 2em;
+      border-radius: 12px;
+      border: 1px solid #333;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
-
-    .history-box h2 {
-      color: #ffa502;
-      margin-top: 0.5em;
-      text-align: left;
+    
+    /* --- Typografia i nagłówki --- */
+    h1, h2 {
+      color: #fbc531; /* Złoty akcent */
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 0;
+      padding-bottom: 0.5em;
+      border-bottom: 1px solid #444;
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
     }
-
+    
+    /* --- Stylizacja informacji o profilu --- */
+    .info {
+      font-size: 1.1em;
+      margin-bottom: 1.2em;
+      color: #ccc;
+      display: flex;
+      align-items: center;
+      gap: 0.7em;
+    }
+    .info span {
+      color: #fff;
+      font-weight: bold;
+    }
+    
+    /* --- Ujednolicony wygląd przycisków (jak na stronie głównej) --- */
+    .btn {
+      display: inline-block;
+      padding: 0.8em 1.8em;
+      background: #fbc531; /* Złoty przycisk */
+      color: #121212; /* Ciemny tekst */
+      font-weight: bold;
+      font-size: 1em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      text-align: center;
+      margin-top: 1em;
+    }
+    .btn:hover {
+      background: #ffa801;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(251, 197, 49, 0.2);
+    }
+    .btn-back {
+        background: #333;
+        color: #fff;
+    }
+    .btn-back:hover {
+        background: #444;
+        box-shadow: none;
+    }
+    
+    /* --- Nowoczesny wygląd tabeli --- */
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 1em;
+      margin-top: 1.5em;
+      font-size: 0.95em;
     }
-
     th, td {
-      padding: 0.6em;
+      padding: 0.9em 0.7em;
       text-align: left;
-      border-bottom: 1px solid #444;
     }
-
+    thead tr {
+      border-bottom: 2px solid #fbc531;
+    }
     th {
-      background: #3a3a3a;
-      color: #ffa502;
+      color: #fbc531;
+      text-transform: uppercase;
+      font-size: 0.8em;
+      letter-spacing: 0.5px;
     }
-
-    td {
-      color: #f1f2f6;
+    tbody tr {
+      border-bottom: 1px solid #333;
     }
-
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+    tbody tr:hover {
+      background: #2a2a2a;
+    }
+    
     .error {
       color: #ff6b6b;
       font-weight: bold;
       margin-top: 1em;
+      text-align: center;
+      padding: 1em;
+      background: rgba(255, 107, 107, 0.1);
+      border-radius: 8px;
     }
+
   </style>
 </head>
 <body>
   <header>
-    <a href="index.html" class="btn">← Powrót</a>
-    <div id="balance-display">💰 ...</div>
+    <a href="index.html" class="btn btn-back">← Powrót do lobby</a>
+    <div id="balance-display" style="font-size: 1.2em; font-weight: bold;"></div>
   </header>
 
-  <div class="content">
-    <h1><span class="emoji">🧍‍♂️</span>Twój Profil</h1>
+  <div class="content-wrapper">
     <div class="flexbox">
       <div class="profile-box">
+        <h2>Dane konta</h2>
         <div class="info">👤 Nazwa użytkownika: <span id="username">...</span></div>
-        <div class="info">💰 Saldo: <span id="balance">...</span> żetonów</div>
+        <div class="info">💰 Saldo: <span id="balance">...</span></div>
         <div class="info">📧 E-mail: <span id="email">...</span></div>
-        <div class="info">📅 Dołączył: <span id="createdAt">...</span></div>
-        <a class="btn" onclick="alert('Opcja edycji profilu będzie dostępna wkrótce!')">✏️ Edytuj profil</a>
+        <div class="info">📅 Data dołączenia: <span id="createdAt">...</span></div>
+        <a class="btn" onclick="alert('Opcja edycji profilu będzie dostępna wkrótce!')">Edytuj profil</a>
       </div>
 
       <div class="history-box">
-        <h2>📜 Historia transakcji</h2>
+        <h2>Historia transakcji</h2>
         <div id="history-error" class="error" style="display:none;"></div>
         <table id="history-table">
           <thead>
@@ -144,7 +177,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr><td colspan="4">Ładowanie danych...</td></tr>
+            <tr><td colspan="4" style="text-align: center;">Ładowanie danych...</td></tr>
           </tbody>
         </table>
       </div>
@@ -152,6 +185,7 @@
   </div>
 
   <script>
+    // Twój skrypt JavaScript pozostaje bez zmian - jest w porządku.
     const user = JSON.parse(localStorage.getItem('user'));
 
     if (!user) {
@@ -161,8 +195,8 @@
         .then(res => res.json())
         .then(data => {
           document.getElementById('username').textContent = user.username;
-          document.getElementById('balance').textContent = data.balance;
-          document.getElementById('email').textContent = data.email || 'brak danych';
+          document.getElementById('balance').textContent = `${data.balance} żetonów`;
+          document.getElementById('email').textContent = data.email || 'Brak danych';
           document.getElementById('createdAt').textContent = new Date(data.createdAt).toLocaleDateString('pl-PL');
           document.getElementById('balance-display').textContent = `💰 ${data.balance} żetonów`;
         })
@@ -176,22 +210,24 @@
           const tbody = document.querySelector('#history-table tbody');
           tbody.innerHTML = '';
           if (history.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4">Brak transakcji.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Brak transakcji do wyświetlenia.</td></tr>';
             return;
           }
+          history.sort((a, b) => new Date(b.date) - new Date(a.date)); // Sortowanie od najnowszych
           history.forEach(item => {
             const tr = document.createElement('tr');
+            const amountColor = item.amount > 0 ? '#2ecc71' : '#e74c3c'; // Zielony dla wpłat, czerwony dla wypłat
             tr.innerHTML = `
               <td>${new Date(item.date).toLocaleDateString('pl-PL')}</td>
               <td>${item.type}</td>
-              <td>${item.amount > 0 ? '+' : ''}${item.amount}</td>
+              <td style="font-weight: bold; color: ${amountColor}">${item.amount > 0 ? '+' : ''}${item.amount}</td>
               <td>${item.balanceAfter}</td>
             `;
             tbody.appendChild(tr);
           });
         })
         .catch(() => {
-          document.getElementById('history-error').textContent = 'Nie udało się pobrać historii.';
+          document.getElementById('history-error').textContent = 'Nie udało się pobrać historii transakcji.';
           document.getElementById('history-error').style.display = 'block';
         });
     }
