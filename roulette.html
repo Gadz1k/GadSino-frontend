@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Ruletka - Gadsino</title>
+    <link rel="icon" type="image/png" href="img/icon.png">
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        :root {
+            --bg-color: #1a221a; /* Ciemna zieleń stołu */
+            --surface-color: #1e1e1e;
+            --primary-color: #fbc531;
+            --text-color: #f1f2f6;
+            --red: #c0392b;
+            --black: #2c3e50;
+            --green: #27ae60;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            width: 100%; padding: 1em 2em; background: rgba(0,0,0,0.2);
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #333; box-sizing: border-box;
+        }
+        
+        .balance-display { font-size: 1.1em; font-weight: 600; }
+        .balance-display span { color: var(--primary-color); }
+        .btn-back {
+            color: var(--text-color); text-decoration: none; background: #333;
+            padding: 0.5em 1em; border-radius: 8px; font-weight: 600;
+            transition: background 0.2s;
+        }
+        .btn-back:hover { background: #444; }
+
+        .game-area { width: 100%; max-width: 1200px; margin-top: 2em; }
+        
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--surface-color); padding: 1em; border-radius: 10px 10px 0 0;
+        }
+        .history-display { display: flex; gap: 0.5em; }
+        .history-number {
+            width: 30px; height: 30px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-weight: 600;
+        }
+        .history-number.red { background-color: var(--red); }
+        .history-number.black { background-color: var(--black); }
+        .history-number.green { background-color: var(--green); }
+        
+        .game-status { font-size: 1.5em; font-weight: 700; }
+        .game-status #timer, .game-status #winning-number { color: var(--primary-color); }
+        
+        .betting-area { display: flex; margin-top: 2px; }
+
+        .betting-table {
+            display: grid;
+            grid-template-columns: 50px repeat(12, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 4px;
+            background: #145014;
+            padding: 10px;
+            flex-grow: 1;
+        }
+
+        .bet-cell {
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; font-weight: 600;
+            border-radius: 5px; cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .bet-cell:hover { transform: scale(1.05); filter: brightness(1.2); }
+        .bet-cell.placed-bet::after {
+            content: ''; position: absolute; width: 20px; height: 20px;
+            border-radius: 50%; background: var(--primary-color);
+            box-shadow: 0 0 10px var(--primary-color);
+            border: 2px solid white;
+        }
+
+        .number { min-height: 60px; }
+        .number.red { background: var(--red); }
+        .number.black { background: var(--black); }
+        .number.green { background: var(--green); }
+        
+        .zero { grid-column: 1 / 2; grid-row: 1 / 4; }
+        .dozen { grid-column: span 4; }
+        .col { grid-column: 13 / 14; }
+        .other { grid-column: span 2; }
+        
+        .chip-selector {
+            display: flex; flex-direction: column; gap: 10px;
+            padding: 10px; background: var(--surface-color);
+            border-radius: 0 10px 10px 0;
+        }
+        .chip {
+            width: 50px; height: 50px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; cursor: pointer; border: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .chip.selected { border-color: var(--primary-color); transform: scale(1.1); }
+        .chip[data-value="1"] { background: #3498db; }
+        .chip[data-value="5"] { background: var(--red); }
+        .chip[data-value="25"] { background: var(--green); }
+        .chip[data-value="100"] { background: var(--black); border: 2px solid #95a5a6; }
+        .chip[data-value="500"] { background: #8e44ad; }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="index.html" class="btn-back">← Powrót do lobby</a>
+    <h1>RULETKA</h1>
+    <div class="balance-display">Saldo: <span id="user-balance">Ładowanie...</span></div>
+</header>
+
+<div class="game-area">
+    <div class="top-bar">
+        <div class="history-display" id="history-display"></div>
+        <div class="game-status" id="game-status">Obstawiaj zakłady!</div>
+    </div>
+    <div class="betting-area">
+        <div class="betting-table" id="betting-table">
+            <div class="bet-cell number green zero" data-bet-type="straight_0">0</div>
+            <div class="bet-cell dozen" data-bet-type="dozen1">1-12</div>
+            <div class="bet-cell dozen" data-bet-type="dozen2">13-24</div>
+            <div class="bet-cell dozen" data-bet-type="dozen3">25-36</div>
+            <div class="bet-cell col" data-bet-type="col3">2:1</div>
+            <div class="bet-cell col" data-bet-type="col2">2:1</div>
+            <div class="bet-cell col" data-bet-type="col1">2:1</div>
+            <div class="bet-cell other" data-bet-type="low">1-18</div>
+            <div class="bet-cell other" data-bet-type="even">Parzyste</div>
+            <div class="bet-cell other number red" data-bet-type="red"></div>
+            <div class="bet-cell other number black" data-bet-type="black"></div>
+            <div class="bet-cell other" data-bet-type="odd">Nieparzyste</div>
+            <div class="bet-cell other" data-bet-type="high">19-36</div>
+        </div>
+        <div class="chip-selector" id="chip-selector">
+            <div class="chip" data-value="1">1</div>
+            <div class="chip" data-value="5">5</div>
+            <div class="chip" data-value="25">25</div>
+            <div class="chip" data-value="100">100</div>
+            <div class="chip" data-value="500">500</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ROULETTE_NUMBERS = {
+        0: 'green', 32: 'red', 15: 'black', 19: 'red', 4: 'black', 21: 'red', 2: 'black',
+        25: 'red', 17: 'black', 34: 'red', 6: 'black', 27: 'red', 13: 'black', 36: 'red',
+        11: 'black', 30: 'red', 8: 'black', 23: 'red', 10: 'black', 5: 'red', 24: 'black',
+        16: 'red', 33: 'black', 1: 'red', 20: 'black', 14: 'red', 31: 'black', 9: 'red',
+        22: 'black', 18: 'red', 29: 'black', 7: 'red', 28: 'black', 12: 'red', 35: 'black',
+        3: 'red', 26: 'black'
+    };
+
+    const socket = io("https://gadsino.onrender.com");
+    const username = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).username : null;
+
+    const userBalanceSpan = document.getElementById('user-balance');
+    const bettingTable = document.getElementById('betting-table');
+    const chipSelector = document.getElementById('chip-selector');
+    const gameStatus = document.getElementById('game-status');
+    const historyDisplay = document.getElementById('history-display');
+    
+    let selectedChip = 1;
+    let currentUserBalance = 0;
+
+    // --- Inicjalizacja ---
+    
+    function generateTable() {
+        for (let i = 1; i <= 36; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('bet-cell', 'number', ROULETTE_NUMBERS[i]);
+            cell.textContent = i;
+            cell.dataset.betType = `straight_${i}`;
+            const row = (i - 1) % 3 + 1;
+            const col = Math.floor((i - 1) / 3) + 2;
+            cell.style.gridRow = `${row} / ${row + 1}`;
+            cell.style.gridColumn = `${col} / ${col + 1}`;
+            bettingTable.appendChild(cell);
+        }
+    }
+
+    async function fetchUserBalance() {
+        if (!username) { userBalanceSpan.textContent = 'N/A'; return; }
+        try {
+            const response = await fetch(`https://gadsino.onrender.com/player/${username}`);
+            const data = await response.json();
+            currentUserBalance = data.balance;
+            userBalanceSpan.textContent = `${currentUserBalance} 🪙`;
+        } catch (error) { userBalanceSpan.textContent = 'Błąd'; }
+    }
+
+    // --- Obsługa zdarzeń z serwera ---
+
+    socket.on('connect', () => {
+        console.log('Połączono z serwerem ruletki!');
+        socket.emit('get_roulette_state');
+        fetchUserBalance();
+    });
+
+    socket.on('roulette_state', (data) => {
+        updateHistory(data.history || []);
+        updatePlacedBets(data.players || {});
+
+        if (data.phase === 'betting') {
+            gameStatus.innerHTML = 'Obstawiaj! Start za <span id="timer">20</span>s';
+        } else if (data.phase === 'spinning') {
+            gameStatus.textContent = '...KRĘCI SIĘ...';
+        } else if (data.phase === 'result') {
+            const color = ROULETTE_NUMBERS[data.winningNumber];
+            gameStatus.innerHTML = `Wypadło: <span id="winning-number" style="color:var(--${color})">${data.winningNumber}</span>`;
+            fetchUserBalance();
+        }
+    });
+
+    socket.on('roulette_bet_tick', (timeLeft) => {
+        const timerEl = document.getElementById('timer');
+        if(timerEl) timerEl.textContent = `${timeLeft}s`;
+    });
+    
+    socket.on('roulette_players_update', (players) => {
+        updatePlacedBets(players);
+    });
+
+    // --- Funkcje UI ---
+
+    function updateHistory(history) {
+        historyDisplay.innerHTML = '';
+        history.slice(0, 10).forEach(num => {
+            const el = document.createElement('div');
+            el.className = `history-number ${ROULETTE_NUMBERS[num]}`;
+            el.textContent = num;
+            historyDisplay.appendChild(el);
+        });
+    }
+
+    function updatePlacedBets(players) {
+        // Czyścimy poprzednie bety
+        document.querySelectorAll('.placed-bet').forEach(el => el.classList.remove('placed-bet'));
+        
+        // Rysujemy nowe
+        for (const name in players) {
+            for (const bet of players[name]) {
+                const cell = document.querySelector(`[data-bet-type="${bet.betType}"]`);
+                if (cell) cell.classList.add('placed-bet');
+            }
+        }
+    }
+
+    // --- Akcje gracza ---
+
+    chipSelector.addEventListener('click', (e) => {
+        if (e.target.classList.contains('chip')) {
+            document.querySelector('.chip.selected')?.classList.remove('selected');
+            e.target.classList.add('selected');
+            selectedChip = parseInt(e.target.dataset.value);
+        }
+    });
+    
+    bettingTable.addEventListener('click', (e) => {
+        const cell = e.target.closest('.bet-cell');
+        if (cell && cell.dataset.betType) {
+            if (!username) return alert("Musisz być zalogowany, aby grać.");
+            if (currentUserBalance < selectedChip) return alert("Niewystarczające środki.");
+
+            socket.emit('roulette_bet', {
+                username,
+                betType: cell.dataset.betType,
+                amount: selectedChip
+            });
+
+            // Optymistyczna aktualizacja UI
+            currentUserBalance -= selectedChip;
+            userBalanceSpan.textContent = `${currentUserBalance} 🪙`;
+        }
+    });
+    
+    // Inicjalizacja
+    generateTable();
+    chipSelector.querySelector('.chip').classList.add('selected');
+</script>
+</body>
+</html>
