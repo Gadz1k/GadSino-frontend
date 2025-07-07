@@ -57,11 +57,9 @@
             position: absolute; width: 16px; height: 16px;
             background: radial-gradient(circle at 5px 5px, #ffffff, var(--ball-color));
             border-radius: 50%;
-            /* ZMIENIONA animacja na dłuższą, aby ruch był bardziej naturalny */
             transition: transform 0.35s cubic-bezier(0.5, 0.2, 0.5, 0.8);
             box-shadow: 0 0 10px white;
             opacity: 0;
-            /* Ustawiamy punkt startowy transformacji na środek */
             transform-origin: center center;
         }
 
@@ -99,13 +97,9 @@
 </div>
 
 <script>
+    // === STAŁE I ZMIENNE ===
     const username = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).username : null;
-    const userBalanceSpan = document.getElementById('user-balance');
-    const dropButton = document.getElementById('drop-button');
-    const betAmountInput = document.getElementById('bet-amount');
-    const board = document.getElementById('plinko-board');
-    const ball = document.getElementById('ball');
-    const multipliersContainer = document.getElementById('multipliers-container');
+    let currentUserBalance = 0;
 
     const ROWS = 12;
     const MULTIPLIERS = [16, 9, 2, 1.4, 1.1, 1, 0.5, 1, 1.1, 1.4, 2, 9, 16];
@@ -114,17 +108,63 @@
     const START_Y = 40;
     const ROW_HEIGHT = 40;
     const PEG_H_SPACING = 50;
-    const BALL_RADIUS = 8; // Połowa szerokości kulki
+    const BALL_RADIUS = 8;
 
-    let currentUserBalance = 0;
+    // === ELEMENTY DOM ===
+    const userBalanceSpan = document.getElementById('user-balance');
+    const dropButton = document.getElementById('drop-button');
+    const betAmountInput = document.getElementById('bet-amount');
+    const board = document.getElementById('plinko-board');
+    const ball = document.getElementById('ball');
+    const multipliersContainer = document.getElementById('multipliers-container');
 
-    function createPlinkoBoard() { /* Bez zmian */ }
-    async function fetchUserBalance() { /* Bez zmian */ }
+    // === FUNKCJE POMOCNICZE ===
     function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
-    
-    // =======================================================
-    //          POPRAWIONA FUNKCJA ANIMACJI KULKI
-    // =======================================================
+
+    async function fetchUserBalance() {
+        if (!username) {
+            userBalanceSpan.textContent = 'N/A';
+            return;
+        }
+        try {
+            const response = await fetch(`https://gadsino.onrender.com/player/${username}`);
+            if (!response.ok) throw new Error('Błąd serwera');
+            const data = await response.json();
+            currentUserBalance = data.balance;
+            userBalanceSpan.textContent = `${currentUserBalance} 🪙`;
+        } catch (error) {
+            console.error("Błąd pobierania salda:", error);
+            userBalanceSpan.textContent = 'Błąd';
+        }
+    }
+
+    // === LOGIKA GRY I UI ===
+    function initializeBoard() {
+        // Rysowanie kołków
+        for (let row = 0; row < ROWS; row++) {
+            const numPegsInRow = row + 1;
+            for (let i = 0; i < numPegsInRow; i++) {
+                const x = START_X + (i * PEG_H_SPACING) - (row * PEG_H_SPACING / 2);
+                const y = START_Y + (row * ROW_HEIGHT);
+                
+                const peg = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                peg.setAttribute("cx", x);
+                peg.setAttribute("cy", y);
+                peg.setAttribute("r", PEG_RADIUS);
+                peg.setAttribute("fill", "var(--peg-color)");
+                board.appendChild(peg);
+            }
+        }
+        // Rysowanie mnożników
+        MULTIPLIERS.forEach((m) => {
+            const box = document.createElement('div');
+            box.className = 'multiplier-box';
+            box.textContent = `${m}x`;
+            box.style.color = m < 1 ? '#aaa' : m < 5 ? 'white' : 'var(--primary-color)';
+            multipliersContainer.appendChild(box);
+        });
+    }
+
     async function animateBall(path) {
         ball.style.transition = 'none';
         ball.style.transform = `translate(${START_X - BALL_RADIUS}px, ${START_Y - 30 - BALL_RADIUS}px)`;
@@ -133,25 +173,19 @@
         await sleep(100);
         ball.style.transition = 'transform 0.35s cubic-bezier(0.5, 0.2, 0.5, 0.8)';
         
-        let horizontalOffset = 0; // -0.5 dla lewo, 0.5 dla prawo
+        let horizontalOffset = 0;
 
         for (let row = 0; row < path.length; row++) {
-            const direction = path[row]; // 0 for left, 1 for right
-            
-            if (direction === 0) { // w lewo
-                horizontalOffset -= 0.5;
-            } else { // w prawo
-                horizontalOffset += 0.5;
-            }
+            const direction = path[row]; // 0 dla lewo, 1 dla prawo
+            horizontalOffset += (direction === 0) ? -0.5 : 0.5;
 
             const x = START_X + (horizontalOffset * PEG_H_SPACING);
             const y = START_Y + ((row + 1) * ROW_HEIGHT);
 
             ball.style.transform = `translate(${x - BALL_RADIUS}px, ${y - BALL_RADIUS}px)`;
-            await sleep(400); // Czas na ruch do następnego rzędu
+            await sleep(400);
         }
         
-        // Animacja do slotu
         const finalSlotIndex = path.filter(d => d === 1).length;
         const multiplierBox = multipliersContainer.children[finalSlotIndex];
         const rect = multiplierBox.getBoundingClientRect();
@@ -167,64 +201,50 @@
         
         await sleep(2000);
         
-        // Reset
         ball.style.opacity = 0;
         multiplierBox.style.transform = 'scale(1)';
         multiplierBox.style.backgroundColor = 'var(--surface-color)';
         multiplierBox.style.color = MULTIPLIERS[finalSlotIndex] < 1 ? '#aaa' : MULTIPLIERS[finalSlotIndex] < 5 ? 'white' : 'var(--primary-color)';
     }
 
-    dropButton.addEventListener('click', async () => { /* Bez zmian */ });
-
-    // Inicjalizacja (treść funkcji bez zmian, tylko kopiuję je tutaj dla kompletności)
-    function init() {
-        // Rysowanie kołków
-        for (let row = 0; row < ROWS; row++) {
-            const numPegs = row + 2;
-            for (let i = 0; i < numPegs; i++) {
-                const x = START_X + (i * PEG_H_SPACING) - ((row + 1) * PEG_H_SPACING / 2);
-                const y = START_Y + (row * ROW_HEIGHT);
-                const peg = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                peg.setAttribute("cx", x); peg.setAttribute("cy", y);
-                peg.setAttribute("r", PEG_RADIUS); peg.setAttribute("fill", "var(--peg-color)");
-                board.appendChild(peg);
-            }
-        }
-        // Rysowanie mnożników
-        MULTIPLIERS.forEach((m) => {
-            const box = document.createElement('div');
-            box.className = 'multiplier-box'; box.textContent = `${m}x`;
-            box.style.color = m < 1 ? '#aaa' : m < 5 ? 'white' : 'var(--primary-color)';
-            multipliersContainer.appendChild(box);
-        });
-    }
-    
-    // Skopiowane funkcje bez zmian
     dropButton.addEventListener('click', async () => {
         if (!username) return alert("Musisz być zalogowany, aby grać.");
+        
         const bet = parseInt(betAmountInput.value);
         if (!bet || bet <= 0) return alert("Wpisz poprawną kwotę.");
         if (bet > currentUserBalance) return alert("Niewystarczające środki.");
+
         dropButton.disabled = true;
+
         try {
             const response = await fetch('https://gadsino.onrender.com/plinko/drop', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, bet })
             });
-            if (!response.ok) throw new Error('Błąd odpowiedzi serwera');
+            
+            if (!response.ok) {
+                 const errorData = await response.json();
+                 throw new Error(errorData.message || 'Błąd odpowiedzi serwera');
+            }
+            
             const result = await response.json();
             currentUserBalance = result.newBalance;
             userBalanceSpan.textContent = `${currentUserBalance} 🪙`;
+
             await animateBall(result.path);
+            
         } catch (error) {
-            alert("Wystąpił błąd podczas gry.");
+            alert(`Wystąpił błąd podczas gry: ${error.message}`);
             console.error(error);
         }
+
         dropButton.disabled = false;
     });
+
+    // === INICJALIZACJA APLIKACJI ===
+    initializeBoard();
     fetchUserBalance();
-    init();
 
 </script>
 </body>
