@@ -16,7 +16,8 @@
         }
         header {
             width: 100%; padding: 1em 2em; background: rgba(0,0,0,0.2); display: flex;
-            justify-content: space-between; align-items: center; border-bottom: 1px solid #333; box-sizing: border-box;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid #333;
+            box-sizing: border-box;
         }
         .balance-display { font-size: 1.1em; font-weight: 600; }
         .balance-display span { color: var(--primary-color); }
@@ -117,7 +118,23 @@
         }
     }
 
-    async function fetchUserBalance() { /* ... taka sama jak w poprzednich grach ... */ }
+    // --- POPRAWIONA, PEŁNA FUNKCJA ---
+    async function fetchUserBalance() {
+        if (!username) {
+            userBalanceSpan.textContent = 'N/A';
+            return;
+        }
+        try {
+            const response = await fetch(`https://gadsino.onrender.com/player/${username}`);
+            if (!response.ok) throw new Error('Błąd serwera');
+            const data = await response.json();
+            currentUserBalance = data.balance;
+            userBalanceSpan.textContent = `${currentUserBalance} 🪙`;
+        } catch (error) {
+            console.error("Błąd pobierania salda:", error);
+            userBalanceSpan.textContent = 'Błąd';
+        }
+    }
     
     function resetUI(isStart = true) {
         document.querySelectorAll('.tower-row').forEach(row => row.classList.add('inactive'));
@@ -144,22 +161,26 @@
         betAmountInput.disabled = true;
         currentBet = bet;
 
-        const response = await fetch('https://gadsino.onrender.com/tower/start', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, bet })
-        });
-        const data = await response.json();
-        
-        if(response.ok) {
-            currentUserBalance = data.newBalance;
-            userBalanceSpan.textContent = `${data.newBalance} 🪙`;
-            nextMultiplierSpan.textContent = `${data.nextMultiplier}x`;
-            tower.querySelector('[data-row="0"]').classList.remove('inactive');
-            tower.querySelector('[data-row="0"]').classList.add('active');
-        } else {
-            alert(data.message);
-            resetUI(true);
+        try {
+            const response = await fetch('https://gadsino.onrender.com/tower/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, bet })
+            });
+            const data = await response.json();
+            
+            if(response.ok) {
+                currentUserBalance = data.newBalance;
+                userBalanceSpan.textContent = `${data.newBalance} 🪙`;
+                nextMultiplierSpan.textContent = `${data.nextMultiplier}x`;
+                tower.querySelector('[data-row="0"]').classList.remove('inactive');
+                tower.querySelector('[data-row="0"]').classList.add('active');
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+             alert(error.message);
+             resetUI(true);
         }
     });
 
@@ -171,62 +192,72 @@
         const rowIndex = parseInt(row.dataset.row);
         const colIndex = parseInt(tile.dataset.col);
 
-        const response = await fetch('https://gadsino.onrender.com/tower/pick', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, row: rowIndex, col: colIndex })
-        });
-        const data = await response.json();
+        try {
+            const response = await fetch('https://gadsino.onrender.com/tower/pick', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, row: rowIndex, col: colIndex })
+            });
+            const data = await response.json();
 
-        if (response.ok) {
-            row.classList.remove('active');
-            row.classList.add('inactive');
-            tile.classList.add('revealed');
+            if (response.ok) {
+                row.classList.remove('active');
+                row.classList.add('inactive');
+                tile.classList.add('revealed');
 
-            if (data.isSkull) {
-                alert('Trafiłeś na pułapkę! Koniec gry.');
-                // Pokaż wszystkie pułapki
-                data.layout.forEach((skullCol, skullRow) => {
-                    const skullTile = tower.querySelector(`[data-row="${skullRow}"] [data-col="${skullCol}"]`);
-                    skullTile.classList.add('skull');
-                    skullTile.innerHTML = '💀';
-                });
-                setTimeout(() => resetUI(true), 3000);
-            } else {
-                tile.classList.add('gem');
-                tile.innerHTML = '💎';
-                cashoutButton.disabled = false;
-                currentWinningsSpan.textContent = `${Math.floor(currentBet * data.currentMultiplier)} 🪙`;
-
-                if (data.isWin) {
-                    alert(`Gratulacje! Przeszedłeś całą wieżę i wygrałeś ${data.winnings}!`);
-                    userBalanceSpan.textContent = `${data.newBalance} 🪙`;
-                    resetUI(true);
+                if (data.isSkull) {
+                    alert('Trafiłeś na pułapkę! Koniec gry.');
+                    data.layout.forEach((skullCol, skullRow) => {
+                        const skullTile = tower.querySelector(`[data-row="${skullRow}"] [data-col="${skullCol}"]`);
+                        skullTile.classList.add('skull');
+                        skullTile.innerHTML = '💀';
+                    });
+                    setTimeout(() => resetUI(true), 3000);
                 } else {
-                    nextMultiplierSpan.textContent = `${data.nextMultiplier}x`;
-                    const nextRow = tower.querySelector(`[data-row="${data.clearedRows}"]`);
-                    if (nextRow) {
-                        nextRow.classList.remove('inactive');
-                        nextRow.classList.add('active');
+                    tile.classList.add('gem');
+                    tile.innerHTML = '💎';
+                    cashoutButton.disabled = false;
+                    currentWinningsSpan.textContent = `${Math.floor(currentBet * data.currentMultiplier)} 🪙`;
+
+                    if (data.isWin) {
+                        alert(`Gratulacje! Przeszedłeś całą wieżę i wygrałeś ${data.winnings}!`);
+                        currentUserBalance = data.newBalance;
+                        userBalanceSpan.textContent = `${currentUserBalance} 🪙`;
+                        resetUI(true);
+                    } else {
+                        nextMultiplierSpan.textContent = `${data.nextMultiplier}x`;
+                        const nextRow = tower.querySelector(`[data-row="${data.clearedRows}"]`);
+                        if (nextRow) {
+                            nextRow.classList.remove('inactive');
+                            nextRow.classList.add('active');
+                        }
                     }
                 }
+            } else {
+                 throw new Error(data.message);
             }
-        } else {
-            alert(data.message);
+        } catch(error) {
+            alert(error.message);
         }
     });
     
     cashoutButton.addEventListener('click', async () => {
-        const response = await fetch('https://gadsino.onrender.com/tower/cashout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username })
-        });
-        const data = await response.json();
-        alert(`Wygrałeś ${data.winnings} żetonów!`);
-        currentUserBalance = data.newBalance;
-        userBalanceSpan.textContent = `${currentUserBalance} 🪙`;
-        resetUI(true);
+        try {
+            const response = await fetch('https://gadsino.onrender.com/tower/cashout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message);
+
+            alert(`Wygrałeś ${data.winnings} żetonów!`);
+            currentUserBalance = data.newBalance;
+            userBalanceSpan.textContent = `${data.newBalance} 🪙`;
+            resetUI(true);
+        } catch(error) {
+            alert(error.message);
+        }
     });
 
     async function init() {
