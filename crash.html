@@ -32,14 +32,13 @@
       width: 100%;
       padding: 1em 2em;
       background: rgba(0,0,0,0.2);
-      display: flex; /* ZMIENIONE */
-      justify-content: space-between; /* ZMIENIONE */
-      align-items: center; /* ZMIENIONE */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       border-bottom: 1px solid #333;
       box-sizing: border-box;
     }
     
-    /* DODANE style dla salda */
     .balance-display {
       font-size: 1.1em;
       font-weight: 600;
@@ -47,6 +46,19 @@
     .balance-display span {
       color: var(--primary-color);
       font-family: 'Roboto Mono', monospace;
+    }
+
+    .btn-back {
+      color: var(--text-color);
+      text-decoration: none;
+      background: #333;
+      padding: 0.5em 1em;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .btn-back:hover {
+      background: #444;
     }
     
     .game-container {
@@ -57,21 +69,22 @@
       max-width: 1400px;
     }
     
+    .left-panel, .right-panel {
+      background: var(--surface-color);
+      border-radius: 12px;
+      padding: 2em;
+    }
+
     .left-panel {
       flex: 1;
       display: flex;
       flex-direction: column;
       gap: 1.5em;
-      background: var(--surface-color);
-      padding: 2em;
-      border-radius: 12px;
     }
 
     .right-panel {
       flex: 3;
       position: relative;
-      background: var(--surface-color);
-      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -105,10 +118,7 @@
       height: 20px;
     }
 
-    .bet-controls h3 {
-      margin-top: 0;
-      color: var(--primary-color);
-    }
+    .bet-controls h3 { margin-top: 0; color: var(--primary-color); }
     
     .bet-input {
       width: 100%;
@@ -141,9 +151,7 @@
     .btn-cashout:hover { background: #34d399; }
     .btn-cashout:disabled { display: none; }
 
-    .players-list {
-      flex-grow: 1;
-    }
+    .players-list { flex-grow: 1; }
     .players-list h3 { color: var(--primary-color); }
     
     #player-table {
@@ -175,6 +183,7 @@
 </head>
 <body>
   <header>
+    <a href="index.html" class="btn-back">← Powrót do lobby</a>
     <h1>CRASH</h1>
     <div class="balance-display">Saldo: <span id="user-balance">Ładowanie...</span></div>
   </header>
@@ -212,11 +221,10 @@
   </div>
 
 <script>
-  const socket = io("https://gadsino.onrender.com"); // ZMIEŃ NA ADRES SWOJEGO SERWERA
+  const socket = io("https://gadsino.onrender.com");
   const userFromStorage = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
   const username = userFromStorage ? userFromStorage.username : `Guest${Math.floor(Math.random()*1000)}`;
 
-  // Elementy UI
   const betBtn = document.getElementById('bet-button');
   const cashoutBtn = document.getElementById('cashout-button');
   const betAmountInput = document.getElementById('bet-amount');
@@ -227,10 +235,8 @@
   const betTimerDisplay = document.getElementById('bet-timer');
   const userBalanceSpan = document.getElementById('user-balance');
   
-  // Zmienne stanu klienta
   let currentUserBalance = 0;
   
-  // --- DODANE: Pobieranie salda przy starcie ---
   async function fetchUserBalance() {
     if (!userFromStorage) {
         userBalanceSpan.textContent = 'N/A';
@@ -238,6 +244,8 @@
     }
     try {
       const response = await fetch(`https://gadsino.onrender.com/player/${username}`);
+      if (!response.ok) throw new Error('Odpowiedź serwera nie była OK');
+      
       const data = await response.json();
       currentUserBalance = data.balance;
       userBalanceSpan.textContent = `${currentUserBalance} 🪙`;
@@ -247,12 +255,10 @@
     }
   }
 
-  // --- Obsługa zdarzeń z serwera ---
-
   socket.on('connect', () => {
     console.log('Połączono z serwerem gry Crash!');
     socket.emit('get_crash_state');
-    fetchUserBalance(); // Pobieramy saldo po połączeniu
+    fetchUserBalance();
   });
 
   socket.on('crash_state', (data) => {
@@ -261,14 +267,14 @@
 
     switch(data.phase) {
       case 'betting':
-        setBettingPhase(data.players || {}); // ZMIENIONE: Przekazujemy graczy
+        setBettingPhase(data.players || {});
         break;
       case 'running':
         setRunningPhase(data.players || {});
         break;
       case 'crashed':
         setCrashedPhase(data.crashPoint);
-        fetchUserBalance(); // Aktualizujemy saldo po rundzie
+        if (userFromStorage) fetchUserBalance();
         break;
       default:
         setWaitingPhase();
@@ -292,8 +298,6 @@
     }
   });
 
-  // --- Funkcje pomocnicze UI ---
-  
   function setWaitingPhase() {
     phaseInfo.textContent = 'Oczekiwanie na następną rundę...';
     betBtn.disabled = true;
@@ -301,14 +305,12 @@
     betBtn.style.display = 'block';
   }
 
-  // ZMIENIONA funkcja, aby poprawnie synchronizować stan po odświeżeniu
   function setBettingPhase(players) {
     phaseInfo.textContent = 'Obstawiaj zakłady!';
     multiplierDisplay.textContent = '1.00x';
     multiplierDisplay.style.color = 'var(--text-color)';
     betTimerDisplay.textContent = ''; 
 
-    // Sprawdzamy, czy gracz już obstawił w tej rundzie
     if (players[username]) {
       betBtn.disabled = true;
       betBtn.textContent = 'Zakład postawiony';
@@ -378,20 +380,20 @@
     else multiplierDisplay.style.color = '#e53e3e';
   }
 
-  // --- Obsługa akcji gracza ---
-
   betBtn.addEventListener('click', () => {
+    if (!userFromStorage) {
+        alert("Musisz być zalogowany, aby grać.");
+        return;
+    }
     const amount = parseInt(betAmountInput.value);
     if (!amount || amount <= 0) {
       alert("Wpisz poprawną kwotę zakładu.");
       return;
     }
-    // DODANA walidacja po stronie klienta
     if (amount > currentUserBalance) {
       alert("Nie masz wystarczających środków.");
       return;
     }
-
     socket.emit('crash_bet', { username, amount });
     betBtn.disabled = true;
     betBtn.textContent = 'Zakład postawiony';
