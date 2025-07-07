@@ -53,14 +53,20 @@
 
         .plinko-container { position: relative; }
         #plinko-board { overflow: visible; }
+        
+        /* --- KLUCZOWA POPRAWKA JEST TUTAJ --- */
         #ball {
-            position: absolute; width: 16px; height: 16px;
+            position: absolute;
+            top: 0; /* Ustawia punkt odniesienia Y na górze kontenera */
+            left: 0; /* Ustawia punkt odniesienia X na lewej krawędzi kontenera */
+            width: 16px; height: 16px;
             background: radial-gradient(circle at 5px 5px, #ffffff, var(--ball-color));
             border-radius: 50%;
             transition: transform 0.35s cubic-bezier(0.5, 0.2, 0.5, 0.8);
             box-shadow: 0 0 10px white;
             opacity: 0;
             transform-origin: center center;
+            /* Usuniemy transform stąd, będzie ustawiany tylko przez JS */
         }
 
         .multipliers {
@@ -97,7 +103,6 @@
 </div>
 
 <script>
-    // === STAŁE I ZMIENNE ===
     const username = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).username : null;
     let currentUserBalance = 0;
 
@@ -110,7 +115,6 @@
     const PEG_H_SPACING = 50;
     const BALL_RADIUS = 8;
 
-    // === ELEMENTY DOM ===
     const userBalanceSpan = document.getElementById('user-balance');
     const dropButton = document.getElementById('drop-button');
     const betAmountInput = document.getElementById('bet-amount');
@@ -118,7 +122,6 @@
     const ball = document.getElementById('ball');
     const multipliersContainer = document.getElementById('multipliers-container');
 
-    // === FUNKCJE POMOCNICZE ===
     function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
     async function fetchUserBalance() {
@@ -138,15 +141,12 @@
         }
     }
 
-    // === LOGIKA GRY I UI ===
     function initializeBoard() {
-        // Rysowanie kołków
         for (let row = 0; row < ROWS; row++) {
             const numPegsInRow = row + 1;
             for (let i = 0; i < numPegsInRow; i++) {
                 const x = START_X + (i * PEG_H_SPACING) - (row * PEG_H_SPACING / 2);
                 const y = START_Y + (row * ROW_HEIGHT);
-                
                 const peg = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 peg.setAttribute("cx", x);
                 peg.setAttribute("cy", y);
@@ -155,7 +155,6 @@
                 board.appendChild(peg);
             }
         }
-        // Rysowanie mnożników
         MULTIPLIERS.forEach((m) => {
             const box = document.createElement('div');
             box.className = 'multiplier-box';
@@ -176,23 +175,23 @@
         let horizontalOffset = 0;
 
         for (let row = 0; row < path.length; row++) {
-            const direction = path[row]; // 0 dla lewo, 1 dla prawo
+            const direction = path[row];
             horizontalOffset += (direction === 0) ? -0.5 : 0.5;
-
             const x = START_X + (horizontalOffset * PEG_H_SPACING);
             const y = START_Y + ((row + 1) * ROW_HEIGHT);
-
             ball.style.transform = `translate(${x - BALL_RADIUS}px, ${y - BALL_RADIUS}px)`;
             await sleep(400);
         }
         
         const finalSlotIndex = path.filter(d => d === 1).length;
         const multiplierBox = multipliersContainer.children[finalSlotIndex];
-        const rect = multiplierBox.getBoundingClientRect();
-        const containerRect = multipliersContainer.getBoundingClientRect();
-        const finalX = rect.left + rect.width / 2 - containerRect.left;
-
-        ball.style.transform = `translate(${finalX - BALL_RADIUS}px, ${board.height.baseVal.value + 20}px)`;
+        const multiplierBoxRect = multiplierBox.getBoundingClientRect();
+        const containerRect = board.getBoundingClientRect();
+        
+        const finalX = multiplierBoxRect.left - containerRect.left + (multiplierBoxRect.width / 2);
+        const finalY = board.height.baseVal.value + 10;
+        
+        ball.style.transform = `translate(${finalX - BALL_RADIUS}px, ${finalY}px)`;
         await sleep(400);
         
         multiplierBox.style.transform = 'scale(1.15)';
@@ -209,7 +208,6 @@
 
     dropButton.addEventListener('click', async () => {
         if (!username) return alert("Musisz być zalogowany, aby grać.");
-        
         const bet = parseInt(betAmountInput.value);
         if (!bet || bet <= 0) return alert("Wpisz poprawną kwotę.");
         if (bet > currentUserBalance) return alert("Niewystarczające środki.");
@@ -222,30 +220,23 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, bet })
             });
-            
             if (!response.ok) {
                  const errorData = await response.json();
                  throw new Error(errorData.message || 'Błąd odpowiedzi serwera');
             }
-            
             const result = await response.json();
             currentUserBalance = result.newBalance;
             userBalanceSpan.textContent = `${currentUserBalance} 🪙`;
-
             await animateBall(result.path);
-            
         } catch (error) {
             alert(`Wystąpił błąd podczas gry: ${error.message}`);
             console.error(error);
         }
-
         dropButton.disabled = false;
     });
 
-    // === INICJALIZACJA APLIKACJI ===
     initializeBoard();
     fetchUserBalance();
-
 </script>
 </body>
 </html>
