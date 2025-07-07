@@ -237,7 +237,7 @@
         return;
     }
     try {
-      const response = await fetch(`/player/${username}`);
+      const response = await fetch(`https://gadsino.onrender.com/player/${username}`);
       const data = await response.json();
       currentUserBalance = data.balance;
       userBalanceSpan.textContent = `${currentUserBalance} 🪙`;
