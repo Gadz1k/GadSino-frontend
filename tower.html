@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Tower Game - Gadsino</title>
+    <link rel="icon" type="image/png" href="img/icon.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        :root {
+            --bg-color: #1a1b26; --surface-color: #2a2c3d; --primary-color: #fbc531;
+            --text-color: #f1f2f6; --gem-color: #3498db; --skull-color: #e74c3c;
+        }
+        body {
+            font-family: 'Poppins', sans-serif; background: var(--bg-color); color: var(--text-color);
+            margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+        }
+        header {
+            width: 100%; padding: 1em 2em; background: rgba(0,0,0,0.2); display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid #333; box-sizing: border-box;
+        }
+        .balance-display { font-size: 1.1em; font-weight: 600; }
+        .balance-display span { color: var(--primary-color); }
+        .btn-back { color: var(--text-color); text-decoration: none; background: #333; padding: 0.5em 1em; border-radius: 8px; font-weight: 600; transition: background 0.2s; }
+        .btn-back:hover { background: #444; }
+
+        .game-container { display: flex; gap: 2em; padding: 2em; width: 100%; max-width: 800px; }
+        .controls-panel {
+            flex: 1; background: var(--surface-color); padding: 2em; border-radius: 12px;
+            display: flex; flex-direction: column; gap: 1.5em;
+        }
+        .game-panel { flex: 2; display: flex; justify-content: center; }
+        .control-group label { display: block; margin-bottom: 0.5em; font-weight: 600; }
+        .control-group input {
+            width: 100%; padding: 0.8em; background: #333; border: 1px solid #444;
+            border-radius: 8px; color: var(--text-color); font-size: 1.1rem; box-sizing: border-box;
+        }
+        .btn {
+            width: 100%; padding: 1em; font-size: 1.2rem; font-weight: 700; border: none;
+            border-radius: 8px; cursor: pointer; transition: all 0.3s ease;
+        }
+        .btn-start { background: var(--primary-color); color: #121212; }
+        .btn-cashout { background: var(--gem-color); color: white; }
+        .btn:disabled { background: #555; color: #999; cursor: not-allowed; }
+        .info-display div { display: flex; justify-content: space-between; font-size: 1.1em; padding: 0.5em 0; border-bottom: 1px solid #444; }
+        .info-display span:last-child { font-weight: 700; color: var(--primary-color); }
+
+        .tower { display: flex; flex-direction: column-reverse; gap: 8px; }
+        .tower-row { display: flex; gap: 8px; justify-content: center; }
+        .tower-tile {
+            width: 100px; height: 100px; background-color: #3e415b; border-radius: 8px;
+            cursor: pointer; transition: background-color 0.3s;
+            display: flex; align-items: center; justify-content: center; font-size: 2.5rem;
+        }
+        .tower-row.inactive .tower-tile { cursor: not-allowed; filter: brightness(0.7); }
+        .tower-row.active .tower-tile:hover { background-color: #5a5d7a; }
+        .tower-tile.revealed { cursor: default; }
+        .tower-tile.gem { background-color: var(--gem-color); }
+        .tower-tile.skull { background-color: var(--skull-color); }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="index.html" class="btn-back">← Powrót do lobby</a>
+    <h1>TOWER</h1>
+    <div class="balance-display">Saldo: <span id="user-balance">Ładowanie...</span></div>
+</header>
+
+<div class="game-container">
+    <div class="controls-panel">
+        <div class="control-group">
+            <label for="bet-amount">Kwota zakładu</label>
+            <input type="number" id="bet-amount" value="10">
+        </div>
+        <button class="btn btn-start" id="start-button">Rozpocznij Grę</button>
+        <button class="btn btn-cashout" id="cashout-button" disabled>Wypłać</button>
+        <div class="info-display">
+            <div><span>Następny mnożnik:</span><span id="next-multiplier">--</span></div>
+            <div><span>Obecna wygrana:</span><span id="current-winnings">--</span></div>
+        </div>
+    </div>
+    <div class="game-panel">
+        <div class="tower" id="tower"></div>
+    </div>
+</div>
+
+<script>
+    const username = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).username : null;
+    let currentUserBalance = 0;
+    let currentBet = 0;
+
+    const userBalanceSpan = document.getElementById('user-balance');
+    const startButton = document.getElementById('start-button');
+    const cashoutButton = document.getElementById('cashout-button');
+    const betAmountInput = document.getElementById('bet-amount');
+    const tower = document.getElementById('tower');
+    const nextMultiplierSpan = document.getElementById('next-multiplier');
+    const currentWinningsSpan = document.getElementById('current-winnings');
+
+    const TOWER_HEIGHT = 8;
+    const TOWER_WIDTH = 3;
+
+    function createTower() {
+        tower.innerHTML = '';
+        for (let i = 0; i < TOWER_HEIGHT; i++) {
+            const row = document.createElement('div');
+            row.className = 'tower-row inactive';
+            row.dataset.row = i;
+            for (let j = 0; j < TOWER_WIDTH; j++) {
+                const tile = document.createElement('div');
+                tile.className = 'tower-tile';
+                tile.dataset.col = j;
+                row.appendChild(tile);
+            }
+            tower.appendChild(row);
+        }
+    }
+
+    async function fetchUserBalance() { /* ... taka sama jak w poprzednich grach ... */ }
+    
+    function resetUI(isStart = true) {
+        document.querySelectorAll('.tower-row').forEach(row => row.classList.add('inactive'));
+        document.querySelectorAll('.tower-tile').forEach(tile => {
+            tile.className = 'tower-tile';
+            tile.innerHTML = '';
+        });
+        if(isStart) {
+            betAmountInput.disabled = false;
+            startButton.disabled = false;
+        }
+        cashoutButton.disabled = true;
+        nextMultiplierSpan.textContent = '--';
+        currentWinningsSpan.textContent = '--';
+    }
+
+    startButton.addEventListener('click', async () => {
+        if (!username) return alert("Musisz być zalogowany.");
+        const bet = parseInt(betAmountInput.value);
+        if (bet > currentUserBalance) return alert("Niewystarczające środki.");
+
+        resetUI(false);
+        startButton.disabled = true;
+        betAmountInput.disabled = true;
+        currentBet = bet;
+
+        const response = await fetch('https://gadsino.onrender.com/tower/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, bet })
+        });
+        const data = await response.json();
+        
+        if(response.ok) {
+            currentUserBalance = data.newBalance;
+            userBalanceSpan.textContent = `${data.newBalance} 🪙`;
+            nextMultiplierSpan.textContent = `${data.nextMultiplier}x`;
+            tower.querySelector('[data-row="0"]').classList.remove('inactive');
+            tower.querySelector('[data-row="0"]').classList.add('active');
+        } else {
+            alert(data.message);
+            resetUI(true);
+        }
+    });
+
+    tower.addEventListener('click', async (e) => {
+        const tile = e.target.closest('.tower-tile');
+        const row = e.target.closest('.tower-row');
+        if (!tile || !row || !row.classList.contains('active')) return;
+
+        const rowIndex = parseInt(row.dataset.row);
+        const colIndex = parseInt(tile.dataset.col);
+
+        const response = await fetch('https://gadsino.onrender.com/tower/pick', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, row: rowIndex, col: colIndex })
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+            row.classList.remove('active');
+            row.classList.add('inactive');
+            tile.classList.add('revealed');
+
+            if (data.isSkull) {
+                alert('Trafiłeś na pułapkę! Koniec gry.');
+                // Pokaż wszystkie pułapki
+                data.layout.forEach((skullCol, skullRow) => {
+                    const skullTile = tower.querySelector(`[data-row="${skullRow}"] [data-col="${skullCol}"]`);
+                    skullTile.classList.add('skull');
+                    skullTile.innerHTML = '💀';
+                });
+                setTimeout(() => resetUI(true), 3000);
+            } else {
+                tile.classList.add('gem');
+                tile.innerHTML = '💎';
+                cashoutButton.disabled = false;
+                currentWinningsSpan.textContent = `${Math.floor(currentBet * data.currentMultiplier)} 🪙`;
+
+                if (data.isWin) {
+                    alert(`Gratulacje! Przeszedłeś całą wieżę i wygrałeś ${data.winnings}!`);
+                    userBalanceSpan.textContent = `${data.newBalance} 🪙`;
+                    resetUI(true);
+                } else {
+                    nextMultiplierSpan.textContent = `${data.nextMultiplier}x`;
+                    const nextRow = tower.querySelector(`[data-row="${data.clearedRows}"]`);
+                    if (nextRow) {
+                        nextRow.classList.remove('inactive');
+                        nextRow.classList.add('active');
+                    }
+                }
+            }
+        } else {
+            alert(data.message);
+        }
+    });
+    
+    cashoutButton.addEventListener('click', async () => {
+        const response = await fetch('https://gadsino.onrender.com/tower/cashout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        });
+        const data = await response.json();
+        alert(`Wygrałeś ${data.winnings} żetonów!`);
+        currentUserBalance = data.newBalance;
+        userBalanceSpan.textContent = `${currentUserBalance} 🪙`;
+        resetUI(true);
+    });
+
+    async function init() {
+        createTower();
+        if (username) {
+            await fetchUserBalance();
+        } else {
+            userBalanceSpan.textContent = 'Zaloguj się';
+            document.querySelectorAll('.btn, input').forEach(el => el.disabled = true);
+        }
+    }
+    
+    init();
+
+</script>
+</body>
+</html>
