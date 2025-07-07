@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Plinko - Gadsino</title>
+    <link rel="icon" type="image/png" href="img/icon.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        :root {
+            --bg-color: #1a1b26;
+            --surface-color: #2a2c3d;
+            --primary-color: #fbc531;
+            --text-color: #f1f2f6;
+            --peg-color: #5a5d7a;
+            --ball-color: #f1f2f6;
+        }
+        body {
+            font-family: 'Poppins', sans-serif; background: var(--bg-color); color: var(--text-color);
+            margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+        }
+        header {
+            width: 100%; padding: 1em 2em; background: rgba(0,0,0,0.2);
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #333; box-sizing: border-box;
+        }
+        .balance-display { font-size: 1.1em; font-weight: 600; }
+        .balance-display span { color: var(--primary-color); }
+        .btn-back {
+            color: var(--text-color); text-decoration: none; background: #333; padding: 0.5em 1em;
+            border-radius: 8px; font-weight: 600; transition: background 0.2s;
+        }
+        .btn-back:hover { background: #444; }
+
+        .game-container {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 1.5em; padding: 2em; width: 100%; max-width: 800px;
+        }
+
+        .controls {
+            display: flex; gap: 1em; width: 100%; max-width: 500px;
+            padding: 1em; background: var(--surface-color); border-radius: 12px;
+        }
+        .bet-input {
+            flex-grow: 1; padding: 0.8em; background: #333; border: 1px solid #444;
+            border-radius: 8px; color: var(--text-color); font-size: 1.2rem;
+        }
+        .btn-drop {
+            padding: 0 2em; font-size: 1.2rem; font-weight: 600; border: none;
+            border-radius: 8px; cursor: pointer; transition: all 0.3s ease;
+            background: var(--primary-color); color: #121212;
+        }
+        .btn-drop:disabled { background: #555; color: #999; cursor: not-allowed; }
+
+        .plinko-container { position: relative; }
+        #plinko-board { overflow: visible; }
+        #ball {
+            position: absolute; width: 16px; height: 16px;
+            background: radial-gradient(circle at 5px 5px, #ffffff, var(--ball-color));
+            border-radius: 50%;
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px white;
+            opacity: 0;
+        }
+
+        .multipliers {
+            display: flex; justify-content: center;
+            width: 100%; gap: 4px;
+        }
+        .multiplier-box {
+            flex-grow: 1; text-align: center; padding: 0.8em 0.2em;
+            background-color: var(--surface-color); border-radius: 8px;
+            font-weight: 700; font-size: 1.1em; transition: all 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="index.html" class="btn-back">← Powrót do lobby</a>
+    <h1>PLINKO</h1>
+    <div class="balance-display">Saldo: <span id="user-balance">Ładowanie...</span></div>
+</header>
+
+<div class="game-container">
+    <div class="controls">
+        <input type="number" id="bet-amount" class="bet-input" placeholder="Kwota..." value="10">
+        <button id="drop-button" class="btn-drop">Zagraj</button>
+    </div>
+
+    <div class="plinko-container">
+        <svg id="plinko-board" width="600" height="550"></svg>
+        <div id="ball"></div>
+    </div>
+    
+    <div class="multipliers" id="multipliers-container"></div>
+</div>
+
+<script>
+    const username = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).username : null;
+    const userBalanceSpan = document.getElementById('user-balance');
+    const dropButton = document.getElementById('drop-button');
+    const betAmountInput = document.getElementById('bet-amount');
+    const board = document.getElementById('plinko-board');
+    const ball = document.getElementById('ball');
+    const multipliersContainer = document.getElementById('multipliers-container');
+
+    const ROWS = 12;
+    const MULTIPLIERS = [16, 9, 2, 1.4, 1.1, 1, 0.5, 1, 1.1, 1.4, 2, 9, 16];
+    const PEG_RADIUS = 6;
+    const START_X = 300;
+    const START_Y = 40;
+    const ROW_HEIGHT = 40;
+    const PEG_H_SPACING = 50;
+
+    let currentUserBalance = 0;
+
+    function createPlinkoBoard() {
+        // Rysowanie kołków
+        for (let row = 0; row < ROWS; row++) {
+            const numPegs = row + 1;
+            for (let i = 0; i < numPegs; i++) {
+                const x = START_X + (i * PEG_H_SPACING) - (row * PEG_H_SPACING / 2);
+                const y = START_Y + (row * ROW_HEIGHT);
+                
+                const peg = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                peg.setAttribute("cx", x);
+                peg.setAttribute("cy", y);
+                peg.setAttribute("r", PEG_RADIUS);
+                peg.setAttribute("fill", "var(--peg-color)");
+                board.appendChild(peg);
+            }
+        }
+        // Rysowanie mnożników
+        MULTIPLIERS.forEach((m, i) => {
+            const box = document.createElement('div');
+            box.className = 'multiplier-box';
+            box.textContent = `${m}x`;
+            box.style.color = m < 1 ? '#aaa' : m < 5 ? 'white' : 'var(--primary-color)';
+            multipliersContainer.appendChild(box);
+        });
+    }
+
+    async function fetchUserBalance() {
+        if (!username) { userBalanceSpan.textContent = 'N/A'; return; }
+        try {
+            const response = await fetch(`https://gadsino.onrender.com/player/${username}`);
+            const data = await response.json();
+            currentUserBalance = data.balance;
+            userBalanceSpan.textContent = `${currentUserBalance} 🪙`;
+        } catch (error) { userBalanceSpan.textContent = 'Błąd'; }
+    }
+    
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+    
+    async function animateBall(path) {
+        ball.style.transition = 'none';
+        ball.style.transform = `translate(${START_X - 8}px, ${START_Y - 30}px)`;
+        ball.style.opacity = 1;
+
+        await sleep(100);
+        ball.style.transition = 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
+        
+        let currentX = START_X;
+        let pathPosition = 0;
+
+        for (let row = 0; row < path.length; row++) {
+            const direction = path[row]; // 0 for left, 1 for right
+            if (direction === 1) pathPosition++;
+
+            // Połowa drogi do następnego rzędu
+            const midX = currentX + (direction === 0 ? -PEG_H_SPACING / 4 : PEG_H_SPACING / 4);
+            const midY = START_Y + (row * ROW_HEIGHT) + (ROW_HEIGHT / 2);
+            ball.style.transform = `translate(${midX - 8}px, ${midY - 8}px)`;
+            await sleep(250);
+
+            // Uderzenie w kołek
+            currentX += (direction === 0 ? -PEG_H_SPACING / 2 : PEG_H_SPACING / 2);
+            const nextY = START_Y + ((row + 1) * ROW_HEIGHT);
+            ball.style.transform = `translate(${currentX - 8}px, ${nextY - 8}px)`;
+            await sleep(250);
+        }
+        
+        // Animacja do slotu
+        const finalSlotIndex = Math.min(pathPosition, MULTIPLIERS.length - 1);
+        const multiplierBox = multipliersContainer.children[finalSlotIndex];
+        const rect = multiplierBox.getBoundingClientRect();
+        const containerRect = multipliersContainer.getBoundingClientRect();
+        const finalX = rect.left + rect.width / 2 - containerRect.left;
+
+        ball.style.transform = `translate(${finalX - 8}px, ${board.height.baseVal.value + 20}px)`;
+        await sleep(300);
+        
+        multiplierBox.style.transform = 'scale(1.15)';
+        multiplierBox.style.backgroundColor = 'var(--primary-color)';
+        multiplierBox.style.color = '#121212';
+        
+        await sleep(2000);
+        
+        // Reset
+        ball.style.opacity = 0;
+        multiplierBox.style.transform = 'scale(1)';
+        multiplierBox.style.backgroundColor = 'var(--surface-color)';
+        multiplierBox.style.color = MULTIPLIERS[finalSlotIndex] < 1 ? '#aaa' : MULTIPLIERS[finalSlotIndex] < 5 ? 'white' : 'var(--primary-color)';
+    }
+
+    dropButton.addEventListener('click', async () => {
+        if (!username) return alert("Musisz być zalogowany, aby grać.");
+        
+        const bet = parseInt(betAmountInput.value);
+        if (!bet || bet <= 0) return alert("Wpisz poprawną kwotę.");
+        if (bet > currentUserBalance) return alert("Niewystarczające środki.");
+
+        dropButton.disabled = true;
+
+        try {
+            const response = await fetch('https://gadsino.onrender.com/plinko/drop', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, bet })
+            });
+            
+            if (!response.ok) throw new Error('Błąd odpowiedzi serwera');
+            
+            const result = await response.json();
+            currentUserBalance = result.newBalance; // Optymistyczna aktualizacja
+            userBalanceSpan.textContent = `${currentUserBalance} 🪙`;
+
+            await animateBall(result.path);
+            
+        } catch (error) {
+            alert("Wystąpił błąd podczas gry.");
+            console.error(error);
+        }
+
+        dropButton.disabled = false;
+    });
+
+    // Inicjalizacja
+    createPlinkoBoard();
+    fetchUserBalance();
+
+</script>
+</body>
+</html>
