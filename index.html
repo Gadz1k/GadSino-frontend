@@ -1,569 +1,615 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <link rel="icon" type="image/png" href="img/icon.png">
-  <meta charset="UTF-8" />
-  <title>Gadsino</title>
-  <style>
-    /* === Zmienne i Style Globalne === */
-    :root {
-      --color-background: #121212;
-      --color-surface: #1e1e1e;
-      --color-primary-accent: #ffa502;
-      --color-secondary-accent: #ff4757;
-      --color-text: #e0e0e0;
-      --font-main: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    }
+    <link rel="icon" type="image/png" href="img/icon.png">
+    <meta charset="UTF-8" />
+    <title>Gadsino</title>
+    <style>
+        /* === Zmienne i Style Globalne === */
+        :root {
+            --color-background: #121212;
+            --color-surface: #1e1e1e;
+            --color-primary-accent: #ffa502;
+            --color-secondary-accent: #ff4757;
+            --color-text: #e0e0e0;
+            --font-main: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
 
-    body.landing {
-      font-family: var(--font-main);
-      background-color: var(--color-background);
-      background-image: 
-        radial-gradient(circle at 15% 50%, rgba(255, 165, 2, 0.1), transparent 30%),
-        radial-gradient(circle at 85% 30%, rgba(255, 71, 87, 0.1), transparent 30%);
-      color: var(--color-text);
-      margin: 0;
-      padding: 0;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      padding-top: 80px; /* Zapewnia miejsce na header */
-    }
+        body.landing {
+            font-family: var(--font-main);
+            background-color: var(--color-background);
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(255, 165, 2, 0.1), transparent 30%),
+                radial-gradient(circle at 85% 30%, rgba(255, 71, 87, 0.1), transparent 30%);
+            color: var(--color-text);
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding-top: 80px; /* Zapewnia miejsce na header */
+        }
 
-    /* === Header i Menu Użytkownika === */
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      padding: 1em 2em;
-      background: rgba(18, 18, 18, 0.8);
-      backdrop-filter: blur(5px);
-      box-sizing: border-box;
-      z-index: 100;
-    }
-    
-    header button {
-      background: var(--color-secondary-accent);
-      border: none;
-      color: white;
-      padding: 0.6em 1.2em;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background 0.3s ease, transform 0.2s ease;
-      margin-left: 10px;
-    }
-    header button:hover {
-      background: #e84118;
-      transform: translateY(-2px);
-    }
+        /* === Header i Menu Użytkownika === */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 1em 2em;
+            background: rgba(18, 18, 18, 0.8);
+            backdrop-filter: blur(5px);
+            box-sizing: border-box;
+            z-index: 100;
+        }
 
-    .dropdown { position: relative; display: inline-block; }
-    .dropdown-toggle {
-      background: none;
-      border: 1px solid rgba(255,255,255,0.3);
-      padding: 0.6em 1.2em;
-      border-radius: 8px;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 1em;
-      transition: background-color 0.2s;
-    }
-    .dropdown-toggle:hover { background-color: rgba(255,255,255,0.1); }
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      right: 0;
-      top: 100%;
-      background: var(--color-surface);
-      border-radius: 10px;
-      padding: 0.5em 0;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-      z-index: 999;
-      min-width: 180px;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    .dropdown-item {
-      padding: 0.7em 1.2em;
-      cursor: pointer;
-      color: white;
-      transition: background 0.2s;
-      text-align: left;
-    }
-    .dropdown-item:hover { background: #57606f; }
-    .dropdown:hover .dropdown-menu { display: block; }
+        header button {
+            background: var(--color-secondary-accent);
+            border: none;
+            color: white;
+            padding: 0.6em 1.2em;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s ease, transform 0.2s ease;
+            margin-left: 10px;
+        }
+        header button:hover {
+            background: #e84118;
+            transform: translateY(-2px);
+        }
 
-    /* === Panel Rankingu (Leaderboard) === */
-    #leaderboard-panel {
-      position: fixed;
-      top: 100px;
-      left: 30px;
-      background: rgba(30, 30, 30, 0.7);
-      backdrop-filter: blur(8px);
-      padding: 1em 1.5em;
-      border-radius: 15px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: white;
-      width: 250px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.4);
-      z-index: 50;
-      text-align: left;
-    }
-    #leaderboard-panel h2 {
-      margin: 0 0 1em 0;
-      font-size: 1.3em;
-      color: var(--color-primary-accent);
-      text-align: center;
-    }
-    #leaderboard-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      font-size: 0.9em;
-    }
-    #leaderboard-list li {
-      padding: 8px 5px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      display: flex;
-      justify-content: space-between;
-    }
-    #leaderboard-list li:last-child { border-bottom: none; }
-    #leaderboard-filter {
-      margin-bottom: 1em;
-      text-align: center;
-    }
-    #leaderboard-filter select {
-      background: rgba(0,0,0,0.3);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 5px;
-      padding: 0.4em 0.8em;
-      font-size: 0.9em;
-    }
-    
-    /* === Główna Treść: Logo i Karta Gry === */
-    main {
-      margin-top: 2rem;
-    }
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-toggle {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.6em 1.2em;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s;
+        }
+        .dropdown-toggle:hover { background-color: rgba(255,255,255,0.1); }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: var(--color-surface);
+            border-radius: 10px;
+            padding: 0.5em 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            z-index: 999;
+            min-width: 180px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .dropdown-item {
+            padding: 0.7em 1.2em;
+            cursor: pointer;
+            color: white;
+            transition: background 0.2s;
+            text-align: left;
+        }
+        .dropdown-item:hover { background: #57606f; }
+        .dropdown:hover .dropdown-menu { display: block; }
 
-    /* === POCZĄTEK ZMIAN W CSS === */
-    #logo {
-        margin-bottom: 1rem; /* Zwiększony margines dla lepszego odstępu */
-    }
+        /* === Panel Rankingu (Leaderboard) === */
+        #leaderboard-panel {
+            position: fixed;
+            top: 100px;
+            left: 30px;
+            background: rgba(30, 30, 30, 0.7);
+            backdrop-filter: blur(8px);
+            padding: 1em 1.5em;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 250px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            z-index: 50;
+            text-align: left;
+        }
+        #leaderboard-panel h2 {
+            margin: 0 0 1em 0;
+            font-size: 1.3em;
+            color: var(--color-primary-accent);
+            text-align: center;
+        }
+        #leaderboard-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.9em;
+        }
+        #leaderboard-list li {
+            padding: 8px 5px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+        }
+        #leaderboard-list li:last-child { border-bottom: none; }
+        #leaderboard-filter {
+            margin-bottom: 1em;
+            text-align: center;
+        }
+        #leaderboard-filter select {
+            background: rgba(0,0,0,0.3);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 5px;
+            padding: 0.4em 0.8em;
+            font-size: 0.9em;
+        }
 
-    #logo-image {
-        height: 360px; /* Ustawiamy stałą wysokość logo */
-        max-width: 90%; /* Zapewnia, że logo nie będzie szersze niż ekran na małych urządzeniach */
-        object-fit: contain; /* Zachowuje proporcje obrazka */
-    }
-    /* === KONIEC ZMIAN W CSS === */
-    
-    p.tagline {
-      font-size: 1.2em;
-      margin-bottom: 3em;
-      max-width: 400px;
-      color: rgba(255,255,255,0.7);
-    }
-    
-    .game-card {
-      background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
-      padding: 2em;
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,0.1);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      max-width: 400px;
-    }
-    .game-card h3 {
-      margin-top: 0;
-      font-size: 1.8em;
-      letter-spacing: 1px;
-    }
+        /* === Główna Treść: Logo i Menu Gier === */
+        main {
+            margin-top: 2rem;
+            width: 100%;
+            max-width: 900px; /* Maksymalna szerokość kontenera z grami */
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
 
-    .game-card .play-button {
-      font-size: 1.3em;
-      padding: 0.8em 2.5em;
-      border-radius: 10px;
-      background: var(--color-primary-accent);
-      border: none;
-      color: #121212;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(255, 165, 2, 0.3);
-    }
-    .game-card .play-button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 20px rgba(255, 165, 2, 0.5);
-    }
-      .game-card .play-button:disabled {
-      background-color: #555;
-      color: #999;
-      cursor: not-allowed;
-      box-shadow: none;
-      transform: none;
-    }
+        #logo-image {
+            height: 150px; /* Zmniejszone logo dla lepszej kompozycji */
+            margin-bottom: 1rem;
+            object-fit: contain;
+        }
 
+        p.tagline {
+            font-size: 1.2em;
+            margin-bottom: 3em;
+            color: rgba(255,255,255,0.7);
+        }
 
-    /* === Modale === */
-    .modal {
-      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(5px);
-      justify-content: center; align-items: center; z-index: 1000;
-    }
-    .modal.active { display: flex; }
-    .modal-box {
-      background: var(--color-surface);
-      padding: 2em;
-      border-radius: 10px;
-      width: 320px;
-      text-align: left;
-      color: white;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    .modal-box h2 {
-      margin-top: 0; margin-bottom: 1em;
-      color: var(--color-primary-accent);
-    }
-    .modal-box label { display: block; margin-bottom: 0.5em; font-weight: bold; }
-    .modal-box input {
-      width: 100%;
-      padding: 0.7em;
-      margin-bottom: 1em;
-      border-radius: 5px;
-      border: 1px solid rgba(255,255,255,0.2);
-      background-color: #333;
-      color: white;
-      font-size: 1em;
-      box-sizing: border-box;
-    }
-    .modal-box button {
-      width: 100%;
-      background: var(--color-secondary-accent);
-      border: none;
-      padding: 0.8em;
-      color: white;
-      font-weight: bold;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    .modal-box button:hover { background: #e84118; }
-    .modal-box .close-btn { background: #555; margin-top: 1em; }
-    .modal-box .close-btn:hover { background: #444; }
-    .modal-error {
-      color: #ff6b6b; margin-bottom: 1em;
-      font-weight: bold; display: none;
-    }
+        /* === NOWA SIATKA GIER === */
+        #game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
 
-    /* === Usunięto zbędne animacje tekstowe === */
+        .game-card {
+            background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            padding: 1.5em;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--color-text);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
 
-  </style>
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.6);
+        }
+
+        .game-card h3 {
+            margin: 0 0 1em 0;
+            font-size: 1.5em;
+        }
+
+        .play-button {
+            font-size: 1.1em;
+            padding: 0.7em 2em;
+            border-radius: 10px;
+            background: var(--color-primary-accent);
+            border: none;
+            color: #121212;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 165, 2, 0.3);
+            text-decoration: none; /* Usunięcie podkreślenia z linków */
+            display: inline-block;
+        }
+
+        .play-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 165, 2, 0.5);
+        }
+        
+        /* Styl dla zablokowanego przycisku */
+        .play-button:disabled {
+            background-color: #555;
+            color: #999;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        
+        a {
+            text-decoration: none;
+        }
+
+        /* === Modale (bez zmian) === */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal.active { display: flex; }
+        .modal-box {
+            background: var(--color-surface);
+            padding: 2em;
+            border-radius: 10px;
+            width: 320px;
+            text-align: left;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .modal-box h2 {
+            margin-top: 0; margin-bottom: 1em;
+            color: var(--color-primary-accent);
+        }
+        .modal-box label { display: block; margin-bottom: 0.5em; font-weight: bold; }
+        .modal-box input {
+            width: 100%;
+            padding: 0.7em;
+            margin-bottom: 1em;
+            border-radius: 5px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background-color: #333;
+            color: white;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+        .modal-box button {
+            width: 100%;
+            background: var(--color-secondary-accent);
+            border: none;
+            padding: 0.8em;
+            color: white;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .modal-box button:hover { background: #e84118; }
+        .modal-box .close-btn { background: #555; margin-top: 1em; }
+        .modal-box .close-btn:hover { background: #444; }
+        .modal-error {
+            color: #ff6b6b; margin-bottom: 1em;
+            font-weight: bold; display: none;
+        }
+    </style>
 </head>
 <body class="landing">
-  <header>
-    <div id="auth-buttons">
-      <button id="login-open-btn">Zaloguj się</button>
-      <button id="register-open-btn">Zarejestruj się</button>
+    <header>
+        <div id="auth-buttons">
+            <button id="login-open-btn">Zaloguj się</button>
+            <button id="register-open-btn">Zarejestruj się</button>
+        </div>
+        <div id="user-info-container"></div>
+    </header>
+
+    <div id="leaderboard-panel">
+        <h2>🏆 Top Gracze</h2>
+        <div id="leaderboard-filter">
+            <select id="leaderboard-select">
+                <option value="all">Cały czas</option>
+                <option value="daily">Dzisiaj</option>
+                <option value="monthly">Ten miesiąc</option>
+            </select>
+        </div>
+        <ul id="leaderboard-list"></ul>
     </div>
-    <div id="user-info-container"></div>
-  </header>
 
-  <div id="leaderboard-panel">
-    <h2>🏆 Top Gracze</h2>
-    <div id="leaderboard-filter">
-      <select id="leaderboard-select">
-        <option value="all">Cały czas</option>
-        <option value="daily">Dzisiaj</option>
-        <option value="monthly">Ten miesiąc</option>
-      </select>
-    </div>
-    <ul id="leaderboard-list"></ul>
-  </div>
+    <main>
+        <h1 id="logo">
+            <img src="img/logo.png" alt="Gadsino Logo" id="logo-image">
+        </h1>
 
-  <main>
-    <h1 id="logo">
-      <img src="img/logo.png" alt="Gadsino Logo" id="logo-image">
-    </h1>
-    
-    <p class="tagline">Witamy w miejscu, gdzie marzenia umierają szybciej niż twoje saldo.</p>
+        <p class="tagline">Witamy w miejscu, gdzie marzenia umierają szybciej niż twoje saldo.</p>
 
-    <div class="game-card">
-        <h3>Blackjack</h3>
-        <a href="blackjack.html"><button class="play-button">♠ Zagraj ♠</button></a>
-    </div>
-    <div class="game-card">
-        <h3>Automaty</h3>
-        <a href="slots.html"><button class="play-button">🔥 Zagraj 🔥</button></a>
-    </div>
-  </main>
-
-
-  <div id="login-modal" class="modal">
-    <div class="modal-box">
-      <h2>Logowanie</h2>
-      <div id="login-error" class="modal-error"></div>
-      <label for="login-username">Nazwa użytkownika</label>
-      <input type="text" id="login-username" autocomplete="username" />
-      <label for="login-password">Hasło</label>
-      <input type="password" id="login-password" autocomplete="current-password" />
-      <button id="login-submit-btn">Zaloguj się</button>
-      <button class="close-btn" id="login-close-btn">Anuluj</button>
-    </div>
-  </div>
-
-  <div id="register-modal" class="modal">
-    <div class="modal-box">
-      <h2>Rejestracja</h2>
-      <div id="register-error" class="modal-error"></div>
-      <label for="register-username">Nazwa użytkownika</label>
-      <input type="text" id="register-username" autocomplete="username" />
-      <label for="register-email">Email</label>
-      <input type="email" id="register-email" autocomplete="email" />
-      <label for="register-password">Hasło</label>
-      <input type="password" id="register-password" autocomplete="new-password" />
-      <button id="register-submit-btn">Zarejestruj się</button>
-      <button class="close-btn" id="register-close-btn">Anuluj</button>
-    </div>
-  </div>
-
-  <div id="deposit-modal" class="modal">
-    <div class="modal-box">
-      <h2>💰 Wpłać żetony</h2>
-      <div id="deposit-error" class="modal-error"></div>
-      <label for="deposit-amount">Ilość żetonów</label>
-      <input type="number" id="deposit-amount" min="1" placeholder="Np. 100" />
-      <button id="deposit-submit-btn">Wpłać</button>
-      <button class="close-btn" id="deposit-close-btn">Anuluj</button>
-    </div>
-  </div>
-
-  <script>
-    // Twój kod JavaScript pozostaje w większości bez zmian,
-    // ale dostosowujemy go do nowej struktury kontenerów w headerze.
-
-    const loginModal = document.getElementById('login-modal');
-    const registerModal = document.getElementById('register-modal');
-    const loginOpenBtn = document.getElementById('login-open-btn');
-    const registerOpenBtn = document.getElementById('register-open-btn');
-    const loginCloseBtn = document.getElementById('login-close-btn');
-    const registerCloseBtn = document.getElementById('register-close-btn');
-    const loginError = document.getElementById('login-error');
-    const registerError = document.getElementById('register-error');
-    const depositModal = document.getElementById('deposit-modal');
-    const depositBtn = document.getElementById('deposit-submit-btn');
-    const depositCloseBtn = document.getElementById('deposit-close-btn');
-    const depositError = document.getElementById('deposit-error');
-    const playButton = document.querySelector('.play-button');
-    const authButtonsContainer = document.getElementById('auth-buttons');
-    const userInfoContainer = document.getElementById('user-info-container');
-
-
-    loginOpenBtn.onclick = () => {
-      loginError.style.display = 'none';
-      loginModal.classList.add('active');
-      registerModal.classList.remove('active');
-    };
-    registerOpenBtn.onclick = () => {
-      registerError.style.display = 'none';
-      registerModal.classList.add('active');
-      loginModal.classList.remove('active');
-    };
-    loginCloseBtn.onclick = () => loginModal.classList.remove('active');
-    registerCloseBtn.onclick = () => registerModal.classList.remove('active');
-
-    document.getElementById('login-submit-btn').onclick = async () => {
-      loginError.style.display = 'none';
-      const username = document.getElementById('login-username').value.trim();
-      const password = document.getElementById('login-password').value;
-      if (!username || !password) {
-        loginError.style.display = 'block';
-        loginError.textContent = 'Podaj nazwę użytkownika i hasło.';
-        return;
-      }
-
-      try {
-        const res = await fetch('https://gadsino.onrender.com/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          loginError.style.display = 'block';
-          loginError.textContent = data.message || 'Błąd logowania.';
-          return;
-        }
-        localStorage.setItem('user', JSON.stringify(data));
-        alert(`Witaj, ${data.username}!`);
-        window.location.reload();
-      } catch (e) {
-        loginError.style.display = 'block';
-        loginError.textContent = 'Błąd połączenia z serwerem.';
-      }
-    };
-
-    document.getElementById('register-submit-btn').onclick = async () => {
-      registerError.style.display = 'none';
-      const username = document.getElementById('register-username').value.trim();
-      const email = document.getElementById('register-email').value.trim();
-      const password = document.getElementById('register-password').value;
-      if (!username || !email || !password) {
-        registerError.style.display = 'block';
-        registerError.textContent = 'Wypełnij wszystkie pola.';
-        return;
-      }
-
-      try {
-        const res = await fetch('https://gadsino.onrender.com/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, email, password })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          registerError.style.display = 'block';
-          registerError.textContent = data.message || 'Błąd rejestracji.';
-          return;
-        }
-        alert('Rejestracja udana! Możesz się zalogować.');
-        registerModal.classList.remove('active');
-      } catch (e) {
-        registerError.style.display = 'block';
-        registerError.textContent = 'Błąd połączenia z serwerem.';
-      }
-    };
-
-    window.addEventListener('keydown', e => {
-      if (e.key === 'Escape') {
-        loginModal.classList.remove('active');
-        registerModal.classList.remove('active');
-        depositModal.classList.remove('active');
-      }
-    });
-
-    function goToProfile() {
-      window.location.href = 'profile.html';
-    }
-
-    function openAddChipsModal() {
-      depositError.style.display = 'none';
-      document.getElementById('deposit-amount').value = '';
-      depositModal.classList.add('active');
-    }
-
-    depositCloseBtn.onclick = () => depositModal.classList.remove('active');
-
-    depositBtn.onclick = async () => {
-      depositError.style.display = 'none';
-      const amount = parseInt(document.getElementById('deposit-amount').value);
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (!amount || amount <= 0) {
-        depositError.textContent = 'Podaj poprawną kwotę.';
-        depositError.style.display = 'block';
-        return;
-      }
-
-      try {
-        const res = await fetch(`https://gadsino.onrender.com/player/${user.username}/deposit`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Błąd wpłaty.');
-        
-        // Dynamiczna aktualizacja salda w menu
-        const balanceSpan = document.getElementById('user-balance-span');
-        if (balanceSpan) {
-            balanceSpan.textContent = `💰 ${data.balance} żetonów`;
-        }
-
-        depositModal.classList.remove('active');
-      } catch (err) {
-        depositError.textContent = err.message || 'Błąd połączenia z serwerem.';
-        depositError.style.display = 'block';
-      }
-    };
-
-    function renderLeaderboard(mode = 'all') {
-      fetch(`https://gadsino.onrender.com/leaderboard/${mode}`)
-        .then(res => res.json())
-        .then(data => {
-          const list = document.getElementById('leaderboard-list');
-          list.innerHTML = '';
-          data.slice(0, 5).forEach((entry, i) => { // Pokaż tylko top 5
-            const li = document.createElement('li');
-            const rank = i + 1;
-            let rankIcon = `${rank}.`;
-            if (rank === 1) rankIcon = '🥇';
-            if (rank === 2) rankIcon = '🥈';
-            if (rank === 3) rankIcon = '🥉';
-            
-            li.innerHTML = `
-                <span>${rankIcon} ${entry.username}</span>
-                <strong>${entry.balance}</strong>
-            `;
-            list.appendChild(li);
-          });
-        })
-        .catch(() => {
-          const list = document.getElementById('leaderboard-list');
-          list.innerHTML = '<li>Błąd ładowania</li>';
-        });
-    }
-
-    document.getElementById('leaderboard-select').addEventListener('change', (e) => {
-      renderLeaderboard(e.target.value);
-    });
-
-    function logout() {
-      localStorage.removeItem('user');
-      window.location.reload();
-    }
-    
-    // --- Główna logika inicjalizacji ---
-    const user = JSON.parse(localStorage.getItem('user'));
-
-    if (user) {
-      authButtonsContainer.style.display = 'none';
-      playButton.disabled = false;
-      
-      fetch(`https://gadsino.onrender.com/player/${user.username}`)
-        .then(res => res.json())
-        .then(data => {
-          userInfoContainer.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 20px;">
-                <span id="user-balance-span" style="font-weight: bold;">💰 ${data.balance} żetonów</span>
-                <div class="dropdown">
-                  <button class="dropdown-toggle">👤 ${user.username} ⏷</button>
-                  <div class="dropdown-menu">
-                    <div class="dropdown-item" onclick="window.location.href='profile.html'"> Profil</div>
-                    <div class="dropdown-item" onclick="openAddChipsModal()">➕ Wpłać żetony</div>
-                    <div class="dropdown-item" onclick="logout()">🚪 Wyloguj</div>
-                  </div>
-                </div>
+        <div id="game-grid">
+            <div class="game-card">
+                <h3>Blackjack</h3>
+                <a href="blackjack.html"><button class="play-button">♠️ Zagraj</button></a>
             </div>
-          `;
-        })
-        .catch(() => {
-            userInfoContainer.innerHTML = `<span>Błąd ładowania danych użytkownika.</span>`;
+            <div class="game-card">
+                <h3>Automaty</h3>
+                <a href="slots.html"><button class="play-button">🎰 Zagraj</button></a>
+            </div>
+            <div class="game-card">
+                <h3>Ruletka</h3>
+                <a href="roulette.html"><button class="play-button">🎡 Zagraj</button></a>
+            </div>
+            <div class="game-card">
+                <h3>Crash</h3>
+                <a href="crash.html"><button class="play-button">🚀 Zagraj</button></a>
+            </div>
+            <div class="game-card">
+                <h3>Miny</h3>
+                <a href="mines.html"><button class="play-button">💣 Zagraj</button></a>
+            </div>
+            <div class="game-card">
+                <h3>Plinko</h3>
+                <a href="plinko.html"><button class="play-button">🪙 Zagraj</button></a>
+            </div>
+            <div class="game-card">
+                <h3>Tower</h3>
+                <a href="tower.html"><button class="play-button">🗼 Zagraj</button></a>
+            </div>
+        </div>
+    </main>
+
+    <div id="login-modal" class="modal">
+        <div class="modal-box">
+            <h2>Logowanie</h2>
+            <div id="login-error" class="modal-error"></div>
+            <label for="login-username">Nazwa użytkownika</label>
+            <input type="text" id="login-username" autocomplete="username" />
+            <label for="login-password">Hasło</label>
+            <input type="password" id="login-password" autocomplete="current-password" />
+            <button id="login-submit-btn">Zaloguj się</button>
+            <button class="close-btn" id="login-close-btn">Anuluj</button>
+        </div>
+    </div>
+
+    <div id="register-modal" class="modal">
+        <div class="modal-box">
+            <h2>Rejestracja</h2>
+            <div id="register-error" class="modal-error"></div>
+            <label for="register-username">Nazwa użytkownika</label>
+            <input type="text" id="register-username" autocomplete="username" />
+            <label for="register-email">Email</label>
+            <input type="email" id="register-email" autocomplete="email" />
+            <label for="register-password">Hasło</label>
+            <input type="password" id="register-password" autocomplete="new-password" />
+            <button id="register-submit-btn">Zarejestruj się</button>
+            <button class="close-btn" id="register-close-btn">Anuluj</button>
+        </div>
+    </div>
+
+    <div id="deposit-modal" class="modal">
+        <div class="modal-box">
+            <h2>💰 Wpłać żetony</h2>
+            <div id="deposit-error" class="modal-error"></div>
+            <label for="deposit-amount">Ilość żetonów</label>
+            <input type="number" id="deposit-amount" min="1" placeholder="Np. 100" />
+            <button id="deposit-submit-btn">Wpłać</button>
+            <button class="close-btn" id="deposit-close-btn">Anuluj</button>
+        </div>
+    </div>
+
+    <script>
+        const loginModal = document.getElementById('login-modal');
+        const registerModal = document.getElementById('register-modal');
+        const loginOpenBtn = document.getElementById('login-open-btn');
+        const registerOpenBtn = document.getElementById('register-open-btn');
+        const loginCloseBtn = document.getElementById('login-close-btn');
+        const registerCloseBtn = document.getElementById('register-close-btn');
+        const loginError = document.getElementById('login-error');
+        const registerError = document.getElementById('register-error');
+        const depositModal = document.getElementById('deposit-modal');
+        const depositBtn = document.getElementById('deposit-submit-btn');
+        const depositCloseBtn = document.getElementById('deposit-close-btn');
+        const depositError = document.getElementById('deposit-error');
+        // ZMIANA: Wybierz WSZYSTKIE przyciski do gry
+        const allPlayButtons = document.querySelectorAll('.play-button');
+        const authButtonsContainer = document.getElementById('auth-buttons');
+        const userInfoContainer = document.getElementById('user-info-container');
+
+
+        loginOpenBtn.onclick = () => {
+            loginError.style.display = 'none';
+            loginModal.classList.add('active');
+            registerModal.classList.remove('active');
+        };
+        registerOpenBtn.onclick = () => {
+            registerError.style.display = 'none';
+            registerModal.classList.add('active');
+            loginModal.classList.remove('active');
+        };
+        loginCloseBtn.onclick = () => loginModal.classList.remove('active');
+        registerCloseBtn.onclick = () => registerModal.classList.remove('active');
+
+        document.getElementById('login-submit-btn').onclick = async () => {
+            loginError.style.display = 'none';
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            if (!username || !password) {
+                loginError.style.display = 'block';
+                loginError.textContent = 'Podaj nazwę użytkownika i hasło.';
+                return;
+            }
+
+            try {
+                const res = await fetch('https://gadsino.onrender.com/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    loginError.style.display = 'block';
+                    loginError.textContent = data.message || 'Błąd logowania.';
+                    return;
+                }
+                localStorage.setItem('user', JSON.stringify(data));
+                alert(`Witaj, ${data.username}!`);
+                window.location.reload();
+            } catch (e) {
+                loginError.style.display = 'block';
+                loginError.textContent = 'Błąd połączenia z serwerem.';
+            }
+        };
+
+        document.getElementById('register-submit-btn').onclick = async () => {
+            registerError.style.display = 'none';
+            const username = document.getElementById('register-username').value.trim();
+            const email = document.getElementById('register-email').value.trim();
+            const password = document.getElementById('register-password').value;
+            if (!username || !email || !password) {
+                registerError.style.display = 'block';
+                registerError.textContent = 'Wypełnij wszystkie pola.';
+                return;
+            }
+
+            try {
+                const res = await fetch('https://gadsino.onrender.com/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    registerError.style.display = 'block';
+                    registerError.textContent = data.message || 'Błąd rejestracji.';
+                    return;
+                }
+                alert('Rejestracja udana! Możesz się zalogować.');
+                registerModal.classList.remove('active');
+            } catch (e) {
+                registerError.style.display = 'block';
+                registerError.textContent = 'Błąd połączenia z serwerem.';
+            }
+        };
+
+        window.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                loginModal.classList.remove('active');
+                registerModal.classList.remove('active');
+                depositModal.classList.remove('active');
+            }
         });
 
-    } else {
-      authButtonsContainer.style.display = 'flex';
-      playButton.disabled = true;
-      playButton.title = "Musisz się zalogować, aby zagrać";
-    }
+        function goToProfile() {
+            window.location.href = 'profile.html';
+        }
 
-    renderLeaderboard('all');
-  </script>
+        function openAddChipsModal() {
+            depositError.style.display = 'none';
+            document.getElementById('deposit-amount').value = '';
+            depositModal.classList.add('active');
+        }
+
+        depositCloseBtn.onclick = () => depositModal.classList.remove('active');
+
+        depositBtn.onclick = async () => {
+            depositError.style.display = 'none';
+            const amount = parseInt(document.getElementById('deposit-amount').value);
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!amount || amount <= 0) {
+                depositError.textContent = 'Podaj poprawną kwotę.';
+                depositError.style.display = 'block';
+                return;
+            }
+
+            try {
+                const res = await fetch(`https://gadsino.onrender.com/player/${user.username}/deposit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Błąd wpłaty.');
+
+                const balanceSpan = document.getElementById('user-balance-span');
+                if (balanceSpan) {
+                    balanceSpan.textContent = `💰 ${data.balance} żetonów`;
+                }
+
+                depositModal.classList.remove('active');
+            } catch (err) {
+                depositError.textContent = err.message || 'Błąd połączenia z serwerem.';
+                depositError.style.display = 'block';
+            }
+        };
+
+        function renderLeaderboard(mode = 'all') {
+            fetch(`https://gadsino.onrender.com/leaderboard/${mode}`)
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('leaderboard-list');
+                    list.innerHTML = '';
+                    data.slice(0, 5).forEach((entry, i) => {
+                        const li = document.createElement('li');
+                        const rank = i + 1;
+                        let rankIcon = `${rank}.`;
+                        if (rank === 1) rankIcon = '🥇';
+                        if (rank === 2) rankIcon = '🥈';
+                        if (rank === 3) rankIcon = '🥉';
+
+                        li.innerHTML = `
+                            <span>${rankIcon} ${entry.username}</span>
+                            <strong>${entry.balance}</strong>
+                        `;
+                        list.appendChild(li);
+                    });
+                })
+                .catch(() => {
+                    const list = document.getElementById('leaderboard-list');
+                    list.innerHTML = '<li>Błąd ładowania</li>';
+                });
+        }
+
+        document.getElementById('leaderboard-select').addEventListener('change', (e) => {
+            renderLeaderboard(e.target.value);
+        });
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.reload();
+        }
+
+        // --- Główna logika inicjalizacji ---
+        const user = JSON.parse(localStorage.getItem('user'));
+
+        if (user) {
+            authButtonsContainer.style.display = 'none';
+            // ZMIANA: Włącz WSZYSTKIE przyciski
+            allPlayButtons.forEach(button => {
+                button.disabled = false;
+                button.title = "";
+            });
+
+            fetch(`https://gadsino.onrender.com/player/${user.username}`)
+                .then(res => res.json())
+                .then(data => {
+                    userInfoContainer.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 20px;">
+                            <span id="user-balance-span" style="font-weight: bold;">💰 ${data.balance} żetonów</span>
+                            <div class="dropdown">
+                                <button class="dropdown-toggle">👤 ${user.username} ⏷</button>
+                                <div class="dropdown-menu">
+                                    <div class="dropdown-item" onclick="window.location.href='profile.html'">Profil</div>
+                                    <div class="dropdown-item" onclick="openAddChipsModal()">➕ Wpłać żetony</div>
+                                    <div class="dropdown-item" onclick="logout()">🚪 Wyloguj</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                })
+                .catch(() => {
+                    userInfoContainer.innerHTML = `<span>Błąd ładowania danych użytkownika.</span>`;
+                });
+
+        } else {
+            authButtonsContainer.style.display = 'flex';
+            // ZMIANA: Zablokuj WSZYSTKIE przyciski
+            allPlayButtons.forEach(button => {
+                button.disabled = true;
+                button.title = "Musisz się zalogować, aby zagrać";
+            });
+        }
+
+        renderLeaderboard('all');
+    </script>
 </body>
 </html>
