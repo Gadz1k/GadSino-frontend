@@ -57,6 +57,37 @@
         .tower-tile.revealed { cursor: default; }
         .tower-tile.gem { background-color: var(--gem-color); }
         .tower-tile.skull { background-color: var(--skull-color); }
+        #notification-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translate(-50%, -150%); /* Startowa pozycja poza ekranem */
+            background-color: var(--surface-color);
+            padding: 1em 2em;
+            border-radius: 10px;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            z-index: 9999;
+            color: var(--text-color);
+            font-weight: 600;
+            font-size: 1.1em;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #notification-container.show {
+            transform: translate(-50%, 0); /* Pozycja widoczna na ekranie */
+        }
+        #notification-container.notification-hidden {
+            display: none; /* Ukryj na starcie */
+        }
+        /* Style dla różnych typów powiadomień */
+        #notification-container.success {
+            border-color: #2ecc71;
+            color: #2ecc71;
+        }
+        #notification-container.error {
+            border-color: #e74c3c;
+            color: #e74c3c;
+        }
 
     </style>
 </head>
@@ -85,6 +116,9 @@
         <div class="tower" id="tower"></div>
     </div>
 </div>
+<div id="notification-container" class="notification-hidden">
+    <p id="notification-message"></p>
+</div>
 
 <script>
     const username = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).username : null;
@@ -98,6 +132,8 @@
     const tower = document.getElementById('tower');
     const nextMultiplierSpan = document.getElementById('next-multiplier');
     const currentWinningsSpan = document.getElementById('current-winnings');
+    const notificationContainer = document.getElementById('notification-container');
+    const notificationMessage = document.getElementById('notification-message');
 
     const TOWER_HEIGHT = 8;
     const TOWER_WIDTH = 3;
@@ -149,6 +185,21 @@
         cashoutButton.disabled = true;
         nextMultiplierSpan.textContent = '--';
         currentWinningsSpan.textContent = '--';
+    }
+
+    function showNotification(message, type = 'info', duration = 3000) {
+        // Ustaw wiadomość i typ (kolor)
+        notificationMessage.textContent = message;
+        notificationContainer.className = ''; // Reset klas
+        notificationContainer.classList.add(type); // Dodaj klasę success/error/info
+    
+        // Pokaż powiadomienie
+        notificationContainer.classList.add('show');
+    
+        // Ukryj po określonym czasie
+        setTimeout(() => {
+            notificationContainer.classList.remove('show');
+        }, duration);
     }
 
     startButton.addEventListener('click', async () => {
@@ -206,7 +257,7 @@
                 tile.classList.add('revealed');
 
                 if (data.isSkull) {
-                    alert('Trafiłeś na pułapkę! Koniec gry.');
+                    showNotification('Trafiłeś na pułapkę! Koniec gry.');
                     data.layout.forEach((skullCol, skullRow) => {
                         const skullTile = tower.querySelector(`[data-row="${skullRow}"] [data-col="${skullCol}"]`);
                         skullTile.classList.add('skull');
@@ -220,7 +271,7 @@
                     currentWinningsSpan.textContent = `${Math.floor(currentBet * data.currentMultiplier)} 🪙`;
 
                     if (data.isWin) {
-                        alert(`Gratulacje! Przeszedłeś całą wieżę i wygrałeś ${data.winnings}!`);
+                        showNotification(`Gratulacje! Przeszedłeś całą wieżę i wygrałeś ${data.winnings}!`);
                         currentUserBalance = data.newBalance;
                         userBalanceSpan.textContent = `${currentUserBalance} 🪙`;
                         resetUI(true);
@@ -251,7 +302,7 @@
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);
 
-            alert(`Wygrałeś ${data.winnings} żetonów!`);
+            showNotification(`Wygrałeś ${data.winnings} żetonów!`);
             currentUserBalance = data.newBalance;
             userBalanceSpan.textContent = `${data.newBalance} 🪙`;
             resetUI(true);
