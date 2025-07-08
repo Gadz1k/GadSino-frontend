@@ -430,7 +430,7 @@
             }
 
             try {
-                const res = await fetch('https://gadsino.onrender.com/login', {
+                const res = await fetch('https://gadsino.onrender.com/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
@@ -462,7 +462,7 @@
             }
 
             try {
-                const res = await fetch('https://gadsino.onrender.com/register', {
+                const res = await fetch('https://gadsino.onrender.com/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, email, password })
@@ -533,7 +533,7 @@
         };
 
         function renderLeaderboard(mode = 'all') {
-            fetch(`https://gadsino.onrender.com/leaderboard/${mode}`)
+            fetch(`https://gadsino.onrender.com/api/users/leaderboard/${mode}`)
                 .then(res => res.json())
                 .then(data => {
                     const list = document.getElementById('leaderboard-list');
