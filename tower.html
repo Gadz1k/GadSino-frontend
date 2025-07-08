@@ -125,7 +125,7 @@
             return;
         }
         try {
-            const response = await fetch(`https://gadsino.onrender.com/player/${username}`);
+            const response = await fetch(`https://gadsino.onrender.com/api/users/player/${username}`);
             if (!response.ok) throw new Error('Błąd serwera');
             const data = await response.json();
             currentUserBalance = data.balance;
@@ -162,7 +162,7 @@
         currentBet = bet;
 
         try {
-            const response = await fetch('https://gadsino.onrender.com/tower/start', {
+            const response = await fetch('https://gadsino.onrender.com/api/games/tower/start', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, bet })
@@ -193,7 +193,7 @@
         const colIndex = parseInt(tile.dataset.col);
 
         try {
-            const response = await fetch('https://gadsino.onrender.com/tower/pick', {
+            const response = await fetch('https://gadsino.onrender.com/api/games/tower/pick', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, row: rowIndex, col: colIndex })
@@ -243,7 +243,7 @@
     
     cashoutButton.addEventListener('click', async () => {
         try {
-            const response = await fetch('https://gadsino.onrender.com/tower/cashout', {
+            const response = await fetch('https://gadsino.onrender.com/api/games/tower/cashout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username })
