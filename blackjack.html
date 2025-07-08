@@ -810,7 +810,7 @@
     }
   
     function updateUserInfo() {
-      fetch(`https://gadsino.onrender.com/player/${username}`)
+      fetch(`https://gadsino.onrender.com/api/users/player/${username}`)
         .then(res => res.json())
         .then(data => document.getElementById('user-balance').innerText = data.balance)
         .catch(() => document.getElementById('user-balance').innerText = '--');
