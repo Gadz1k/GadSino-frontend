@@ -512,7 +512,7 @@
             }
 
             try {
-                const res = await fetch(`https://gadsino.onrender.com/player/${user.username}/deposit`, {
+                const res = await fetch(`https://gadsino.onrender.com/api/users/player/${user.username}/deposit`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ amount })
@@ -579,7 +579,7 @@
                 button.title = "";
             });
 
-            fetch(`https://gadsino.onrender.com/player/${user.username}`)
+            fetch(`https://gadsino.onrender.com/api/users/player/${user.username}`)
                 .then(res => res.json())
                 .then(data => {
                     userInfoContainer.innerHTML = `
