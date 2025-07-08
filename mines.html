@@ -143,7 +143,7 @@
             return;
         }
         try {
-            const response = await fetch(`https://gadsino.onrender.com/player/${username}`);
+            const response = await fetch(`https://gadsino.onrender.com/api/users/player/${username}`);
             if (!response.ok) throw new Error('Błąd serwera');
             const data = await response.json();
             currentUserBalance = data.balance;
@@ -192,7 +192,7 @@
         currentBet = bet;
 
         try {
-            const response = await fetch('https://gadsino.onrender.com/mines/start', {
+            const response = await fetch('https://gadsino.onrender.com/api/games/mines/start', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, bet, mines, tiles })
@@ -219,7 +219,7 @@
         const tileIndex = parseInt(tile.dataset.index);
         
         try {
-            const response = await fetch('https://gadsino.onrender.com/mines/reveal', {
+            const response = await fetch('https://gadsino.onrender.com/api/games/mines/reveal', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, tileIndex })
@@ -263,7 +263,7 @@
 
     cashoutButton.addEventListener('click', async () => {
         try {
-            const response = await fetch('https://gadsino.onrender.com/mines/cashout', {
+            const response = await fetch('https://gadsino.onrender.com/api/games/mines/cashout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username })
