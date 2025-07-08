@@ -191,7 +191,7 @@
     if (!user) {
       window.location.href = 'index.html';
     } else {
-      fetch(`https://gadsino.onrender.com/player/${user.username}`)
+      fetch(`https://gadsino.onrender.com/api/users/player/${user.username}`)
         .then(res => res.json())
         .then(data => {
           document.getElementById('username').textContent = user.username;
@@ -204,7 +204,7 @@
           alert('Błąd ładowania danych profilu.');
         });
 
-      fetch(`https://gadsino.onrender.com/player/${user.username}/history`)
+      fetch(`https://gadsino.onrender.com/api/users/player/${user.username}`)
         .then(res => res.json())
         .then(history => {
           const tbody = document.querySelector('#history-table tbody');
