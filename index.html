@@ -64,8 +64,8 @@
     .dropdown-item {
       padding: 0.7em 1.2em; cursor: pointer; color: white;
       transition: background 0.2s; text-align: left;
-      display: block; 
-      text-decoration: none;
+      display: block; /* Poprawka dla linków */
+      text-decoration: none; /* Poprawka dla linków */
     }
     .dropdown-item:hover { background: #57606f; }
     .dropdown:hover .dropdown-menu { display: block; }
@@ -121,15 +121,11 @@
       box-shadow: 0 4px 15px rgba(251, 197, 49, 0.3);
       text-decoration: none; display: inline-block;
     }
-    .game-card a.play-button[disabled] { /* Styl dla nieaktywnego linku */
-      background-color: #555;
-      color: #999;
-      pointer-events: none; /* To jest kluczowe - blokuje kliknięcie */
-      filter: grayscale(1);
-      box-shadow: none;
+    .game-card .play-button:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(251, 197, 49, 0.5); }
+    .game-card .play-button:disabled {
+      background-color: #555; color: #999; cursor: not-allowed;
+      box-shadow: none; transform: none;
     }
-     .game-card .play-button:hover:not([disabled]) { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(251, 197, 49, 0.5); }
-
 
     /* === Modale === */
     .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 1000; }
@@ -263,12 +259,11 @@
     }
     setupModal('login-modal', 'login-open-btn', 'login-close-btn');
     setupModal('register-modal', 'register-open-btn', 'register-close-btn');
-    // `deposit-modal` jest otwierany z dynamicznie tworzonego menu, więc nie ma `openBtnId`
-    setupModal('deposit-modal', null, 'deposit-close-btn');
+    setupModal('deposit-modal', null, 'deposit-close-btn'); // Otwierany z menu
     
     window.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
-        document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+        document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
       }
     });
     
@@ -386,8 +381,9 @@
       if (user) {
         authButtonsContainer.style.display = 'none';
         playButtons.forEach(button => {
-          button.removeAttribute('disabled');
+          button.disabled = false;
           button.removeAttribute('title');
+          // Zmiana z button na 'a'
           button.style.pointerEvents = 'auto';
           button.style.filter = 'none';
         });
@@ -415,8 +411,9 @@
     } else {
       authButtonsContainer.style.display = 'flex';
       playButtons.forEach(button => {
-        button.setAttribute('disabled', 'true');
+        button.disabled = true;
         button.title = "Musisz się zalogować, aby zagrać";
+        // Zmiana z button na 'a'
         button.style.pointerEvents = 'none';
         button.style.filter = 'grayscale(1)';
       });
