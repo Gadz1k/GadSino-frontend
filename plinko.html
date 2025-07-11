@@ -450,7 +450,7 @@
             currentUserBalance = result.newBalance;
             userBalanceSpan.textContent = `${currentUserBalance} 🪙`;
             // Funkcja animacji jest teraz częścią pojedynczej gry, ale jej nie czekamy w trybie auto
-            // await animateBall(result.path); // Możesz włączyć, jeśli chcesz widzieć każdą kulkę
+            await animateBall(result.path);
         } catch (error) {
             alert(`Wystąpił błąd: ${error.message}`);
             isAutobetRunning = false; // Zatrzymaj auto-grę w razie błędu
