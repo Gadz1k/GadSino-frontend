@@ -78,6 +78,59 @@
             background-color: var(--surface-color); border-radius: 8px;
             font-weight: 700; font-size: 1.1em; transition: all 0.3s;
         }
+        .controls {
+            flex-direction: column; /* Zmieniamy układ na kolumnowy */
+            width: 100%;
+            max-width: 400px;
+        }
+        .mode-switcher {
+            display: flex;
+            background-color: #1a1b26;
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 1em;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 0.8em;
+            border: none;
+            background: transparent;
+            color: var(--text-color);
+            font-size: 1em;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .mode-btn.active {
+            background-color: #3e415b;
+        }
+        .control-group {
+            margin-bottom: 1em;
+        }
+        .control-group label {
+            display: block;
+            margin-bottom: 0.5em;
+            font-weight: 600;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        .control-group input, .control-group select {
+            width: 100%;
+            padding: 0.8em;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: var(--text-color);
+            font-size: 1.1rem;
+            box-sizing: border-box;
+        }
+        #auto-mode-panel.hidden {
+            display: none;
+        }
+        .btn-drop.stop-autobet {
+            background-color: #e74c3c; /* Czerwony kolor dla przycisku stop */
+        }
     </style>
 </head>
 <body>
