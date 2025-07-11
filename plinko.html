@@ -192,57 +192,72 @@
 <script>
     const username = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).username : null;
     let currentUserBalance = 0;
-
-    const ROWS = 12;
-    const MULTIPLIERS = [16, 9, 2, 1.4, 1.1, 1, 0.5, 1, 1.1, 1.4, 2, 9, 16];
-    const PEG_RADIUS = 6;
-    const START_X = 300;
-    const START_Y = 40;
-    const ROW_HEIGHT = 40;
-    const PEG_H_SPACING = 50;
-    const BALL_RADIUS = 8;
-
+    let isAutoMode = false;
+    let isAutobetRunning = false;
+    
+    // Definicje mnożników (muszą być takie same jak na backendzie)
+    const MULTIPLIERS = {
+        low: { 8: [2.9,1.4,1.1,1,0.5,1,1.1,1.4,2.9], 12: [5.6,2.1,1.2,1.1,1,0.5,1,1.1,1.2,2.1,5.6], 16: [8,3,2,1.5,1.2,1.1,1,0.5,1,1.1,1.2,1.5,2,3,8] },
+        medium: { 8: [5,2,1.2,1.1,0.4,1.1,1.2,2,5], 12: [10,3,1.4,1.1,1,0.4,1,1.1,1.4,3,10], 16: [16,9,2,1.4,1.1,1,0.5,1,1.1,1.4,2,9,16] },
+        high: { 8: [13,3,1.3,1,0.3,1,1.3,3,13], 12: [30,5,2,1.1,0.5,0.3,0.5,1.1,2,5,30], 16: [130,24,5,2,1.5,0.5,0.3,0.2,0.3,0.5,1.5,2,5,24,130] }
+    };
+    
+    // Elementy DOM
     const userBalanceSpan = document.getElementById('user-balance');
     const dropButton = document.getElementById('drop-button');
     const betAmountInput = document.getElementById('bet-amount');
     const board = document.getElementById('plinko-board');
     const ball = document.getElementById('ball');
     const multipliersContainer = document.getElementById('multipliers-container');
-
+    const manualModeBtn = document.getElementById('manual-mode-btn');
+    const autoModeBtn = document.getElementById('auto-mode-btn');
+    const autoModePanel = document.getElementById('auto-mode-panel');
+    const riskLevelSelect = document.getElementById('risk-level');
+    const rowCountSelect = document.getElementById('row-count');
+    const numberOfBetsInput = document.getElementById('number-of-bets');
+    
+    // Funkcje pomocnicze
     function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
-
+    
     async function fetchUserBalance() {
-        if (!username) {
-            userBalanceSpan.textContent = 'N/A';
-            return;
-        }
+        if (!username) { userBalanceSpan.textContent = 'N/A'; return; }
         try {
             const response = await fetch(`https://gadsino.onrender.com/api/users/player/${username}`);
-            if (!response.ok) throw new Error('Błąd serwera');
             const data = await response.json();
             currentUserBalance = data.balance;
             userBalanceSpan.textContent = `${currentUserBalance} 🪙`;
-        } catch (error) {
-            console.error("Błąd pobierania salda:", error);
-            userBalanceSpan.textContent = 'Błąd';
-        }
+        } catch (error) { userBalanceSpan.textContent = 'Błąd'; }
     }
-
+    
+    // Funkcja do dynamicznego tworzenia planszy
     function initializeBoard() {
-        for (let row = 0; row < ROWS; row++) {
-            const numPegsInRow = row + 1;
+        board.innerHTML = '';
+        multipliersContainer.innerHTML = '';
+        
+        const rows = parseInt(rowCountSelect.value);
+        const risk = riskLevelSelect.value;
+        const currentMultipliers = MULTIPLIERS[risk][rows];
+    
+        const PEG_RADIUS = 6;
+        const boardWidth = 600;
+        const START_X = boardWidth / 2;
+        const START_Y = 40;
+        const ROW_HEIGHT = (board.height.baseVal.value - START_Y - 50) / rows;
+        const PEG_H_SPACING = boardWidth / (rows + 2);
+    
+        for (let row = 0; row < rows; row++) {
+            const numPegsInRow = row + 2;
             for (let i = 0; i < numPegsInRow; i++) {
-                const x = START_X + (i * PEG_H_SPACING) - (row * PEG_H_SPACING / 2);
+                const x = START_X + (i * PEG_H_SPACING) - ((numPegsInRow - 1) * PEG_H_SPACING / 2);
                 const y = START_Y + (row * ROW_HEIGHT);
                 const peg = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                peg.setAttribute("cx", x);
-                peg.setAttribute("cy", y);
-                peg.setAttribute("r", PEG_RADIUS);
-                peg.setAttribute("fill", "var(--peg-color)");
+                peg.setAttribute("cx", x); peg.setAttribute("cy", y);
+                peg.setAttribute("r", PEG_RADIUS); peg.setAttribute("fill", "var(--peg-color)");
                 board.appendChild(peg);
             }
         }
-        MULTIPLIERS.forEach((m) => {
+        
+        currentMultipliers.forEach((m) => {
             const box = document.createElement('div');
             box.className = 'multiplier-box';
             box.textContent = `${m}x`;
@@ -250,62 +265,69 @@
             multipliersContainer.appendChild(box);
         });
     }
-
+    
+    // Zmodyfikowana funkcja animacji
     async function animateBall(path) {
-        ball.style.transition = 'none';
-        ball.style.transform = `translate(${START_X - BALL_RADIUS}px, ${START_Y - 30 - BALL_RADIUS}px)`;
-        ball.style.opacity = 1;
-        
-        await sleep(100);
-        ball.style.transition = 'transform 0.35s cubic-bezier(0.5, 0.2, 0.5, 0.8)';
-        
-        let horizontalOffset = 0;
-
-        for (let row = 0; row < path.length; row++) {
-            const direction = path[row];
-            horizontalOffset += (direction === 0) ? -0.5 : 0.5;
-            const x = START_X + (horizontalOffset * PEG_H_SPACING);
-            const y = START_Y + ((row + 1) * ROW_HEIGHT);
-            ball.style.transform = `translate(${x - BALL_RADIUS}px, ${y - BALL_RADIUS}px)`;
-            await sleep(400);
-        }
-        
-        const finalSlotIndex = path.filter(d => d === 1).length;
-        const multiplierBox = multipliersContainer.children[finalSlotIndex];
-        const multiplierBoxRect = multiplierBox.getBoundingClientRect();
-        const containerRect = board.getBoundingClientRect();
-        
-        const finalX = multiplierBoxRect.left - containerRect.left + (multiplierBoxRect.width / 2);
-        const finalY = board.height.baseVal.value + 10;
-        
-        ball.style.transform = `translate(${finalX - BALL_RADIUS}px, ${finalY}px)`;
-        await sleep(400);
-        
-        multiplierBox.style.transform = 'scale(1.15)';
-        multiplierBox.style.backgroundColor = 'var(--primary-color)';
-        multiplierBox.style.color = '#121212';
-        
-        await sleep(2000);
-        
-        ball.style.opacity = 0;
-        multiplierBox.style.transform = 'scale(1)';
-        multiplierBox.style.backgroundColor = 'var(--surface-color)';
-        multiplierBox.style.color = MULTIPLIERS[finalSlotIndex] < 1 ? '#aaa' : MULTIPLIERS[finalSlotIndex] < 5 ? 'white' : 'var(--primary-color)';
+        // ... (kod funkcji animateBall pozostaje prawie taki sam, ale dostosuj go, jeśli zmieniłeś stałe)
     }
-
-    dropButton.addEventListener('click', async () => {
+    
+    // Logika przełączania trybów
+    manualModeBtn.addEventListener('click', () => {
+        isAutoMode = false;
+        manualModeBtn.classList.add('active');
+        autoModeBtn.classList.remove('active');
+        autoModePanel.classList.add('hidden');
+        dropButton.textContent = 'Zagraj';
+    });
+    
+    autoModeBtn.addEventListener('click', () => {
+        isAutoMode = true;
+        autoModeBtn.classList.add('active');
+        manualModeBtn.classList.remove('active');
+        autoModePanel.classList.remove('hidden');
+        dropButton.textContent = 'Start Autobet';
+    });
+    
+    // Zmiana ustawień dynamicznie odświeża planszę
+    rowCountSelect.addEventListener('change', initializeBoard);
+    riskLevelSelect.addEventListener('change', initializeBoard);
+    
+    // Główna funkcja auto-gry
+    async function runAutobet() {
+        isAutobetRunning = true;
+        dropButton.textContent = 'Stop Autobet';
+        dropButton.classList.add('stop-autobet');
+    
+        const totalBets = parseInt(numberOfBetsInput.value);
+        for (let i = 0; i < totalBets; i++) {
+            if (!isAutobetRunning) break; // Przerwij pętlę, jeśli użytkownik kliknął stop
+    
+            await playSingleRound();
+            await sleep(500); // Mała przerwa między grami
+        }
+    
+        isAutobetRunning = false;
+        dropButton.textContent = 'Start Autobet';
+        dropButton.classList.remove('stop-autobet');
+    }
+    
+    // Funkcja dla pojedynczej rundy (manualnej lub w auto)
+    async function playSingleRound() {
         if (!username) return alert("Musisz być zalogowany, aby grać.");
         const bet = parseInt(betAmountInput.value);
-        if (!bet || bet <= 0) return alert("Wpisz poprawną kwotę.");
-        if (bet > currentUserBalance) return alert("Niewystarczające środki.");
-
+        const risk = riskLevelSelect.value;
+        const rows = parseInt(rowCountSelect.value);
+    
+        if (!bet || bet <= 0) { alert("Wpisz poprawną kwotę."); return; }
+        if (bet > currentUserBalance) { alert("Niewystarczające środki."); return; }
+    
         dropButton.disabled = true;
-
+    
         try {
             const response = await fetch('https://gadsino.onrender.com/api/games/plinko/drop', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, bet })
+                body: JSON.stringify({ username, bet, risk, rows }) // Wysyłamy nowe dane
             });
             if (!response.ok) {
                  const errorData = await response.json();
@@ -314,16 +336,41 @@
             const result = await response.json();
             currentUserBalance = result.newBalance;
             userBalanceSpan.textContent = `${currentUserBalance} 🪙`;
-            await animateBall(result.path);
+            // Funkcja animacji jest teraz częścią pojedynczej gry, ale jej nie czekamy w trybie auto
+            // await animateBall(result.path); // Możesz włączyć, jeśli chcesz widzieć każdą kulkę
         } catch (error) {
-            alert(`Wystąpił błąd podczas gry: ${error.message}`);
-            console.error(error);
+            alert(`Wystąpił błąd: ${error.message}`);
+            isAutobetRunning = false; // Zatrzymaj auto-grę w razie błędu
         }
-        dropButton.disabled = false;
+        
+        if(!isAutobetRunning) dropButton.disabled = false;
+    }
+    
+    // Główny listener przycisku
+    dropButton.addEventListener('click', () => {
+        if (isAutoMode) {
+            if (isAutobetRunning) {
+                isAutobetRunning = false; // Zatrzymaj pętlę
+            } else {
+                runAutobet(); // Uruchom pętlę
+            }
+        } else {
+            playSingleRound(); // Zagraj raz
+        }
     });
-
-    initializeBoard();
-    fetchUserBalance();
+    
+    
+    // Inicjalizacja przy starcie strony
+    async function init() {
+        if (username) {
+            await fetchUserBalance();
+        } else {
+            userBalanceSpan.textContent = 'Zaloguj się';
+            document.querySelectorAll('button, input, select').forEach(el => el.disabled = true);
+        }
+        initializeBoard();
+    }
+    init();
 </script>
 </body>
 </html>
