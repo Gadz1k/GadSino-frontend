@@ -14,76 +14,69 @@
             --peg-color: #5a5d7a;
             --ball-color: #f1f2f6;
         }
+        
+        /* === Style Globalne === */
         body {
-            font-family: 'Poppins', sans-serif; background: var(--bg-color); color: var(--text-color);
-            margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
         }
         header {
-            width: 100%; padding: 1em 2em; background: rgba(0,0,0,0.2);
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #333; box-sizing: border-box;
+            width: 100%;
+            padding: 1em 2em;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            box-sizing: border-box;
         }
         .balance-display { font-size: 1.1em; font-weight: 600; }
         .balance-display span { color: var(--primary-color); }
         .btn-back {
-            color: var(--text-color); text-decoration: none; background: #333; padding: 0.5em 1em;
-            border-radius: 8px; font-weight: 600; transition: background 0.2s;
+            color: var(--text-color);
+            text-decoration: none;
+            background: #333;
+            padding: 0.5em 1em;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.2s;
         }
         .btn-back:hover { background: #444; }
-
-        .game-container {
-            display: flex; flex-direction: column; align-items: center;
-            gap: 1.5em; padding: 2em; width: 100%; max-width: 800px;
-        }
-
-        .controls {
-            display: flex; gap: 1em; width: 100%; max-width: 500px;
-            padding: 1em; background: var(--surface-color); border-radius: 12px;
-        }
-        .bet-input {
-            flex-grow: 1; padding: 0.8em; background: #333; border: 1px solid #444;
-            border-radius: 8px; color: var(--text-color); font-size: 1.2rem;
-        }
-        .btn-drop {
-            padding: 0 2em; font-size: 1.2rem; font-weight: 600; border: none;
-            border-radius: 8px; cursor: pointer; transition: all 0.3s ease;
-            background: var(--primary-color); color: #121212;
-        }
-        .btn-drop:disabled { background: #555; color: #999; cursor: not-allowed; }
-
-        .plinko-container { position: relative; }
-        #plinko-board { overflow: visible; }
         
-        /* --- KLUCZOWA POPRAWKA JEST TUTAJ --- */
-        /* W sekcji <style> znajdź #ball i zmień jego właściwości */
-        #ball {
-            position: absolute;
-            top: 0; 
-            left: 0;     
-            width: 16px; 
-            height: 16px;
-            background: radial-gradient(circle at 5px 5px, #ffffff, var(--ball-color));
-            border-radius: 50%;
-            /* Zmieniamy transition - będzie płynniejsze i z efektem lekkiego "odbicia" */
-            transition: transform 0.25s cubic-bezier(0.5, 0, 0.75, 0.5); 
-            box-shadow: 0 0 10px white;
-            opacity: 0;
-            transform-origin: center center;
-        }
-
-        .multipliers {
-            display: flex; justify-content: center;
-            width: 100%; gap: 4px;
-        }
-        .multiplier-box {
-            flex-grow: 1; text-align: center; padding: 0.8em 0.2em;
-            background-color: var(--surface-color); border-radius: 8px;
-            font-weight: 700; font-size: 1.1em; transition: all 0.3s;
-        }
-        .controls {
-            flex-direction: column; /* Zmieniamy układ na kolumnowy */
+        /* === GŁÓWNY LAYOUT DWUKOLUMNOWY === */
+        .game-container {
+            display: flex;
+            gap: 2em;
+            padding: 2em;
             width: 100%;
-            max-width: 400px;
+            max-width: 1200px;
+            align-items: flex-start;
+        }
+        .controls-panel {
+            flex: 1;
+            max-width: 350px;
+            background: var(--surface-color);
+            padding: 2em;
+            border-radius: 12px;
+        }
+        .game-panel {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* === PANEL STEROWANIA (LEWA STRONA) === */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
         }
         .mode-switcher {
             display: flex;
@@ -130,38 +123,62 @@
         #auto-mode-panel.hidden {
             display: none;
         }
+        .btn-drop {
+            padding: 1em;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--primary-color);
+            color: #121212;
+            margin-top: 1em;
+        }
+        .btn-drop:disabled { background: #555; color: #999; cursor: not-allowed; }
         .btn-drop.stop-autobet {
-            background-color: #e74c3c; /* Czerwony kolor dla przycisku stop */
+            background-color: #e74c3c;
         }
-        .game-container {
-            display: flex;
-            gap: 2em;
-            padding: 2em;
-            width: 100%;
-            max-width: 1200px; /* Zwiększamy maksymalną szerokość */
-            align-items: flex-start;
-        }
-        .controls-panel {
-            flex: 1;
-            max-width: 350px;
-            background: var(--surface-color);
-            padding: 2em;
-            border-radius: 12px;
-        }
-        .game-panel {
-            flex: 2;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        
+        /* === PLANSZA GRY (PRAWA STRONA) === */
         .plinko-container {
             position: relative;
             width: 100%;
             display: flex;
             justify-content: center;
         }
+        #plinko-board {
+            overflow: visible;
+        }
+        #ball {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 16px;
+            height: 16px;
+            background: radial-gradient(circle at 5px 5px, #ffffff, var(--ball-color));
+            border-radius: 50%;
+            transition: transform 0.25s cubic-bezier(0.5, 0, 0.75, 0.5);
+            box-shadow: 0 0 10px white;
+            opacity: 0;
+            transform-origin: center center;
+        }
         .multipliers {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            gap: 4px;
             margin-top: 1em;
+        }
+        .multiplier-box {
+            flex-grow: 1;
+            text-align: center;
+            padding: 0.8em 0.2em;
+            background-color: var(--surface-color);
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1.1em;
+            transition: all 0.3s;
         }
     </style>
 </head>
