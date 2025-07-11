@@ -55,18 +55,20 @@
         #plinko-board { overflow: visible; }
         
         /* --- KLUCZOWA POPRAWKA JEST TUTAJ --- */
+        /* W sekcji <style> znajdź #ball i zmień jego właściwości */
         #ball {
             position: absolute;
-            top: 0; /* Ustawia punkt odniesienia Y na górze kontenera */
-            left: 0; /* Ustawia punkt odniesienia X na lewej krawędzi kontenera */
-            width: 16px; height: 16px;
+            top: 0; 
+            left: 0;     
+            width: 16px; 
+            height: 16px;
             background: radial-gradient(circle at 5px 5px, #ffffff, var(--ball-color));
             border-radius: 50%;
-            transition: transform 0.35s cubic-bezier(0.5, 0.2, 0.5, 0.8);
+            /* Zmieniamy transition - będzie płynniejsze i z efektem lekkiego "odbicia" */
+            transition: transform 0.25s cubic-bezier(0.5, 0, 0.75, 0.5); 
             box-shadow: 0 0 10px white;
             opacity: 0;
             transform-origin: center center;
-            /* Usuniemy transform stąd, będzie ustawiany tylko przez JS */
         }
 
         .multipliers {
@@ -131,6 +133,36 @@
         .btn-drop.stop-autobet {
             background-color: #e74c3c; /* Czerwony kolor dla przycisku stop */
         }
+        .game-container {
+            display: flex;
+            gap: 2em;
+            padding: 2em;
+            width: 100%;
+            max-width: 1200px; /* Zwiększamy maksymalną szerokość */
+            align-items: flex-start;
+        }
+        .controls-panel {
+            flex: 1;
+            max-width: 350px;
+            background: var(--surface-color);
+            padding: 2em;
+            border-radius: 12px;
+        }
+        .game-panel {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .plinko-container {
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        .multipliers {
+            margin-top: 1em;
+        }
     </style>
 </head>
 <body>
@@ -142,51 +174,51 @@
 </header>
 
 <div class="game-container">
-    <div class="controls">
-        <div class="mode-switcher">
-            <button id="manual-mode-btn" class="mode-btn active">Manual</button>
-            <button id="auto-mode-btn" class="mode-btn">Auto</button>
-        </div>
-    
-        <div class="control-group">
-            <label for="bet-amount">Kwota zakładu</label>
-            <input type="number" id="bet-amount" value="10">
-        </div>
-    
-        <div id="auto-mode-panel" class="hidden">
-            <div class="control-group">
-                <label for="risk-level">Ryzyko</label>
-                <select id="risk-level">
-                    <option value="low">Niskie</option>
-                    <option value="medium" selected>Średnie</option>
-                    <option value="high">Wysokie</option>
-                </select>
+    <div class="controls-panel">
+        <div class="controls">
+            <div class="mode-switcher">
+                <button id="manual-mode-btn" class="mode-btn active">Manual</button>
+                <button id="auto-mode-btn" class="mode-btn">Auto</button>
             </div>
             <div class="control-group">
-                <label for="row-count">Liczba rzędów</label>
-                <select id="row-count">
-                    <option value="8">8</option>
-                    <option value="10">10</option>
-                    <option value="12" selected>12</option>
-                    <option value="14">14</option>
-                    <option value="16">16</option>
-                </select>
+                <label for="bet-amount">Kwota zakładu</label>
+                <input type="number" id="bet-amount" value="10">
             </div>
-            <div class="control-group">
-                <label for="number-of-bets">Liczba gier</label>
-                <input type="number" id="number-of-bets" value="10">
+            <div id="auto-mode-panel" class="hidden">
+                <div class="control-group">
+                    <label for="risk-level">Ryzyko</label>
+                    <select id="risk-level">
+                        <option value="low">Niskie</option>
+                        <option value="medium" selected>Średnie</option>
+                        <option value="high">Wysokie</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="row-count">Liczba rzędów</label>
+                    <select id="row-count">
+                        <option value="8">8</option>
+                        <option value="10">10</option>
+                        <option value="12" selected>12</option>
+                        <option value="14">14</option>
+                        <option value="16">16</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="number-of-bets">Liczba gier</label>
+                    <input type="number" id="number-of-bets" value="10">
+                </div>
             </div>
+            <button id="drop-button" class="btn-drop">Zagraj</button>
         </div>
-    
-        <button id="drop-button" class="btn-drop">Zagraj</button>
     </div>
 
-    <div class="plinko-container">
-        <svg id="plinko-board" width="600" height="550"></svg>
-        <div id="ball"></div>
+    <div class="game-panel">
+        <div class="plinko-container">
+            <svg id="plinko-board" width="700" height="650"></svg>
+            <div id="ball"></div>
+        </div>
+        <div class="multipliers" id="multipliers-container"></div>
     </div>
-    
-    <div class="multipliers" id="multipliers-container"></div>
 </div>
 
 <script>
@@ -266,9 +298,73 @@
         });
     }
     
-    // Zmodyfikowana funkcja animacji
+    // ZASTĄP STARĄ funkcję animateBall TĄ NOWĄ
     async function animateBall(path) {
-        // ... (kod funkcji animateBall pozostaje prawie taki sam, ale dostosuj go, jeśli zmieniłeś stałe)
+        const rows = parseInt(rowCountSelect.value);
+        const boardWidth = 700;
+        const START_X = boardWidth / 2;
+        const START_Y = 40;
+        const ROW_HEIGHT = (650 - START_Y - 50) / rows;
+        const PEG_H_SPACING = boardWidth / (rows + 2);
+        const BALL_RADIUS = 8;
+    
+        // Reset i pokazanie kulki na starcie
+        ball.style.transition = 'none'; // Wyłączamy transition do pozycjonowania
+        ball.style.transform = `translate(${START_X - BALL_RADIUS}px, ${0 - BALL_RADIUS}px)`;
+        ball.style.opacity = 1;
+        
+        await sleep(100); // Chwila na render
+        ball.style.transition = 'transform 0.25s cubic-bezier(0.5, 0, 0.75, 0.5)'; // Włączamy transition dla animacji
+        
+        let horizontalOffset = 0;
+    
+        // Pętla animacji przez każdy rząd
+        for (let row = 0; row < path.length; row++) {
+            const direction = path[row];
+            horizontalOffset += (direction === 0) ? -0.5 : 0.5;
+    
+            // Celujemy w pozycję kołka w następnym rzędzie
+            const nextPegX = START_X + (horizontalOffset * PEG_H_SPACING);
+            const nextPegY = START_Y + (row * ROW_HEIGHT);
+    
+            // Symulujemy "odbicie" - najpierw w bok, potem w dół
+            const intermediateX = ball.getBoundingClientRect().left - board.getBoundingClientRect().left + BALL_RADIUS;
+            const intermediateY = nextPegY + ROW_HEIGHT / 2;
+            
+            ball.style.transform = `translate(${nextPegX - BALL_RADIUS}px, ${intermediateY - BALL_RADIUS}px)`;
+            
+            await sleep(280); // Czekamy na zakończenie ruchu (trochę dłużej niż transition)
+        }
+        
+        // Ostatni ruch do kieszeni z mnożnikiem
+        const finalSlotIndex = path.filter(d => d === 1).length;
+        const multiplierBox = multipliersContainer.children[finalSlotIndex];
+        if (multiplierBox) {
+            const multiplierBoxRect = multiplierBox.getBoundingClientRect();
+            const containerRect = multipliersContainer.getBoundingClientRect();
+            
+            const finalX = multiplierBoxRect.left - containerRect.left + (multiplierBoxRect.width / 2);
+            
+            ball.style.transform = `translate(${finalX + 15 - BALL_RADIUS}px, ${650 + 10}px)`; // Przesunięcie do odpowiedniego slota
+            await sleep(300);
+            
+            // Podświetlenie wygranej
+            multiplierBox.style.transform = 'scale(1.15)';
+            multiplierBox.style.backgroundColor = 'var(--primary-color)';
+            multiplierBox.style.color = '#121212';
+            
+            await sleep(1500); // Czas na pokazanie wyniku
+            
+            // Reset styli
+            ball.style.opacity = 0;
+            multiplierBox.style.transform = 'scale(1)';
+            const risk = riskLevelSelect.value;
+            const currentMultipliers = MULTIPLIERS[risk][rows];
+            multiplierBox.style.backgroundColor = 'var(--surface-color)';
+            multiplierBox.style.color = currentMultipliers[finalSlotIndex] < 1 ? '#aaa' : currentMultipliers[finalSlotIndex] < 5 ? 'white' : 'var(--primary-color)';
+        } else {
+            ball.style.opacity = 0; // Ukryj kulkę, jeśli coś pójdzie nie tak
+        }
     }
     
     // Logika przełączania trybów
