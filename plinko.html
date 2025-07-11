@@ -90,7 +90,41 @@
 
 <div class="game-container">
     <div class="controls">
-        <input type="number" id="bet-amount" class="bet-input" placeholder="Kwota..." value="10">
+        <div class="mode-switcher">
+            <button id="manual-mode-btn" class="mode-btn active">Manual</button>
+            <button id="auto-mode-btn" class="mode-btn">Auto</button>
+        </div>
+    
+        <div class="control-group">
+            <label for="bet-amount">Kwota zakładu</label>
+            <input type="number" id="bet-amount" value="10">
+        </div>
+    
+        <div id="auto-mode-panel" class="hidden">
+            <div class="control-group">
+                <label for="risk-level">Ryzyko</label>
+                <select id="risk-level">
+                    <option value="low">Niskie</option>
+                    <option value="medium" selected>Średnie</option>
+                    <option value="high">Wysokie</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="row-count">Liczba rzędów</label>
+                <select id="row-count">
+                    <option value="8">8</option>
+                    <option value="10">10</option>
+                    <option value="12" selected>12</option>
+                    <option value="14">14</option>
+                    <option value="16">16</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="number-of-bets">Liczba gier</label>
+                <input type="number" id="number-of-bets" value="10">
+            </div>
+        </div>
+    
         <button id="drop-button" class="btn-drop">Zagraj</button>
     </div>
 
